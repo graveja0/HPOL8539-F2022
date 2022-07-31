@@ -1,0 +1,22 @@
+project:
+  type: website
+
+website:
+  title: "HPOL8539-F2022"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - about.qmd
+
+execute:
+  freeze: auto  # re-render only when source changes
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+
+editor: visual
+
