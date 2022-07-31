@@ -1,0 +1,6 @@
+---
+title: "A post!"
+editor: visual
+---
+
+This is a post!

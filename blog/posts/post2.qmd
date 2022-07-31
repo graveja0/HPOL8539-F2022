@@ -1,0 +1,47 @@
+---
+title: "second post"
+editor: visual
+---
+
+National Harbor[^1] is a census-designated place (CDP) in Prince George's County, Maryland, United States, located along the Potomac River near the Woodrow Wilson Bridge and just south of Washington. It originated as a 300-acre (1.2 km2) multi-use waterfront development. Per the 2020 census, the population was 5,509.
+
+[^1]: the text content and images are all from the Wikipedia page linked above.
+
+## Development
+
+The Gaylord National Resort & Convention Center at National Harbor opened on April 1, 2008 in Oxon Hill, Maryland. The site is being developed by Milton Peterson's Peterson Companies with the project expected to cost well over \$2 billion, and a construction time frame of 2007 to late 2014. As of April 2016 construction was continuing and the cost was set at \$4 billion. In 2010, the development was designated as a census-designated place.
+
+::: column-margin
+Reasons to go:
+
+1.  Ferris wheel
+2.  Ferris wheel
+:::
+
+::: {.callout-warning appearance="simple" icon="false"}
+### Gaylord National Resort
+
+Be prepared for the massive scale of the atrium which has a mini-version of a town *inside* it.
+:::
+
+[![](https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/GaylordNationalResort.jpg/500px-GaylordNationalResort.jpg){height="400" width="400" fig-align="center" fig-alt="A aerial photograph of Gaylord National Resort"}](https://en.wikipedia.org/wiki/National_Harbor,_Maryland)
+
+### Disney
+
+The land developed for National Harbor was previously Salubria Plantation, built in 1827 by Dr. John H. Bayne. The plantation house burned down in 1981 and was offered for sale along with the surrounding land. The land was sold in 1984 and in 1994 was rezoned for mixed-use development. In the fall of 1997, the Maryland Department of the Environment and the Army Corps of Engineers approved new developer permits, granted for the PortAmerica project in 1988.
+
+::: {#fig-ferris layout="[[1,1],[1]]"}
+![View from Virginia.](https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/National_Harbor_Aerial718.jpg/440px-National_Harbor_Aerial718.jpg){#fig-main}
+
+![View from the air.](https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/National_Harbor_Aerial420.jpg/440px-National_Harbor_Aerial420.jpg){#fig-far}
+
+![View from the promenade.](https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Capital_Wheel_at_National_Harbor%252C_Maryland%252C_USA.jpg/500px-Capital_Wheel_at_National_Harbor%252C_Maryland%252C_USA.jpg){#fig-close}
+
+Three views of the ferris wheel.
+:::
+
+Here's a big version of one of those images!
+
+::: column-screen
+![A BIG view from the promenade.](https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Capital_Wheel_at_National_Harbor%252C_Maryland%252C_USA.jpg/2560px-Capital_Wheel_at_National_Harbor%252C_Maryland%252C_USA.jpg)
+:::

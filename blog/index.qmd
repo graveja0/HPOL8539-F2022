@@ -1,0 +1,12 @@
+---
+title: Course Blog
+subtitle: Additional content and tips 
+listing:
+  sort: "date desc"
+  contents: "posts"
+  sort-ui: false
+  filter-ui: false
+  categories: true
+  feed: true
+search: false
+---
