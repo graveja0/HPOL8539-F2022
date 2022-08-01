@@ -1,0 +1,198 @@
+[
+  {
+    "objectID": "ignore/meta-structure-equations.html",
+    "href": "ignore/meta-structure-equations.html",
+    "title": "Fixed, Random and Correlated Random Effects",
+    "section": "",
+    "text": "Add unobserved heterogeneity\n\\[\nY_i = \\mathbf{X}_i'\\beta + \\tau D_i + U_i +\\epsilon_i \\quad \\quad \\quad Eq. 2\n\\]\n\n\nMove to panel data setting\n\\[\nY_{it} = \\mathbf{X}_{it}'\\beta + \\tau D_{it} + U_i + \\epsilon_i \\quad \\quad \\quad Eq. 3\n\\]\n\n\nPooled OLS\n\\[\n\\begin{aligned}\nY_{it} &=\\mathbf{X}_{it}'\\beta + \\tau D_{it} + \\overbrace{U_i + \\epsilon_{it}}^{\\eta_{it}} \\\\\n&= \\mathbf{X}_{it}'\\beta + \\tau D_{it}  + \\eta_{it} \\quad \\quad \\quad Eq. 4\n\\end{aligned}\n\\]\n\n\nRandom Effects\n\\[\n\\begin{aligned}\nY_{it} &= \\mathbf{X}_{it}'\\beta + \\tau D_{it}  + \\overbrace{U_i + \\epsilon_{it}}^{v_it} \\\\\nY_{it} &= \\mathbf{X}_{it}'\\beta + \\tau D_{it}  + v_{it} \\quad \\quad \\quad Eq. 5 \\\\\nv_{it} &= U_i + \\epsilon_{it} \\\\\nU_i &\\sim N(0,\\sigma^2_u)\n\\end{aligned}\n\\]\n\n\nDummy Variable Regression\n\\[\nY_{it} = \\mathbf{X}_{it}'\\beta + \\tau D_i + \\mathbf{U}_i + \\epsilon_{it} \\quad \\quad \\quad Eq. 6\n\\]\n\n\nFirst Differences\n\\[\n\\begin{aligned}\nY_{it} &= \\mathbf{X}_{it}'\\beta + \\tau D_{it} + U_i + \\epsilon_{it} \\\\\nY_{i,t-1} &=  \\mathbf{X}_{i,t-1}'\\beta + \\tau D_{i,t-1} + U_i + \\epsilon_{i,t-1} \\\\\nY_{it} - Y_{i,t-1} &= (\\mathbf{X}_{it} - \\mathbf{X}_{i,t-1})'\\beta + \\tau (D_{it} - D_{i,t-1}) + (U_i - U_i) +  (\\epsilon_{it} - \\epsilon_{i,t-1}) \\\\\n&= (\\mathbf{X}_{it} - \\mathbf{X}_{i,t-1})'\\beta + \\tau (D_{it} - D_{i,t-1}) + (\\epsilon_{it} - \\epsilon_{i,t-1}) \\quad \\quad \\quad Eq. 7\n\\end{aligned}\n\\]\n\n\nDemeaning\n\\[\n\\begin{align}\n(Y_{it}-\\bar{Y_i}) &= (\\mathbf{X}_{it}-\\bar{\\mathbf{X}_i})'\\beta + \\tau (D_{it}-\\bar{D_i}) + (U_i - \\bar{U_i)} + (\\epsilon_{it} - \\bar{\\epsilon_i}) \\\\\n&= (\\mathbf{X}_{it}-\\bar{\\mathbf{X}_i})'\\beta + \\tau (D_{it}-\\bar{D_i})  + (\\epsilon_{it} - \\bar{\\epsilon_i}) \\quad \\quad \\quad Eq. 8\n\\end{align}\n\\]\n\n\nQuasi Demeaning\n\\[\n\\begin{align}\n(Y_{it}-\\theta \\bar{Y_i}) = (\\mathbf{X}_{it}-\\theta \\bar{\\mathbf{X}_i})'\\beta + \\tau (D_{it}-\\theta \\bar{D_i})  + (\\epsilon_{it} - \\theta \\bar{\\epsilon_i}) \\quad \\quad \\quad Eq. 9\n\\end{align}\n\\]\nnote: need to define theta still.\n\n\nCorrelated Random Effects\n\\[\n\\begin{align}\nY_{it} &= \\mathbf{X}_{it}'\\beta + \\tau D_i + \\overbrace{U_i}^{U_i = \\bar{\\mathbf{X}_i}'\\gamma+\\omega_i} + \\epsilon_{it} \\\\\n&= \\mathbf{X}_{it}'\\beta + \\tau D_i + \\bar{\\mathbf{X}_i}'\\gamma+ \\underbrace{\\omega_i + \\epsilon_{it}}_{v_{it}} \\\\\nv_{it} &= \\omega_i + \\epsilon_{it} \\\\\n\\omega_i &\\sim N(0,\\sigma^2_u\n\\end{align}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#basic-model",
+    "href": "ignore/panel-data-full-animation.html#basic-model",
+    "title": "Panel Data",
+    "section": "Basic Model",
+    "text": "Basic Model\n\nA"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#basic-model-1",
+    "href": "ignore/panel-data-full-animation.html#basic-model-1",
+    "title": "Panel Data",
+    "section": "Basic Model",
+    "text": "Basic Model\n\nA+B\nA"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#basic-model-2",
+    "href": "ignore/panel-data-full-animation.html#basic-model-2",
+    "title": "Panel Data",
+    "section": "Basic Model",
+    "text": "Basic Model\n\n\\[\nY_i = \\mathbf{X}_i'\\beta + \\tau D_i \\quad \\quad  + \\quad \\quad \\epsilon_i\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#basic-model-3",
+    "href": "ignore/panel-data-full-animation.html#basic-model-3",
+    "title": "Panel Data",
+    "section": "Basic Model",
+    "text": "Basic Model\n\n\\[\nY_i= \\underbrace{\\color{green}{\\mathbf{X}_i'\\beta} + \\color{green}{\\tau D_i}}_{\\text{Systematic component}} + \\underbrace{\\color{red}{\\epsilon_i}}_{\\text{Stochastic Component}}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#basic-model-4",
+    "href": "ignore/panel-data-full-animation.html#basic-model-4",
+    "title": "Panel Data",
+    "section": "Basic Model",
+    "text": "Basic Model\n\n\\[\nY_i= \\color{green}{\\mathbf{X}_i'\\beta} + \\color{green}{\\tau D_i} + \\color{red}{\\epsilon_i}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#add-unobserved-heterogeneity",
+    "href": "ignore/panel-data-full-animation.html#add-unobserved-heterogeneity",
+    "title": "Panel Data",
+    "section": "Add Unobserved Heterogeneity",
+    "text": "Add Unobserved Heterogeneity\n\\[\nY_i= \\color{green}{\\mathbf{X}_i'\\beta} + \\color{green}{\\tau D_i} + \\color{purple}{U_i} + \\color{red}{\\epsilon_i}\n\\]\n\n\\[\nY_i= \\color{green}{\\mathbf{X}_i'\\beta} + \\color{green}{\\tau D_i} + \\color{red}{\\epsilon_i}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#go-to-panel-data-setting",
+    "href": "ignore/panel-data-full-animation.html#go-to-panel-data-setting",
+    "title": "Panel Data",
+    "section": "Go To Panel Data Setting",
+    "text": "Go To Panel Data Setting\n\\[\nY_{it} = \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{grenn}{\\tau D_{it}} + \\color{purple}{U_i} + \\color{red}{\\epsilon_{it}}\n\\]\n\n\\[\nY_{it}= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{purple}{U_i} + \\color{red}{\\epsilon_{it}}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#pooled-ols",
+    "href": "ignore/panel-data-full-animation.html#pooled-ols",
+    "title": "Panel Data",
+    "section": "Pooled OLS",
+    "text": "Pooled OLS\n\\[\nY_{it}= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\overbrace{\\color{purple}{U_i} + \\color{red}{\\epsilon_{it}}}^{\\color{red}{\\eta_{it}}}\n\\]\n\n\\[\nY_{it} = \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{purple}{U_i} + \\color{red}{\\epsilon_{it}}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#pooled-ols-1",
+    "href": "ignore/panel-data-full-animation.html#pooled-ols-1",
+    "title": "Panel Data",
+    "section": "Pooled OLS",
+    "text": "Pooled OLS\n\\[\nY_{it}= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{red}{\\eta_{it}}\n\\]\n\n\\[\nY_{it}= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\overbrace{\\color{purple}{U_i} + \\color{red}{\\epsilon_i}}^{\\color{red}{\\eta_{it}}}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#random-effects",
+    "href": "ignore/panel-data-full-animation.html#random-effects",
+    "title": "Panel Data",
+    "section": "Random Effects",
+    "text": "Random Effects\n\\[\n\\begin{aligned}\nY_{it} &= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{red}{\\eta_{it}}\n\\end{aligned}\n\\]\n\n\\[\n\\begin{aligned}\n\\color{red}{\\eta_{it}} &= \\color{purple}{U_i} + \\color{red}{\\epsilon_{it}}\n\\end{aligned}\n\\]\n\n\n\\[\n\\begin{aligned}\n\\color{purple}{U_i} &\\sim N(0,\\sigma^2_u)\n\\end{aligned}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#dummy-variable-regression",
+    "href": "ignore/panel-data-full-animation.html#dummy-variable-regression",
+    "title": "Panel Data",
+    "section": "Dummy Variable Regression",
+    "text": "Dummy Variable Regression\n\\[\nY_{it}= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{purple}{U_i} + \\color{red}{\\epsilon_{it}}\n\\]\n\n\\[\n\\begin{aligned}\nY_{it} &= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{red}{\\eta_{it}}\n\\end{aligned}\n\\]\n\\[\n\\begin{aligned}\n\\color{red}{\\eta_{it}} &= \\color{purple}{U_i} + \\color{red}{\\epsilon_{it}}\n\\end{aligned}\n\\]\n\\[\n\\begin{aligned}\n\\color{purple}{U_i} &\\sim N(0,\\sigma^2_u)\n\\end{aligned}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#dummy-variable-regression-1",
+    "href": "ignore/panel-data-full-animation.html#dummy-variable-regression-1",
+    "title": "Panel Data",
+    "section": "Dummy Variable Regression",
+    "text": "Dummy Variable Regression\n\\[\nY_{it}= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{green}{\\mathbf{U_i}} + \\color{red}{\\epsilon_{it}}\n\\]\n\n\\[\nY_{it}= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{purple}{U_i} + \\color{red}{\\epsilon_{it}}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#first-differences",
+    "href": "ignore/panel-data-full-animation.html#first-differences",
+    "title": "Panel Data",
+    "section": "First Differences",
+    "text": "First Differences\n\n\\[\nY_{it}= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{green}{\\mathbf{U_i}} + \\color{red}{\\epsilon_{it}}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#first-differences-1",
+    "href": "ignore/panel-data-full-animation.html#first-differences-1",
+    "title": "Panel Data",
+    "section": "First Differences",
+    "text": "First Differences\n\n\\[\nY_{it}= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{purple}{U_i} + \\color{red}{\\epsilon_{it}}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#first-differences-2",
+    "href": "ignore/panel-data-full-animation.html#first-differences-2",
+    "title": "Panel Data",
+    "section": "First Differences",
+    "text": "First Differences\n\\[\nY_{it}= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{purple}{U_i} + \\color{red}{\\epsilon_{it}}\n\\]\n\n\\[\nY_{i,t-1}= \\color{green}{\\mathbf{X}_{i,t-1}'\\beta} + \\color{green}{\\tau D_{i,t-1}} + \\color{purple}{U_i} + \\color{red}{\\epsilon_{i,t-1}}\n\\]\n\n\n\\[\n\\(Y_{it} - Y_{i,t-1}) = \\color{green}{(\\mathbf{X}_{it}-\\mathbf{X}_{i,t-1})'\\beta} + \\color{green}{\\tau (D_{it}-D_{i,t-1})} + \\color{purple}{U_i} + \\color{red}{(\\epsilon_{it}-\\epsilon_{i,t-1})}\n\\]"
+  },
+  {
+    "objectID": "ignore/panel-data-full-animation.html#first-differences-3",
+    "href": "ignore/panel-data-full-animation.html#first-differences-3",
+    "title": "Panel Data",
+    "section": "First Differences",
+    "text": "First Differences\n\\[\n\\Delta Y_{it}= \\color{green}{\\Delta \\mathbf{X}_{it}'\\beta} + \\color{green}{\\Delta \\tau D_{it}} + \\color{purple}{U_i} + \\color{red}{\\Delta \\epsilon_{it}}\n\\]\n\n\\[\nY_{it}= \\color{green}{\\mathbf{X}_{it}'\\beta} + \\color{green}{\\tau D_{it}} + \\color{purple}{U_i} + \\color{red}{\\epsilon_{it}}\n\\]\n\\[\nY_{i,t-1}= \\color{green}{\\mathbf{X}_{i,t-1}'\\beta} + \\color{green}{\\tau D_{i,t-1}} + \\color{purple}{U_i} + \\color{red}{\\epsilon_{i,t-1}}\n\\]\n\\[\n(Y_{it} - Y_{i,t-1}) = \\color{green}{(\\mathbf{X}_{it}-\\mathbf{X}_{i,t-1})'\\beta} + \\color{green}{\\tau (D_{it}-D_{i,t-1})} + \\color{purple}{U_i} + \\color{red}{(\\epsilon_{it}-\\epsilon_{i,t-1})}\n\\]"
+  },
+  {
+    "objectID": "ignore/wooldridge-extended-twfe-did.html",
+    "href": "ignore/wooldridge-extended-twfe-did.html",
+    "title": "wooldridge-did",
+    "section": "",
+    "text": "library(\"did\")\nlibrary(\"broom\")\nlibrary(\"fixest\")\nlibrary(\"ggplot2\")\nlibrary(\"data.table\")\n\nsimulation6 = function() {\n  dat = CJ(firm = 1:1000, year = 1980:2015)     [\n    , time_fe := rnorm(1, sd = .5), by = \"year\"][\n    , unit_fe := rnorm(1, sd = .5), by = \"firm\"][\n    , state := sample(1:50, 1), by = \"firm\"    ]\n\n  setkey(dat, state, firm, year)\n\n  treatment_groups = data.table(\n    state = c(1, 18, 35),\n    cohort = c(1989, 1998, 2007),\n    hat_gamma = c(.5, .3, .1))\n  dat = treatment_groups[dat, roll = TRUE, on = \"state\"]\n\n  dat                                                [\n    , treat  := as.numeric(year >= cohort)          ][\n    , gamma  := rnorm(.N, mean = hat_gamma, sd = .2)][\n    , tau    := fifelse(treat == 1, gamma, 0)       ][\n    , cumtau := cumsum(tau), by = \"firm\"            ][\n    , error  := rnorm(.N, 0, .5)                    ][\n    , y := unit_fe + time_fe + cumtau + error       ][\n    , time_to_treat := year - cohort                ]\n\n  return(dat)\n}\n\ndat = simulation6()\n\n\netwfe = feols(y ~ treat : factor(time_to_treat) : factor(cohort) | firm + year, data = dat)\n\nVariables 'treat:factor(time_to_treat)-27:factor(cohort)1989', 'treat:factor(time_to_treat)-26:factor(cohort)1989' and 106 others have been removed because of collinearity (see $collin.var).\n\n# Clean the results\netwfe = as.data.table(tidy(etwfe))\netwfe = etwfe[\n    , .(term = term, etwfe = estimate)][\n    , group := as.numeric(gsub(\".*cohort.\", \"\", term))][\n    , year := as.numeric(gsub(\".*time_to_treat.(\\\\d+).*\", \"\\\\1\", term)) + group][\n    , .(group, year, etwfe)]\n\n\ncsa = att_gt(\n    yname = \"y\",\n    gname = \"cohort\",\n    idname = \"firm\",\n    tname = \"year\",\n    control_group = \"notyettreated\",\n    data = dat)\n\n# Clean the results\ncsa = data.table(group = csa$group, year = csa$t, csa = csa$att)\n\n\n# merge the TWFE and CSA results\nresults = merge(etwfe, csa, by = c(\"group\", \"year\"))\ncolnames(results) = c(\"Cohort\", \"Year\", \"TWFE w/ interactions\", \"CSA (2021)\")\nresults[, Cohort := factor(Cohort)]\n\ndat_plot = melt(results, id.vars = c(\"Cohort\", \"Year\"))\nggplot(dat_plot, aes(Year, value, color = variable, linetype = Cohort)) +\n  geom_line(size = 1.4) +\n  theme_minimal() +\n  labs(x = \"Year\", y = \"ATT\", color = \"Estimator\", linetype = \"Cohort\")\n\n\n\n\n\nggplot(results, aes(`TWFE w/ interactions`, `CSA (2021)`, color = Cohort)) +\n  geom_point(size = 2) +\n  geom_abline(intercept = 0, slope = 1) +\n  labs(title = \"On the 45 degree line, estimates of the group-time ATT\\nare identical under the two strategies.\") +\n  theme_minimal()"
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "HPOL8539-F2022",
+    "section": "",
+    "text": "This is a Quarto website."
+  },
+  {
+    "objectID": "blog/posts/post1.html",
+    "href": "blog/posts/post1.html",
+    "title": "A post!",
+    "section": "",
+    "text": "This is a post!"
+  },
+  {
+    "objectID": "blog/posts/post2.html",
+    "href": "blog/posts/post2.html",
+    "title": "second post",
+    "section": "",
+    "text": "National Harbor1 is a census-designated place (CDP) in Prince George’s County, Maryland, United States, located along the Potomac River near the Woodrow Wilson Bridge and just south of Washington. It originated as a 300-acre (1.2 km2) multi-use waterfront development. Per the 2020 census, the population was 5,509."
+  },
+  {
+    "objectID": "blog/posts/post2.html#development",
+    "href": "blog/posts/post2.html#development",
+    "title": "second post",
+    "section": "Development",
+    "text": "Development\nThe Gaylord National Resort & Convention Center at National Harbor opened on April 1, 2008 in Oxon Hill, Maryland. The site is being developed by Milton Peterson’s Peterson Companies with the project expected to cost well over $2 billion, and a construction time frame of 2007 to late 2014. As of April 2016 construction was continuing and the cost was set at $4 billion. In 2010, the development was designated as a census-designated place.\n\n\nReasons to go:\n\nFerris wheel\nFerris wheel\n\n\n\n\n\n\n\nGaylord National Resort\n\n\n\nBe prepared for the massive scale of the atrium which has a mini-version of a town inside it.\n\n\n\n\n\n\n\n\nDisney\nThe land developed for National Harbor was previously Salubria Plantation, built in 1827 by Dr. John H. Bayne. The plantation house burned down in 1981 and was offered for sale along with the surrounding land. The land was sold in 1984 and in 1994 was rezoned for mixed-use development. In the fall of 1997, the Maryland Department of the Environment and the Army Corps of Engineers approved new developer permits, granted for the PortAmerica project in 1988.\n\n\n\n\n\n\n\n(a) View from Virginia.\n\n\n\n\n\n\n\n(b) View from the air.\n\n\n\n\n\n\n\n\n\n(c) View from the promenade.\n\n\n\n\nFigure 1: Three views of the ferris wheel.\n\n\nHere’s a big version of one of those images!\n\n\n\n\nA BIG view from the promenade."
+  },
+  {
+    "objectID": "slides/introduction/lec_intro.html#introduction",
+    "href": "slides/introduction/lec_intro.html#introduction",
+    "title": "HPOL8539 Introduction",
+    "section": "Introduction",
+    "text": "Introduction\n\nWelcome to Advanced Program and Policy Evaluation!"
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "1 + 1\n\n[1] 2"
+  },
+  {
+    "objectID": "modules/d1-introduction.html",
+    "href": "modules/d1-introduction.html",
+    "title": "Introduction",
+    "section": "",
+    "text": "Introductions\nPrinciples for designing introductory data science curricula\n\nStart with cake 🍰\nCherish day one 🗓️\nSkip baby steps 🍼\nHide the veggies 🥦\nLeverage the ecosystem 🌲\n\nMeet the toolkit\n\nR and RStudio in RStudio Cloud\nQuarto\nGit and GitHub"
+  },
+  {
+    "objectID": "modules/d1-introduction.html#slides",
+    "href": "modules/d1-introduction.html#slides",
+    "title": "Introduction",
+    "section": "Slides",
+    "text": "Slides\nView slides in full screen"
+  },
+  {
+    "objectID": "modules/d1-introduction.html#exercises",
+    "href": "modules/d1-introduction.html#exercises",
+    "title": "Introduction",
+    "section": "Exercises",
+    "text": "Exercises\n\n\n\n\n\n\nExercise\n\n\n\n\n\n\n\n\n\n\n\n\nNo matching items"
+  },
+  {
+    "objectID": "schedule.html",
+    "href": "schedule.html",
+    "title": "Schedule",
+    "section": "",
+    "text": "Day 2\nWednesday August 31, 2022"
+  }
+]
