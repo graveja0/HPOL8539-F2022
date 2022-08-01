@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss  xmlns:atom="http://www.w3.org/2005/Atom" 
+      xmlns:media="http://search.yahoo.com/mrss/" 
+      xmlns:content="http://purl.org/rss/1.0/modules/content/" 
+      xmlns:dc="http://purl.org/dc/elements/1.1/" 
+      version="2.0">
+<channel>
+<title>Advanced Program and Policy Evaluation (HPOL8539)</title>
+<link>https://graveja0.github.io/HPOL8539-F2022/blog/index.html</link>
+<atom:link href="https://graveja0.github.io/HPOL8539-F2022/blog/index.xml" rel="self" type="application/rss+xml"/>
+<description></description>
+<generator>quarto-1.0.36</generator>
+<lastBuildDate>Mon, 01 Aug 2022 14:44:02 GMT</lastBuildDate>
+<item>
+  <title>A post!</title>
+  <link>https://graveja0.github.io/HPOL8539-F2022/blog/posts/post1.html</link>
+  <description><![CDATA[ 
+
+
+
+<p>This is a post!</p>
+
+
+
+ ]]></description>
+  <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/post1.html</guid>
+  <pubDate>Mon, 01 Aug 2022 14:44:02 GMT</pubDate>
+</item>
+<item>
+  <title>second post</title>
+  <link>https://graveja0.github.io/HPOL8539-F2022/blog/posts/post2.html</link>
+  <description><![CDATA[ 
+
+
+
+<p>National Harbor<sup>1</sup> is a census-designated place (CDP) in Prince George’s County, Maryland, United States, located along the Potomac River near the Woodrow Wilson Bridge and just south of Washington. It originated as a 300-acre (1.2 km2) multi-use waterfront development. Per the 2020 census, the population was 5,509.</p>
+<section id="development" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="development">Development</h2>
+<p>The Gaylord National Resort &amp; Convention Center at National Harbor opened on April 1, 2008 in Oxon Hill, Maryland. The site is being developed by Milton Peterson’s Peterson Companies with the project expected to cost well over $2 billion, and a construction time frame of 2007 to late 2014. As of April 2016 construction was continuing and the cost was set at $4 billion. In 2010, the development was designated as a census-designated place.</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Reasons to go:</p>
+<ol type="1">
+<li>Ferris wheel</li>
+<li>Ferris wheel</li>
+</ol>
+</div></div><div class="callout-warning callout callout-style-simple no-icon callout-captioned">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-caption-container flex-fill">
+Gaylord National Resort
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Be prepared for the massive scale of the atrium which has a mini-version of a town <em>inside</em> it.</p>
+</div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="https://en.wikipedia.org/wiki/National_Harbor,_Maryland"><img src="https://graveja0.github.io/HPOL8539-F2022/blog/posts/https:/upload.wikimedia.org/wikipedia/commons/thumb/a/a5/GaylordNationalResort.jpg/500px-GaylordNationalResort.jpg" alt="A aerial photograph of Gaylord National Resort" width="400" height="400" class="figure-img"></a></p>
+</figure>
+</div>
+<section id="disney" class="level3 page-columns page-full">
+<h3 class="anchored" data-anchor-id="disney">Disney</h3>
+<p>The land developed for National Harbor was previously Salubria Plantation, built in 1827 by Dr.&nbsp;John H. Bayne. The plantation house burned down in 1981 and was offered for sale along with the surrounding land. The land was sold in 1984 and in 1994 was rezoned for mixed-use development. In the fall of 1997, the Maryland Department of the Environment and the Army Corps of Engineers approved new developer permits, granted for the PortAmerica project in 1988.</p>
+<div id="fig-ferris" class="quarto-layout-panel">
+<figure class="figure">
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-main" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="https://graveja0.github.io/HPOL8539-F2022/blog/posts/https:/upload.wikimedia.org/wikipedia/commons/thumb/7/7d/National_Harbor_Aerial718.jpg/440px-National_Harbor_Aerial718.jpg" class="img-fluid figure-img" data-ref-parent="fig-ferris"></p>
+<p></p><figcaption class="figure-caption">(a) View from Virginia.</figcaption><p></p>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 50.0%;justify-content: center;">
+<div id="fig-far" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="https://graveja0.github.io/HPOL8539-F2022/blog/posts/https:/upload.wikimedia.org/wikipedia/commons/thumb/a/af/National_Harbor_Aerial420.jpg/440px-National_Harbor_Aerial420.jpg" class="img-fluid figure-img" data-ref-parent="fig-ferris"></p>
+<p></p><figcaption class="figure-caption">(b) View from the air.</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="quarto-layout-row quarto-layout-valign-top">
+<div class="quarto-layout-cell quarto-layout-cell-subref" style="flex-basis: 100.0%;justify-content: center;">
+<div id="fig-close" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="https://graveja0.github.io/HPOL8539-F2022/blog/posts/https:/upload.wikimedia.org/wikipedia/commons/thumb/9/91/Capital_Wheel_at_National_Harbor%252C_Maryland%252C_USA.jpg/500px-Capital_Wheel_at_National_Harbor%252C_Maryland%252C_USA.jpg" class="img-fluid figure-img" data-ref-parent="fig-ferris"></p>
+<p></p><figcaption class="figure-caption">(c) View from the promenade.</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+<p></p><figcaption class="figure-caption">Figure 1: Three views of the ferris wheel.</figcaption><p></p>
+</figure>
+</div>
+<p>Here’s a big version of one of those images!</p>
+<div class="column-screen">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="https://graveja0.github.io/HPOL8539-F2022/blog/posts/https:/upload.wikimedia.org/wikipedia/commons/thumb/9/91/Capital_Wheel_at_National_Harbor%252C_Maryland%252C_USA.jpg/2560px-Capital_Wheel_at_National_Harbor%252C_Maryland%252C_USA.jpg" class="img-fluid figure-img"></p>
+<p></p><figcaption class="figure-caption">A BIG view from the promenade.</figcaption><p></p>
+</figure>
+</div>
+</div>
+
+
+</section>
+</section>
+
+
+<div id="quarto-appendix" class="default"><section class="footnotes footnotes-end-of-document"><h2 class="anchored quarto-appendix-heading">Footnotes</h2>
+
+<ol>
+<li id="fn1"><p>the text content and images are all from the Wikipedia page linked above.↩︎</p></li>
+</ol>
+</section></div> ]]></description>
+  <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/post2.html</guid>
+  <pubDate>Mon, 01 Aug 2022 14:44:02 GMT</pubDate>
+  <media:content url="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/GaylordNationalResort.jpg/500px-GaylordNationalResort.jpg" medium="image" type="image/jpeg"/>
+</item>
+</channel>
+</rss>

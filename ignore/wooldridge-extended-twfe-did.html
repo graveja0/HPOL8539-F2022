@@ -227,7 +227,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>etwfe <span class="ot">=</span> <span class="fu">feols</span>(y <span class="sc">~</span> treat <span class="sc">:</span> <span class="fu">factor</span>(time_to_treat) <span class="sc">:</span> <span class="fu">factor</span>(cohort) <span class="sc">|</span> firm <span class="sc">+</span> year, <span class="at">data =</span> dat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Variables 'treat:factor(time_to_treat)-27:factor(cohort)1989', 'treat:factor(time_to_treat)-26:factor(cohort)1989' and 106 others have been removed because of collinearity (see $collin.var).</code></pre>
+<pre><code>Variables 'treat:factor(time_to_treat)-27:factor(cohort)1989', 'treat:factor(time_to_treat)-26:factor(cohort)1989' and 115 others have been removed because of collinearity (see $collin.var).</code></pre>
 </div>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean the results</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>etwfe <span class="ot">=</span> <span class="fu">as.data.table</span>(<span class="fu">tidy</span>(etwfe))</span>
