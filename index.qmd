@@ -1,11 +1,30 @@
 ---
 title: "HPOL8539-F2022"
+listing:
+  - id: schedule
+    contents:
+      - schedule.qmd
 ---
 
-This is a Quarto website.
+::: {#schedule}
+:::
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
 
-```{r}
-1 + 1
+<!-- https://github.com/rstudio-conf-2022/teach-ds -->
+<!-- https://rstudio-conf-2022.github.io/teach-ds/ -->
+<!-- https://github.com/rstudio-conf-2022/teach-ds-learnr -->
+<!-- https://mine-cetinkaya-rundel.github.io/teach-r-online/ -->
+<!-- https://github.com/rstudio-education/dsbox -->
+<!-- https://github.com/sta210-s22/website -->
+<!-- https://cran.r-project.org/web/packages/colorspace/vignettes/colorspace.html -->
+
+
+```{r, eval = FALSE}
+#| echo: false
+#| message: false
+#| warning: false
+
+  
+install.packages(c("learnr", "gradethis", "sortable", "learnrhash"))
 ```
+

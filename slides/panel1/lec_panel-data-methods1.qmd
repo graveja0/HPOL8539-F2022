@@ -1,0 +1,7 @@
+---
+title: "Panel Data Methods I"
+subtitle: "Fixed, Random and Correlated Random Effects"
+format: revealjs
+---
+
+# Panel data!

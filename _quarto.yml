@@ -13,16 +13,10 @@ website:
     collapse-level: 1
     contents:
       - index.qmd
-      - text: "Workshop Blog"
+      - text: "Schedule"
+        href: schedule.qmd
+      - text: "Blog"
         href: blog/index.qmd
-      - section: "Tools and Applications"
-        contents:
-          - text: Decision Tree Drawing Tool
-            href: https://dare.shinyapps.io/tree/
-          - text: Probabilistic Sensitivity Analysis (PSA)
-            href: https://vanderbilt-health-economic-modeling.shinyapps.io/probabilistic-sensitivity-analysis/
-execute:
-  freeze: auto  # re-render only when source changes
 
 format:
   html:

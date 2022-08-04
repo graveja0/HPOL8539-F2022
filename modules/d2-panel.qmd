@@ -1,0 +1,34 @@
+---
+title: "Panel Data Methods"
+subtitle: "8:30 - 10:30"
+author: "John Graves"
+date: "2022-08-31"
+listing:
+  - id: exercises
+    contents:
+      - text: test
+    type: table
+    fields: [title]
+    field-display-names:
+      title: "Exercise"
+    sort: [filename]
+    sort-ui: false
+    filter-ui: false
+    image-placeholder: images/exercise.png
+tbl-colwidths: [5,20,75]
+---
+
+## Outline
+
+- Introductions
+- Item Two 
+
+## Slides
+
+[View slides in full screen](../slides/panel1/lec_panel-data-methods1.qmd)
+
+
+## Exercises
+
+::: {#exercises}
+:::
