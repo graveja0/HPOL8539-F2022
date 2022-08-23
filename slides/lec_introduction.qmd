@@ -1,0 +1,12 @@
+---
+title: "Introduction and Course Details"
+author: "John Graves"
+format: 
+  revealjs:
+    footer: |
+      [Back to Website](../index.html)
+---
+
+## First Slide!
+
+Content

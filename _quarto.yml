@@ -1,7 +1,7 @@
 project:
   type: website
   resources:
-    - "*.xlsx"
+    - "current-syllabus.pdf"
 
 website:
   title: "Advanced Program and Policy Evaluation (HPOL8539)"
@@ -13,10 +13,17 @@ website:
     collapse-level: 1
     contents:
       - index.qmd
-      - text: "Schedule"
-        href: schedule.qmd
+      - section: "Slides"
+        contents:
+          - slides/lec_introduction.qmd
       - text: "Blog"
         href: blog/index.qmd
+      - section: "Useful Links"
+        contents:
+          - text: Causal Inference - The Mixtape (Cunningham)
+            href: https://mixtape.scunning.com/
+          - text: The Effect (Huntington-Klein)
+            href: https://theeffectbook.net/
 
 format:
   html:
