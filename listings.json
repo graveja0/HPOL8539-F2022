@@ -1,16 +1,12 @@
 [
   {
     "listing": "/index.html",
-    "items": [
-      "/schedule.html"
-    ]
+    "items": []
   },
   {
     "listing": "/blog/index.html",
     "items": [
-      "/blog/posts/post1.html",
-      "/blog/posts/post2.html",
-      "/blog/posts/did-revisited.html"
+      "/blog/posts/post1.html"
     ]
   },
   {
@@ -20,12 +16,5 @@
   {
     "listing": "/modules/d1-introduction.html",
     "items": []
-  },
-  {
-    "listing": "/schedule.html",
-    "items": [
-      "/modules/d1-introduction.html",
-      "/modules/d2-panel.html"
-    ]
   }
 ]

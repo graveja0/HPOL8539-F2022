@@ -65,9 +65,9 @@ ul.task-list{list-style: none;}
     }
 
     const options = {
-      valueNames: ['listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      valueNames: ['listing-title','listing-author','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
       
-      searchColumns: ["listing-title","listing-author","listing-image","listing-description","listing-categories"],
+      searchColumns: ["listing-title","listing-author","listing-description","listing-categories"],
     };
 
     window['quarto-listings'] = window['quarto-listings'] || {};
@@ -116,26 +116,61 @@ ul.task-list{list-style: none;}
     <ul class="list-unstyled mt-1">
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../index.html" class="sidebar-item-text sidebar-link">HPOL8539-F2022</a>
+  <a href="../index.html" class="sidebar-item-text sidebar-link">Advanced Program and Policy Evaluation</a>
   </div>
 </li>
-        <li class="sidebar-item">
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">Slides</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../schedule.html" class="sidebar-item-text sidebar-link">Schedule</a>
+  <a href="../slides/lec_introduction.html" class="sidebar-item-text sidebar-link">Introduction and Course Details</a>
   </div>
 </li>
+      </ul>
+  </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../blog/index.html" class="sidebar-item-text sidebar-link active">Blog</a>
   </div>
 </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">Useful Links</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://github.com/graveja0/HPOL8539-F2022/raw/main/current-syllabus.pdf" class="sidebar-item-text sidebar-link">Current Syllabus</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://mixtape.scunning.com/" class="sidebar-item-text sidebar-link">Causal Inference - The Mixtape (Cunningham)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://theeffectbook.net/" class="sidebar-item-text sidebar-link">The Effect (Huntington-Klein)</a>
+  </div>
+</li>
+      </ul>
+  </li>
     </ul>
     </div>
 </nav>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(3)</span></div></div><div class="quarto-margin-footer"><div class="margin-footer-item">
+    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(1)</span></div></div><div class="quarto-margin-footer"><div class="margin-footer-item">
 <p><img src="vu-logo.png" class="img-fluid"></p>
 </div></div></div>
 <!-- main -->
@@ -165,13 +200,6 @@ ul.task-list{list-style: none;}
 <div class="quarto-listing quarto-listing-container-default" id="listing-listing">
 <div class="list quarto-listing-default">
 <div class="quarto-post image-right" data-index="0" data-listing-file-modified-sort="1659364706512" data-listing-reading-time-sort="0.02">
-<div class="thumbnail">
-<a href="../blog/posts/post1.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="../blog/posts/post1.html"></a></p>
-</div>
 <div class="body">
 <a href="../blog/posts/post1.html">
 <h3 class="no-anchor listing-title">
@@ -187,52 +215,6 @@ This is a post!
 </div>
 <div class="metadata">
 <a href="../blog/posts/post1.html"> </a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-listing-file-modified-sort="1659364706512" data-listing-reading-time-sort="1.4">
-<div class="thumbnail">
-<p><a href="../blog/posts/post2.html"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/GaylordNationalResort.jpg/500px-GaylordNationalResort.jpg" class="thumnail-image"> </a></p>
-</div>
-<div class="body">
-<a href="../blog/posts/post2.html">
-<h3 class="no-anchor listing-title">
-second post
-</h3>
-<div class="listing-subtitle">
-
-</div>
-<div class="listing-description">
-National Harbor<sup>1</sup> is a census-designated place (CDP) in Prince George’s County, Maryland, United States, located along the Potomac River near the Woodrow Wilson Bridge and just south of Washington. It originated as a 300-acre (1.2 km2) multi-use waterfront development. Per the 2020 census, the population was 5,509.
-</div>
-</a>
-</div>
-<div class="metadata">
-<a href="../blog/posts/post2.html"> </a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-listing-file-modified-sort="1660940291029" data-listing-reading-time-sort="22.84">
-<div class="thumbnail">
-<a href="../blog/posts/did-revisited.html">
-<div class="thumbnail-image">
-
-</div>
-</a><p><a href="../blog/posts/did-revisited.html"></a></p>
-</div>
-<div class="body">
-<a href="../blog/posts/did-revisited.html">
-<h3 class="no-anchor listing-title">
-Simulate DID Data
-</h3>
-<div class="listing-subtitle">
-
-</div>
-<div class="listing-description">
-<img src="did-revisited_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid" width="672">
-</div>
-</a>
-</div>
-<div class="metadata">
-<a href="../blog/posts/did-revisited.html"> </a>
 </div>
 </div>
 </div>
