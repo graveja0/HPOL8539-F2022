@@ -130,7 +130,7 @@
     "href": "index.html",
     "title": "Advanced Program and Policy Evaluation",
     "section": "",
-    "text": "Schedule\n    \n    \n  \n  \n    \n      \n      \n      \n    \n  \n  \n    \n      August 24, 2022\n    \n    8:45 AM\n10:45 AM\nCourse Introduction and Mechanics\n    \n      August 30, 2022\n    \n    8:45 AM\n10:45 AM\nSimulation as a Guide for Study Design, Estimation, and Inference\n    \n      September 7, 2022\n    \n    8:45 AM\n10:45 AM\nPanel Data Methods I: Fixed, Random, and Correlated Random Effects Estimation\n    \n      September 14, 2022\n    \n    8:45 AM\n10:45 AM\nPanel Data II: Difference-in-Differences Revisited\n    \n      September 21, 2022\n    \n    8:45 AM\n10:45 AM\nNext Generation Difference-in-Differences Estimators\n    \n      September 28, 2022\n    \n    8:45 AM\n10:45 AM\nNonlinear Differences-in-Differences and Functional Form Considerations\n    \n      October 5, 2022\n    \n    8:45 AM\n10:45 AM\nInterrupted Time Series vs. Differences-in-Differences (Guest Lecture by Dr. Carrie Fry)\n    \n      October 12, 2022\n    \n    8:45 AM\n10:45 AM\nNO CLASS\n    \n      October 19, 2022\n    \n    8:45 AM\n8:45 AM\nPeer Review Writeup Due\n    8:45 AM\n10:45 AM\nNO CLASS\n    \n      October 26, 2022\n    \n    8:45 AM\n10:45 AM\nStatistical Inference for Policy Evaluation\n    \n      November 2, 2022\n    \n    8:45 AM\n10:45 AM\nSynthetic Control Methods\n    \n      November 9, 2022\n    \n    8:45 AM\n10:45 AM\nQuantile Treatment Effects and Changes-in-Changes\n    \n      November 16, 2022\n    \n    8:45 AM\n10:45 AM\nPartial Identification Methods: Treatment Effect Bounds\n    \n      December 1, 2022\n    \n    8:45 AM\n10:45 AM\nResearch Project Organization, Execution and Workflows: Best Practices\n    \n      December 8, 2022\n    \n    8:45 AM\n8:45 AM\nMethods Writeup Due\n    8:45 AM\n10:45 AM\nStudent Methods Presentations\n  \n  \n  \n\n\n\n\n\n\n\n\n\n\n\n\n\nNo matching items"
+    "text": "Schedule\n    \n    \n  \n  \n    \n      \n      \n      \n    \n  \n  \n    \n      August 24, 2022\n    \n    8:45 AM\n10:45 AM\nCourse Introduction and Mechanics\n    \n      August 30, 2022\n    \n    8:45 AM\n10:45 AM\nSimulation as a Guide for Study Design, Estimation, and Inference\n    \n      September 7, 2022\n    \n    8:45 AM\n10:45 AM\nPanel Data Methods I: Fixed, Random, and Correlated Random Effects Estimation\n    \n      September 14, 2022\n    \n    8:45 AM\n10:45 AM\nPanel Data II: Difference-in-Differences Revisited\n    \n      September 21, 2022\n    \n    8:45 AM\n10:45 AM\nNext Generation Difference-in-Differences Estimators\n    \n      September 28, 2022\n    \n    8:45 AM\n10:45 AM\nNonlinear Differences-in-Differences and Functional Form Considerations\n    \n      October 5, 2022\n    \n    8:45 AM\n10:45 AM\nInterrupted Time Series vs. Differences-in-Differences (Guest Lecture by Dr. Carrie Fry)\n    \n      October 12, 2022\n    \n    8:45 AM\n10:45 AM\nNO CLASS\n    \n      October 19, 2022\n    \n    8:45 AM\n8:45 AM\nPeer Review Writeup Due\n    8:45 AM\n10:45 AM\nNO CLASS\n    \n      October 26, 2022\n    \n    8:45 AM\n10:45 AM\nStatistical Inference for Policy Evaluation\n    \n      November 2, 2022\n    \n    8:45 AM\n10:45 AM\nSynthetic Control Methods\n    \n      November 9, 2022\n    \n    8:45 AM\n10:45 AM\nQuantile Treatment Effects and Changes-in-Changes\n    \n      November 16, 2022\n    \n    8:45 AM\n8:45 AM\nDraft Methods Writeup Due to Peer Reviewer\n    8:45 AM\n10:45 AM\nPartial Identification Methods: Treatment Effect Bounds\n    \n      December 1, 2022\n    \n    8:45 AM\n8:45 AM\nYour Review of Your Peer's Methods Writeup is Due Back to Them\n    8:45 AM\n10:45 AM\nResearch Project Organization, Execution and Workflows: Best Practices\n    \n      December 8, 2022\n    \n    8:45 AM\n8:45 AM\nFinal Methods Writeup Due to John\n    8:45 AM\n10:45 AM\nStudent Methods Presentations\n  \n  \n  \n\n\n\n\n\n\n\n\n\n\n\n\n\nNo matching items"
   },
   {
     "objectID": "blog/posts/post1.html",
@@ -182,11 +182,144 @@
     "text": "Compare\n\nest1a %>% \n  bind_rows(est1b) %>% \n  bind_rows(est_cs6) %>% \n  ggplot(aes(x = year, y = att, colour = factor(group), pch = estimator)) + \n  geom_point() +\n  #ggthemes::theme_clean() +\n  ggsci::scale_color_aaas() \n\n\n\nest2a %>% \n  bind_rows(est2b) %>% \n  bind_rows(est2c) %>% \n  bind_rows(est2d) %>% \n  bind_rows(est_cs6b) %>% \n  ggplot(aes(x = year, y = att, colour = factor(group), pch = estimator)) + \n  geom_point() +\n  #theme_clean() +\n  ggsci::scale_color_aaas() +\n  #scale_shape_manual(values =c(19,4,3)) +\n  facet_grid(~group)\n\n\n\n\nSource\nReview paper\nWooldridge"
   },
   {
-    "objectID": "slides/lec_introduction.html#first-slide",
-    "href": "slides/lec_introduction.html#first-slide",
+    "objectID": "slides/lec_introduction.html#welcome-to-hpol8539",
+    "href": "slides/lec_introduction.html#welcome-to-hpol8539",
     "title": "Introduction and Course Details",
-    "section": "First Slide!",
-    "text": "First Slide!\nContent\n\n\nBack to Website"
+    "section": "Welcome to HPOL8539!",
+    "text": "Welcome to HPOL8539!\n\n\nYou are the inaugural cohort!\nCourse grew out of growing need to expand and de-mystify the “toolkit” of program and policy evaluation methods."
+  },
+  {
+    "objectID": "slides/lec_introduction.html#the-dreaded-ice-breaker-questions",
+    "href": "slides/lec_introduction.html#the-dreaded-ice-breaker-questions",
+    "title": "Introduction and Course Details",
+    "section": "The Dreaded Ice Breaker Questions",
+    "text": "The Dreaded Ice Breaker Questions\n\n\nWhat research topics are you interested in / working on?\nWhat method vexes you the most?\nWhat do you hope to take away from this course?"
+  },
+  {
+    "objectID": "slides/lec_introduction.html#welcome-to-hpol8539-1",
+    "href": "slides/lec_introduction.html#welcome-to-hpol8539-1",
+    "title": "Introduction and Course Details",
+    "section": "Welcome to HPOL8539!",
+    "text": "Welcome to HPOL8539!\n\n\nLast 5 years have witnessed a disorienting advancement in methods for program and policy evaluation.\nThe social sciences (naively) thought you could take basic panel data methods (e.g., fixed effects regression) and apply them to any “flavor” of policy intervention:\n\nStaggered treatment adoption.\nScenarios with heterogeneous treatment effects."
+  },
+  {
+    "objectID": "slides/lec_introduction.html#policy-evaluation-methods-until-2019",
+    "href": "slides/lec_introduction.html#policy-evaluation-methods-until-2019",
+    "title": "Introduction and Course Details",
+    "section": "Policy Evaluation Methods Until 2019",
+    "text": "Policy Evaluation Methods Until 2019"
+  },
+  {
+    "objectID": "slides/lec_introduction.html#policy-evaluation-2019-2021",
+    "href": "slides/lec_introduction.html#policy-evaluation-2019-2021",
+    "title": "Introduction and Course Details",
+    "section": "Policy Evaluation: 2019-2021",
+    "text": "Policy Evaluation: 2019-2021"
+  },
+  {
+    "objectID": "slides/lec_introduction.html#policy-evaluation-2019-2021-1",
+    "href": "slides/lec_introduction.html#policy-evaluation-2019-2021-1",
+    "title": "Introduction and Course Details",
+    "section": "Policy Evaluation: 2019-2021",
+    "text": "Policy Evaluation: 2019-2021\nThe rest of us:\n\n\n\nvia GIPHY"
+  },
+  {
+    "objectID": "slides/lec_introduction.html#policy-evaluation-2022",
+    "href": "slides/lec_introduction.html#policy-evaluation-2022",
+    "title": "Introduction and Course Details",
+    "section": "Policy Evaluation: 2022",
+    "text": "Policy Evaluation: 2022\nEconometricians:\n\n\n\n\n\nvia GIPHY\n\n\n\n\n\nvia GIPHY"
+  },
+  {
+    "objectID": "slides/lec_introduction.html#policy-evaluation-2022-1",
+    "href": "slides/lec_introduction.html#policy-evaluation-2022-1",
+    "title": "Introduction and Course Details",
+    "section": "Policy Evaluation: 2022",
+    "text": "Policy Evaluation: 2022\nThe rest of us:\n\n\n\nvia GIPHY"
+  },
+  {
+    "objectID": "slides/lec_introduction.html#welcome-to-hpol8539-2",
+    "href": "slides/lec_introduction.html#welcome-to-hpol8539-2",
+    "title": "Introduction and Course Details",
+    "section": "Welcome to HPOL8539!",
+    "text": "Welcome to HPOL8539!\n\n\nThe goal of this course is to chart an intuitive path through recent advancements in policy evaluation methods.\nWe’ll spend quite a bit of time on DID and event study methods.\nWe’ll also cover some other important new estimation approaches.\nWe’ll also cover statistical inference issues."
+  },
+  {
+    "objectID": "slides/lec_introduction.html#guiding-principles-for-hpol8539",
+    "href": "slides/lec_introduction.html#guiding-principles-for-hpol8539",
+    "title": "Introduction and Course Details",
+    "section": "Guiding Principles for HPOL8539",
+    "text": "Guiding Principles for HPOL8539\n\n\nWe will take our time and adapt as needed.\nThe focus of the course will be on “proof by simulation.”\nBy the end of the course you will have access to materials on all the topics.\n\nDepending on our pacing, we may “decant” some of the methods from live class sessions to “blog” posts on the website."
+  },
+  {
+    "objectID": "slides/lec_introduction.html#a-typical-causal-inference-policy-evaluation-course",
+    "href": "slides/lec_introduction.html#a-typical-causal-inference-policy-evaluation-course",
+    "title": "Introduction and Course Details",
+    "section": "A Typical Causal Inference / Policy Evaluation Course",
+    "text": "A Typical Causal Inference / Policy Evaluation Course\n\n\nRead a bunch of econometrics before class.\nSee a bunch of econometrics flashed on slides during class.\nBang your head against the wall outside of class to code up and complete an assignment based on the econometrics."
+  },
+  {
+    "objectID": "slides/lec_introduction.html#how-this-class-will-operate",
+    "href": "slides/lec_introduction.html#how-this-class-will-operate",
+    "title": "Introduction and Course Details",
+    "section": "How This Class Will Operate",
+    "text": "How This Class Will Operate\n\n\nRead some econometrics before class.1\nCollectively bang our heads against the wall by coding up a “live” case study during class.\nAssignments will focus on rigorously peer reviewing an unpublished research study, and writing up a methods section for a grant proposal, dissertation proposal, or research project.\n\n\nCan’t avoid the econometrics entirely!"
+  },
+  {
+    "objectID": "slides/lec_introduction.html#how-this-class-will-operate-1",
+    "href": "slides/lec_introduction.html#how-this-class-will-operate-1",
+    "title": "Introduction and Course Details",
+    "section": "How This Class Will Operate",
+    "text": "How This Class Will Operate\n\n\nThere are no formal lectures. Only discussions, some white board work, and “live case studies.”\nI have “flipped” the class format in the sense that the hard-core econometrics will show up primarily in the readings."
+  },
+  {
+    "objectID": "slides/lec_introduction.html#guiding-principles-for-hpol8539-1",
+    "href": "slides/lec_introduction.html#guiding-principles-for-hpol8539-1",
+    "title": "Introduction and Course Details",
+    "section": "Guiding Principles for HPOL8539",
+    "text": "Guiding Principles for HPOL8539\n\nThe case studies will be done in R, but you will not need to be or become an advanced R programmer to do them!1\n\nI highly recommend becoming familiar with R / tidyverse methods, though!"
+  },
+  {
+    "objectID": "slides/lec_introduction.html#grading-and-assignments",
+    "href": "slides/lec_introduction.html#grading-and-assignments",
+    "title": "Introduction and Course Details",
+    "section": "Grading and Assignments",
+    "text": "Grading and Assignments\n\n\n40% of student assessment is based on direct observation and engagement.\n20% is basd on a written critique of a working paper that applies course methods to a current research topic (DUE: OCTOBER 19)"
+  },
+  {
+    "objectID": "slides/lec_introduction.html#grading-and-assignments-1",
+    "href": "slides/lec_introduction.html#grading-and-assignments-1",
+    "title": "Introduction and Course Details",
+    "section": "Grading and Assignments",
+    "text": "Grading and Assignments\n\n\nRemaining 40% is based on written methods section for a proposed research study you aim to undertake during your dissertation (or afterwards).\nThere are two choices for the structure of this assignment:\n\nAs an “Approach” section for an NIH/AHRQ grant application\nAs a methods section for a research study or PhD dissertation proposal.\nAlternative structures may be pursued after consultation with Dr. Graves, and with his permission."
+  },
+  {
+    "objectID": "slides/lec_introduction.html#grading-and-assignments-2",
+    "href": "slides/lec_introduction.html#grading-and-assignments-2",
+    "title": "Introduction and Course Details",
+    "section": "Grading and Assignments",
+    "text": "Grading and Assignments\n\n\nThree weeks in advance of the final written methods section being due (on December 8), you will submit a draft to a peer reviewer in the course (November 16)\nYou will also be a peer reviewer for another student’s work."
+  },
+  {
+    "objectID": "slides/lec_introduction.html#grading-and-assignments-3",
+    "href": "slides/lec_introduction.html#grading-and-assignments-3",
+    "title": "Introduction and Course Details",
+    "section": "Grading and Assignments",
+    "text": "Grading and Assignments\n\n\n15 percentage points (of the 40% total for the assignment) will be based on your written assessment of your peer’s work. This will be due to them (with a copy to me) on December 1.\nBased on this feedback, you will revise your methods writeup and submit a final version on December 8. This final writeup will be worth 25 percentage points (of the 40% total for the assignment).\nMake sense?"
+  },
+  {
+    "objectID": "slides/lec_introduction.html#grading-and-assignments-4",
+    "href": "slides/lec_introduction.html#grading-and-assignments-4",
+    "title": "Introduction and Course Details",
+    "section": "Grading and Assignments",
+    "text": "Grading and Assignments\n\n\nThe guiding principle for this assignment structure is to unearth much of the “hidden curriculum” that often goes untaught in graduate school.\n\nYou will be called upon often to be a peer reviewer.\nThe audience for a grant reviewer and for a peer reviewer are different and you should learn how to write for both.\nYou will often circulate your research to trusted peers for comments before formally submitting for publication."
+  },
+  {
+    "objectID": "slides/lec_introduction.html#questions-or-comments",
+    "href": "slides/lec_introduction.html#questions-or-comments",
+    "title": "Introduction and Course Details",
+    "section": "Questions or Comments?",
+    "text": "Questions or Comments?\n\nAre there additional methods you want to learn?\n\n\n\nBack to Website"
   },
   {
     "objectID": "about.html",
