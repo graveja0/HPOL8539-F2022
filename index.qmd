@@ -10,10 +10,11 @@ editor_options:
 
 
 ```{r, echo = FALSE}
+#| fig-align: center
 library(downloadthis)
 ## Link in Github repo
 download_link(
-  link = "https://github.com/graveja0/cea-workshop-vital/raw/main/case-studies/cs2_healthy-sick-dead.xlsx",
+  link = "https://github.com/graveja0/HPOL8539-F2022/raw/main/current-syllabus.pdf",
   button_label = "Current Syllabus",
   button_type = "primary",
   has_icon = TRUE,
