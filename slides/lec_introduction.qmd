@@ -7,6 +7,182 @@ format:
       [Back to Website](../index.html)
 ---
 
-## First Slide!
+## Welcome to HPOL8539!
 
-Content
+::: incremental
+- You are the inaugural cohort!
+- Course grew out of growing need to expand and de-mystify the "toolkit" of program and policy evaluation methods. 
+:::
+
+## The Dreaded Ice Breaker Questions
+
+::: incremental
+1. What research topics are you interested in / working on?
+2. What method vexes you the most?
+3. What do you hope to take away from this course?
+:::
+
+
+## Welcome to HPOL8539!
+
+::: incremental
+- Last 5 years have witnessed a **disorienting advancement** in methods for program and policy evaluation.
+- The social sciences (naively) thought you could take basic panel data methods (e.g., fixed effects regression) and apply them to any "flavor" of policy intervention:
+  1. Staggered treatment adoption.
+  2. Scenarios with heterogeneous treatment effects. 
+:::
+
+## Policy Evaluation Methods Until 2019
+
+![](media/did-profit-meme.jpeg)
+
+## Policy Evaluation: 2019-2021
+
+
+![](media/vandebilt-econometricians.jpeg)
+
+## Policy Evaluation: 2019-2021
+
+The rest of  us: 
+
+<iframe src="https://giphy.com/embed/9bXjoBk28pwnKLKoKb" width="320" height="480" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/fire-panic-9bXjoBk28pwnKLKoKb">via GIPHY</a></p>
+
+
+## Policy Evaluation: 2022
+
+Econometricians: 
+
+::: columns 
+
+::: {.column width="50%"}
+
+<iframe src="https://giphy.com/embed/WOliLGRz7TJtGAazTp" width="480" height="270" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/AppleTV-apple-tv-appletv-tamacti-WOliLGRz7TJtGAazTp">via GIPHY</a></p>
+
+:::
+
+::: {.column width="50%"}
+
+
+<iframe src="https://giphy.com/embed/Q3siJKQdEjjtZMpR8Q" width="480" height="326" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/governorofpoker-oprah-you-get-a-car-Q3siJKQdEjjtZMpR8Q">via GIPHY</a></p>
+
+:::
+
+:::
+
+## Policy Evaluation: 2022
+
+The rest of us: 
+
+<iframe src="https://giphy.com/embed/vVEjKbAUFtZzFzjYbz" width="480" height="270" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/the-weeknd-superbowl-vVEjKbAUFtZzFzjYbz">via GIPHY</a></p>
+
+## Welcome to HPOL8539!
+
+::: incremental
+- The goal of this course is to chart an intuitive path through recent advancements in policy evaluation  methods. 
+
+- We'll spend quite a bit of time on DID and event study methods. 
+
+- We'll also cover some other important new estimation approaches.
+
+- We'll also cover statistical inference issues. 
+
+::: 
+
+## Guiding Principles for HPOL8539
+
+::: incremental
+
+- We will take our time and adapt as needed.
+
+- The focus of the course will be on "proof by simulation." 
+
+- By the end of the course you will have access to materials on all the topics.
+
+  - Depending on our pacing, we may "decant" some of the methods from live class sessions to "blog" posts on the website. 
+:::
+  
+## A Typical Causal Inference / Policy Evaluation Course
+
+::: incremental
+1. Read a bunch of econometrics before class.
+2. See a bunch of econometrics flashed on slides during class.
+3. Bang your head against the wall outside of class to code up and complete an assignment based on the econometrics.
+:::
+
+## How This Class Will Operate
+
+::: incremental
+1. Read some econometrics before class.^[Can't avoid the econometrics entirely!]
+2. Collectively bang our heads against the wall by coding up a "live" case study during class. 
+3. Assignments will focus on rigorously peer reviewing an unpublished research study, and writing up a methods section for a grant proposal, dissertation proposal, or research project. 
+:::
+
+## How This Class Will Operate 
+
+::: incremental
+- There are no formal lectures.  Only discussions, some white board work, and "live case studies." 
+
+- I have "flipped" the class format in the sense that the hard-core econometrics will show up primarily in the readings. 
+:::
+
+## Guiding Principles for HPOL8539
+
+
+- The case studies will be done in R, *but you will not need to be or become an advanced R programmer to do them!*^[I highly recommend becoming familiar with R / tidyverse methods, though!]
+
+## Grading and Assignments
+
+::: incremental
+- 40% of student assessment is based on direct observation and engagement.
+
+- 20% is basd on a written critique of a working paper that applies course methods to a current research topic (DUE: OCTOBER 19)
+
+:::
+
+## Grading and Assignments
+
+::: incremental
+- Remaining 40% is based on  written methods section for a proposed research study you aim to undertake during your dissertation (or afterwards). 
+
+- There are two choices for the structure of this assignment:
+
+  1. As an “Approach” section for an NIH/AHRQ grant application
+  2. As a methods section for a research study or PhD dissertation proposal. 
+  3. Alternative structures may be pursued after consultation with Dr. Graves, and with his permission.  
+:::
+
+## Grading and Assignments
+
+::: incremental
+- Three weeks in advance of the final written methods section being due (on December 8), you will submit a draft to a peer reviewer in the course (November 16)
+
+- You will also be a peer reviewer for another student's work. 
+
+:::
+
+## Grading and Assignments
+
+::: incremental
+- 15 percentage points (of the 40% total for the assignment) will be based on your written assessment of your peer's work. This will be due to them (with a copy to me) on December 1. 
+
+- Based on this feedback, you will revise your methods writeup and submit a final version on December 8. This final writeup will be worth 25 percentage points (of the 40% total for the assignment).
+
+- Make sense? 
+:::
+
+## Grading and Assignments
+
+::: incremental
+- The guiding principle for this assignment structure is to unearth much of the "hidden curriculum" that often goes untaught in graduate school. 
+
+  1. You will be called upon often to be a peer reviewer.
+  2. The audience for a grant reviewer and for a peer reviewer are *different* and you should learn how to write for both. 
+  3. You will often circulate your research to trusted peers for comments before formally submitting for publication. 
+:::
+
+
+## Questions or Comments?
+
+- Are there additional methods you want to learn? 
+
+
