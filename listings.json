@@ -1,10 +1,21 @@
 [
   {
+    "listing": "/index.html",
+    "items": [
+      "/schedule.html"
+    ]
+  },
+  {
     "listing": "/blog/index.html",
     "items": [
       "/blog/posts/post1.html",
-      "/blog/posts/post2.html"
+      "/blog/posts/post2.html",
+      "/blog/posts/did-revisited.html"
     ]
+  },
+  {
+    "listing": "/modules/d2-panel.html",
+    "items": []
   },
   {
     "listing": "/modules/d1-introduction.html",
@@ -13,7 +24,8 @@
   {
     "listing": "/schedule.html",
     "items": [
-      "/modules/d1-introduction.html"
+      "/modules/d1-introduction.html",
+      "/modules/d2-panel.html"
     ]
   }
 ]

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Advanced Program and Policy Evaluation (HPOL8539) - wooldridge-did</title>
+<title>Advanced Program and Policy Evaluation (HPOL8539) - DID Estimators</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -127,7 +127,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <header id="quarto-header" class="headroom fixed-top">
   <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
     <div class="container-fluid d-flex justify-content-between">
-      <h1 class="quarto-secondary-nav-title">wooldridge-did</h1>
+      <h1 class="quarto-secondary-nav-title">DID Estimators</h1>
       <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
         <i class="bi bi-chevron-right"></i>
       </button>
@@ -165,7 +165,14 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </nav>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#scratch" id="toc-scratch" class="nav-link active" data-scroll-target="#scratch">SCRATCH</a></li>
+  <li><a href="#approach-2" id="toc-approach-2" class="nav-link" data-scroll-target="#approach-2">Approach 2</a></li>
+  </ul>
+</nav>
     <div class="quarto-margin-footer"><div class="margin-footer-item">
 <p><img src="vu-logo.png" class="img-fluid"></p>
 </div></div></div>
@@ -174,7 +181,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title d-none d-lg-block">wooldridge-did</h1>
+<h1 class="title d-none d-lg-block">DID Estimators</h1>
 </div>
 
 
@@ -188,94 +195,577 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
+<p>This notebook replicates the analysis <a href="https://friosavila.github.io/playingwithstata/main_jwdid.html">here</a></p>
+<p>Let’s start by loading libraries and data.</p>
+<div class="cell">
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: right;">lemp</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">first_treat</th>
+<th style="text-align: right;">countyreal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">8.461469</td>
+<td style="text-align: right;">2003</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">8001</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8.336870</td>
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">8001</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">8.340217</td>
+<td style="text-align: right;">2005</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">8001</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8.378161</td>
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">8001</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">8.487352</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">8001</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4.997212</td>
+<td style="text-align: right;">2003</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">8019</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Now let’s create some design variables.</p>
+<ol type="1">
+<li>A treatment indicator</li>
+<li>Categorical (factor) variables for treatment group and time.</li>
+<li>Dummy indicators for the treatment group and time variables.</li>
+</ol>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  df_raw <span class="sc">%&gt;%</span> </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>     <span class="co"># Create a binary treatment indicator that is one if ever treated and </span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>     <span class="co"># current year is &gt;= treatment year. </span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>     <span class="fu">mutate</span>(<span class="at">treated =</span> <span class="fu">case_when</span>(</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>       year <span class="sc">&gt;=</span> first_treat <span class="sc">&amp;</span> first_treat <span class="sc">&gt;</span> <span class="dv">0</span> <span class="sc">~</span> <span class="dv">1</span>, </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>       <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">0</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    )) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">factor</span>(year), </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">first_treat =</span> <span class="fu">factor</span>(first_treat)) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  fastDummies<span class="sc">::</span><span class="fu">dummy_cols</span>(<span class="fu">c</span>(<span class="st">"year"</span>,<span class="st">"first_treat"</span>))</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>df <span class="sc">%&gt;%</span> </span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 3%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 5%">
+<col style="width: 6%">
+<col style="width: 6%">
+<col style="width: 6%">
+<col style="width: 6%">
+<col style="width: 6%">
+<col style="width: 8%">
+<col style="width: 10%">
+<col style="width: 10%">
+<col style="width: 10%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">lemp</th>
+<th style="text-align: left;">year</th>
+<th style="text-align: left;">first_treat</th>
+<th style="text-align: right;">countyreal</th>
+<th style="text-align: right;">treated</th>
+<th style="text-align: right;">year_2003</th>
+<th style="text-align: right;">year_2004</th>
+<th style="text-align: right;">year_2005</th>
+<th style="text-align: right;">year_2006</th>
+<th style="text-align: right;">year_2007</th>
+<th style="text-align: right;">first_treat_0</th>
+<th style="text-align: right;">first_treat_2004</th>
+<th style="text-align: right;">first_treat_2006</th>
+<th style="text-align: right;">first_treat_2007</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">8.461469</td>
+<td style="text-align: left;">2003</td>
+<td style="text-align: left;">2007</td>
+<td style="text-align: right;">8001</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8.336870</td>
+<td style="text-align: left;">2004</td>
+<td style="text-align: left;">2007</td>
+<td style="text-align: right;">8001</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">8.340217</td>
+<td style="text-align: left;">2005</td>
+<td style="text-align: left;">2007</td>
+<td style="text-align: right;">8001</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">8.378161</td>
+<td style="text-align: left;">2006</td>
+<td style="text-align: left;">2007</td>
+<td style="text-align: right;">8001</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">8.487352</td>
+<td style="text-align: left;">2007</td>
+<td style="text-align: left;">2007</td>
+<td style="text-align: right;">8001</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4.997212</td>
+<td style="text-align: left;">2003</td>
+<td style="text-align: left;">2007</td>
+<td style="text-align: right;">8019</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Our next step is to create a series of interaction terms between treatment group, time, and treated. However, for a given treatment group we only include interactions with times that occur <em>on</em> or <em>after</em> the treatment time.</p>
+<p>We’ll figure out these using a <code>crossing()</code> command:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>treatment_group_times <span class="ot">&lt;-</span> <span class="fu">levels</span>(df<span class="sc">$</span>first_treat) <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>(); treatment_group_times</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]    0 2004 2006 2007</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Note we eventually need to get rid of hte never treated (0's) for the interactions</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>all_times <span class="ot">&lt;-</span> <span class="fu">levels</span>(df<span class="sc">$</span>year) <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>() ; all_times</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2003 2004 2005 2006 2007</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>interactions_needed <span class="ot">&lt;-</span> <span class="fu">crossing</span>(<span class="at">first_treat =</span> treatment_group_times, <span class="at">year =</span> all_times) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">occurs_on_or_after =</span> <span class="fu">as.integer</span>(year <span class="sc">&gt;=</span> first_treat)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(first_treat <span class="sc">!=</span> <span class="st">"0"</span>) </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>interactions_needed <span class="sc">%&gt;%</span> <span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: right;">first_treat</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">occurs_on_or_after</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">2003</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">2005</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">2003</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">2005</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">2003</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">2005</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Let’s now restrict to cases that were ever treated (i.e., treatment_group_time!=0) and the times that occur on or after those dates:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>interactions_needed <span class="ot">&lt;-</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  interactions_needed <span class="sc">%&gt;%</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(occurs_on_or_after<span class="sc">==</span><span class="dv">1</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>interactions_needed <span class="sc">%&gt;%</span> <span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: right;">first_treat</th>
+<th style="text-align: right;">year</th>
+<th style="text-align: right;">occurs_on_or_after</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">2005</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2004</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2006</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">2007</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Now lets create a column that has the formula for the interaction between group * time * treated:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>interactions_needed <span class="ot">&lt;-</span> </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  interactions_needed <span class="sc">%&gt;%</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">first_treat =</span> <span class="fu">glue</span>(<span class="st">"first_treat_{first_treat}"</span>),</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>         <span class="at">year =</span> <span class="fu">glue</span>(<span class="st">"year_{year}"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">rhs =</span> <span class="fu">glue</span>(<span class="st">"{first_treat}:{year}:treated"</span>)) </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>interactions_needed <span class="sc">%&gt;%</span> <span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 12%">
+<col style="width: 23%">
+<col style="width: 43%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">first_treat</th>
+<th style="text-align: left;">year</th>
+<th style="text-align: right;">occurs_on_or_after</th>
+<th style="text-align: left;">rhs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">first_treat_2004</td>
+<td style="text-align: left;">year_2004</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">first_treat_2004:year_2004:treated</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">first_treat_2004</td>
+<td style="text-align: left;">year_2005</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">first_treat_2004:year_2005:treated</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">first_treat_2004</td>
+<td style="text-align: left;">year_2006</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">first_treat_2004:year_2006:treated</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">first_treat_2004</td>
+<td style="text-align: left;">year_2007</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">first_treat_2004:year_2007:treated</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">first_treat_2006</td>
+<td style="text-align: left;">year_2006</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">first_treat_2006:year_2006:treated</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">first_treat_2006</td>
+<td style="text-align: left;">year_2007</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">first_treat_2006:year_2007:treated</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">first_treat_2007</td>
+<td style="text-align: left;">year_2007</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">first_treat_2007:year_2007:treated</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>This allows us to pull out the right-hand side variable definitions for our eventual regression.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>rhs <span class="ot">&lt;-</span> interactions_needed <span class="sc">%&gt;%</span> <span class="fu">pull</span>(rhs) <span class="sc">%&gt;%</span> <span class="fu">as.vector</span>()</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>rhs <span class="ot">&lt;-</span> <span class="fu">paste0</span>(rhs, <span class="at">collapse =</span> <span class="st">"+"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>rhs</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "first_treat_2004:year_2004:treated+first_treat_2004:year_2005:treated+first_treat_2004:year_2006:treated+first_treat_2004:year_2007:treated+first_treat_2006:year_2006:treated+first_treat_2006:year_2007:treated+first_treat_2007:year_2007:treated"</code></pre>
+</div>
+</div>
+<p>We can now fit a TWFE regression:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fit_fmla <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">glue</span>(<span class="st">"lemp ~ {rhs} | first_treat + year"</span>)); fit_fmla</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>lemp ~ first_treat_2004:year_2004:treated + first_treat_2004:year_2005:treated + 
+    first_treat_2004:year_2006:treated + first_treat_2004:year_2007:treated + 
+    first_treat_2006:year_2006:treated + first_treat_2006:year_2007:treated + 
+    first_treat_2007:year_2007:treated | first_treat + year</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">feols</span>(fit_fmla, <span class="at">data =</span> df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># library(data.table)</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># broom::tidy(fit) %&gt;% kable()</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># # Clean the results</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="co"># etwfe = as.data.table(tidy(fit))</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co"># etwfe = etwfe[</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="co">#     , .(term = term, etwfe = estimate)][</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co">#     , group := as.numeric(gsub(".*cohort.", "", term))][</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co">#     , year := as.numeric(gsub(".*time_to_treat.(\\d+).*", "\\1", term)) + group][</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co">#     , .(group, year, etwfe)]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">feols</span>(lemp <span class="sc">~</span> treated <span class="sc">:</span> <span class="fu">factor</span>(first_treat) <span class="sc">:</span> <span class="fu">factor</span>(year) <span class="sc">|</span> first_treat <span class="sc">+</span> year, <span class="at">data =</span> df) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  broom<span class="sc">::</span><span class="fu">tidy</span>() <span class="sc">%&gt;%</span> <span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="scratch" class="level1">
+<h1>SCRATCH</h1>
+<div class="cell">
+
+</div>
+</section>
+<section id="approach-2" class="level1">
+<h1>Approach 2</h1>
 <p><a href="https://arelbundock.com/posts/2021-09-30-extendedtwfe/">Source</a></p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"did"</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"broom"</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"fixest"</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"ggplot2"</span>)</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"data.table"</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>simulation6 <span class="ot">=</span> <span class="cf">function</span>() {</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  dat <span class="ot">=</span> <span class="fu">CJ</span>(<span class="at">firm =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">1000</span>, <span class="at">year =</span> <span class="dv">1980</span><span class="sc">:</span><span class="dv">2015</span>)     [</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    , time_fe <span class="sc">:</span><span class="er">=</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="at">sd =</span> .<span class="dv">5</span>), by <span class="ot">=</span> <span class="st">"year"</span>][</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    , unit_fe <span class="sc">:</span><span class="er">=</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="at">sd =</span> .<span class="dv">5</span>), by <span class="ot">=</span> <span class="st">"firm"</span>][</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    , state <span class="sc">:</span><span class="er">=</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, <span class="dv">1</span>), by <span class="ot">=</span> <span class="st">"firm"</span>    ]</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setkey</span>(dat, state, firm, year)</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  treatment_groups <span class="ot">=</span> <span class="fu">data.table</span>(</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">state =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">18</span>, <span class="dv">35</span>),</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">cohort =</span> <span class="fu">c</span>(<span class="dv">1989</span>, <span class="dv">1998</span>, <span class="dv">2007</span>),</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">hat_gamma =</span> <span class="fu">c</span>(.<span class="dv">5</span>, .<span class="dv">3</span>, .<span class="dv">1</span>))</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  dat <span class="ot">=</span> treatment_groups[dat, roll <span class="ot">=</span> <span class="cn">TRUE</span>, on <span class="ot">=</span> <span class="st">"state"</span>]</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  dat                                                [</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    , treat  <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(year <span class="sc">&gt;=</span> cohort)          ][</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    , gamma  <span class="sc">:</span><span class="er">=</span> <span class="fu">rnorm</span>(.N, <span class="at">mean =</span> hat_gamma, <span class="at">sd =</span> .<span class="dv">2</span>)][</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    , tau    <span class="sc">:</span><span class="er">=</span> <span class="fu">fifelse</span>(treat <span class="sc">==</span> <span class="dv">1</span>, gamma, <span class="dv">0</span>)       ][</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    , cumtau <span class="sc">:</span><span class="er">=</span> <span class="fu">cumsum</span>(tau), by <span class="ot">=</span> <span class="st">"firm"</span>            ][</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    , error  <span class="sc">:</span><span class="er">=</span> <span class="fu">rnorm</span>(.N, <span class="dv">0</span>, .<span class="dv">5</span>)                    ][</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    , y <span class="sc">:</span><span class="er">=</span> unit_fe <span class="sc">+</span> time_fe <span class="sc">+</span> cumtau <span class="sc">+</span> error       ][</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    , time_to_treat <span class="sc">:</span><span class="er">=</span> year <span class="sc">-</span> cohort                ]</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(dat)</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">=</span> <span class="fu">simulation6</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"did"</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"broom"</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"fixest"</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"ggplot2"</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">"data.table"</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>simulation6 <span class="ot">=</span> <span class="cf">function</span>() {</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  dat <span class="ot">=</span> <span class="fu">CJ</span>(<span class="at">firm =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">1000</span>, <span class="at">year =</span> <span class="dv">1980</span><span class="sc">:</span><span class="dv">2015</span>)     [</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>    , time_fe <span class="sc">:</span><span class="er">=</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="at">sd =</span> .<span class="dv">5</span>), by <span class="ot">=</span> <span class="st">"year"</span>][</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    , unit_fe <span class="sc">:</span><span class="er">=</span> <span class="fu">rnorm</span>(<span class="dv">1</span>, <span class="at">sd =</span> .<span class="dv">5</span>), by <span class="ot">=</span> <span class="st">"firm"</span>][</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    , state <span class="sc">:</span><span class="er">=</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, <span class="dv">1</span>), by <span class="ot">=</span> <span class="st">"firm"</span>    ]</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">setkey</span>(dat, state, firm, year)</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  treatment_groups <span class="ot">=</span> <span class="fu">data.table</span>(</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">state =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">18</span>, <span class="dv">35</span>),</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">cohort =</span> <span class="fu">c</span>(<span class="dv">1989</span>, <span class="dv">1998</span>, <span class="dv">2007</span>),</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="at">hat_gamma =</span> <span class="fu">c</span>(.<span class="dv">5</span>, .<span class="dv">3</span>, .<span class="dv">1</span>))</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>  dat <span class="ot">=</span> treatment_groups[dat, roll <span class="ot">=</span> <span class="cn">TRUE</span>, on <span class="ot">=</span> <span class="st">"state"</span>]</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>  dat                                                [</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>    , treat  <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(year <span class="sc">&gt;=</span> cohort)          ][</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>    , gamma  <span class="sc">:</span><span class="er">=</span> <span class="fu">rnorm</span>(.N, <span class="at">mean =</span> hat_gamma, <span class="at">sd =</span> .<span class="dv">2</span>)][</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>    , tau    <span class="sc">:</span><span class="er">=</span> <span class="fu">fifelse</span>(treat <span class="sc">==</span> <span class="dv">1</span>, gamma, <span class="dv">0</span>)       ][</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>    , cumtau <span class="sc">:</span><span class="er">=</span> <span class="fu">cumsum</span>(tau), by <span class="ot">=</span> <span class="st">"firm"</span>            ][</span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>    , error  <span class="sc">:</span><span class="er">=</span> <span class="fu">rnorm</span>(.N, <span class="dv">0</span>, .<span class="dv">5</span>)                    ][</span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>    , y <span class="sc">:</span><span class="er">=</span> unit_fe <span class="sc">+</span> time_fe <span class="sc">+</span> cumtau <span class="sc">+</span> error       ][</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>    , time_to_treat <span class="sc">:</span><span class="er">=</span> year <span class="sc">-</span> cohort                ]</span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(dat)</span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>dat <span class="ot">=</span> <span class="fu">simulation6</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>etwfe <span class="ot">=</span> <span class="fu">feols</span>(y <span class="sc">~</span> treat <span class="sc">:</span> <span class="fu">factor</span>(time_to_treat) <span class="sc">:</span> <span class="fu">factor</span>(cohort) <span class="sc">|</span> firm <span class="sc">+</span> year, <span class="at">data =</span> dat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Variables 'treat:factor(time_to_treat)-27:factor(cohort)1989', 'treat:factor(time_to_treat)-26:factor(cohort)1989' and 115 others have been removed because of collinearity (see $collin.var).</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean the results</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>etwfe <span class="ot">=</span> <span class="fu">as.data.table</span>(<span class="fu">tidy</span>(etwfe))</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>etwfe <span class="ot">=</span> etwfe[</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    , .(<span class="at">term =</span> term, <span class="at">etwfe =</span> estimate)][</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    , group <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(<span class="fu">gsub</span>(<span class="st">".*cohort."</span>, <span class="st">""</span>, term))][</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    , year <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(<span class="fu">gsub</span>(<span class="st">".*time_to_treat.(</span><span class="sc">\\</span><span class="st">d+).*"</span>, <span class="st">"</span><span class="sc">\\</span><span class="st">1"</span>, term)) <span class="sc">+</span> group][</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    , .(group, year, etwfe)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>etwfe <span class="ot">=</span> <span class="fu">feols</span>(y <span class="sc">~</span> treat <span class="sc">:</span> <span class="fu">factor</span>(time_to_treat) <span class="sc">:</span> <span class="fu">factor</span>(cohort) <span class="sc">|</span> firm <span class="sc">+</span> year, <span class="at">data =</span> dat)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean the results</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>etwfe <span class="ot">=</span> <span class="fu">as.data.table</span>(<span class="fu">tidy</span>(etwfe))</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>etwfe <span class="ot">=</span> etwfe[</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    , .(<span class="at">term =</span> term, <span class="at">etwfe =</span> estimate)][</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    , group <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(<span class="fu">gsub</span>(<span class="st">".*cohort."</span>, <span class="st">""</span>, term))][</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    , year <span class="sc">:</span><span class="er">=</span> <span class="fu">as.numeric</span>(<span class="fu">gsub</span>(<span class="st">".*time_to_treat.(</span><span class="sc">\\</span><span class="st">d+).*"</span>, <span class="st">"</span><span class="sc">\\</span><span class="st">1"</span>, term)) <span class="sc">+</span> group][</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    , .(group, year, etwfe)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>csa <span class="ot">=</span> <span class="fu">att_gt</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">yname =</span> <span class="st">"y"</span>,</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">gname =</span> <span class="st">"cohort"</span>,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">idname =</span> <span class="st">"firm"</span>,</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">tname =</span> <span class="st">"year"</span>,</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">control_group =</span> <span class="st">"notyettreated"</span>,</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> dat)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean the results</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>csa <span class="ot">=</span> <span class="fu">data.table</span>(<span class="at">group =</span> csa<span class="sc">$</span>group, <span class="at">year =</span> csa<span class="sc">$</span>t, <span class="at">csa =</span> csa<span class="sc">$</span>att)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>csa <span class="ot">=</span> <span class="fu">att_gt</span>(</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">yname =</span> <span class="st">"y"</span>,</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">gname =</span> <span class="st">"cohort"</span>,</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">idname =</span> <span class="st">"firm"</span>,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">tname =</span> <span class="st">"year"</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">control_group =</span> <span class="st">"notyettreated"</span>,</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> dat)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Clean the results</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>csa <span class="ot">=</span> <span class="fu">data.table</span>(<span class="at">group =</span> csa<span class="sc">$</span>group, <span class="at">year =</span> csa<span class="sc">$</span>t, <span class="at">csa =</span> csa<span class="sc">$</span>att)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># merge the TWFE and CSA results</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>results <span class="ot">=</span> <span class="fu">merge</span>(etwfe, csa, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"group"</span>, <span class="st">"year"</span>))</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(results) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Cohort"</span>, <span class="st">"Year"</span>, <span class="st">"TWFE w/ interactions"</span>, <span class="st">"CSA (2021)"</span>)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>results[, Cohort <span class="sc">:</span><span class="er">=</span> <span class="fu">factor</span>(Cohort)]</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>dat_plot <span class="ot">=</span> <span class="fu">melt</span>(results, <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">"Cohort"</span>, <span class="st">"Year"</span>))</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_plot, <span class="fu">aes</span>(Year, value, <span class="at">color =</span> variable, <span class="at">linetype =</span> Cohort)) <span class="sc">+</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">1.4</span>) <span class="sc">+</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"ATT"</span>, <span class="at">color =</span> <span class="st">"Estimator"</span>, <span class="at">linetype =</span> <span class="st">"Cohort"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="wooldridge-extended-twfe-did_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid" width="672"></p>
-</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># merge the TWFE and CSA results</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>results <span class="ot">=</span> <span class="fu">merge</span>(etwfe, csa, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"group"</span>, <span class="st">"year"</span>))</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(results) <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"Cohort"</span>, <span class="st">"Year"</span>, <span class="st">"TWFE w/ interactions"</span>, <span class="st">"CSA (2021)"</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>results[, Cohort <span class="sc">:</span><span class="er">=</span> <span class="fu">factor</span>(Cohort)]</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>dat_plot <span class="ot">=</span> <span class="fu">melt</span>(results, <span class="at">id.vars =</span> <span class="fu">c</span>(<span class="st">"Cohort"</span>, <span class="st">"Year"</span>))</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dat_plot, <span class="fu">aes</span>(Year, value, <span class="at">color =</span> variable, <span class="at">linetype =</span> Cohort)) <span class="sc">+</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">size =</span> <span class="fl">1.4</span>) <span class="sc">+</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"ATT"</span>, <span class="at">color =</span> <span class="st">"Estimator"</span>, <span class="at">linetype =</span> <span class="st">"Cohort"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(results, <span class="fu">aes</span>(<span class="st">`</span><span class="at">TWFE w/ interactions</span><span class="st">`</span>, <span class="st">`</span><span class="at">CSA (2021)</span><span class="st">`</span>, <span class="at">color =</span> Cohort)) <span class="sc">+</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">slope =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"On the 45 degree line, estimates of the group-time ATT</span><span class="sc">\n</span><span class="st">are identical under the two strategies."</span>) <span class="sc">+</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output-display">
-<p><img src="wooldridge-extended-twfe-did_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
-</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(results, <span class="fu">aes</span>(<span class="st">`</span><span class="at">TWFE w/ interactions</span><span class="st">`</span>, <span class="st">`</span><span class="at">CSA (2021)</span><span class="st">`</span>, <span class="at">color =</span> Cohort)) <span class="sc">+</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">intercept =</span> <span class="dv">0</span>, <span class="at">slope =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"On the 45 degree line, estimates of the group-time ATT</span><span class="sc">\n</span><span class="st">are identical under the two strategies."</span>) <span class="sc">+</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
