@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Advanced Program and Policy Evaluation (HPOL8539) - A post!</title>
+<title>Advanced Program and Policy Evaluation (HPOL8539) - Using Simulation to Calculate Power and Minimum Detectable Effects</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -15,6 +15,69 @@ span.underline{text-decoration: underline;}
 div.column{display: inline-block; vertical-align: top; width: 50%;}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
 </style>
 
 
@@ -64,7 +127,7 @@ ul.task-list{list-style: none;}
   <header id="quarto-header" class="headroom fixed-top">
   <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
     <div class="container-fluid d-flex justify-content-between">
-      <h1 class="quarto-secondary-nav-title">A post!</h1>
+      <h1 class="quarto-secondary-nav-title">Using Simulation to Calculate Power and Minimum Detectable Effects</h1>
       <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
         <i class="bi bi-chevron-right"></i>
       </button>
@@ -102,6 +165,21 @@ ul.task-list{list-style: none;}
 </li>
       </ul>
   </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">Case Studies</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://graves-vanderbilt.shinyapps.io/HPOL8539-Simulation/" class="sidebar-item-text sidebar-link">Simulation as a Guide for Study Design and Inference</a>
+  </div>
+</li>
+      </ul>
+  </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../blog/index.html" class="sidebar-item-text sidebar-link">Blog</a>
@@ -109,12 +187,12 @@ ul.task-list{list-style: none;}
 </li>
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
-            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">Useful Links</a>
-          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">Useful Links</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">
             <i class="bi bi-chevron-right ms-2"></i>
           </a> 
       </div>
-      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="https://github.com/graveja0/HPOL8539-F2022/raw/main/current-syllabus.pdf" class="sidebar-item-text sidebar-link">Current Syllabus</a>
@@ -137,7 +215,20 @@ ul.task-list{list-style: none;}
 </nav>
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
+        <nav id="TOC" role="doc-toc">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#define-the-data-generation-process" id="toc-define-the-data-generation-process" class="nav-link active" data-scroll-target="#define-the-data-generation-process">Define the Data Generation Process</a></li>
+  <li><a href="#define-the-estimator" id="toc-define-the-estimator" class="nav-link" data-scroll-target="#define-the-estimator">Define the Estimator</a></li>
+  <li><a href="#define-the-discrimination-function" id="toc-define-the-discrimination-function" class="nav-link" data-scroll-target="#define-the-discrimination-function">Define the discrimination function</a></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a>
+  <ul class="collapse">
+  <li><a href="#power" id="toc-power" class="nav-link" data-scroll-target="#power">Power</a></li>
+  </ul></li>
+  <li><a href="#minimum-detectable-effects" id="toc-minimum-detectable-effects" class="nav-link" data-scroll-target="#minimum-detectable-effects">Minimum Detectable Effects</a></li>
+  </ul>
+</nav>
     <div class="quarto-margin-footer"><div class="margin-footer-item">
 <p><img src="vu-logo.png" class="img-fluid"></p>
 </div></div></div>
@@ -146,7 +237,7 @@ ul.task-list{list-style: none;}
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title d-none d-lg-block">A post!</h1>
+<h1 class="title d-none d-lg-block">Using Simulation to Calculate Power and Minimum Detectable Effects</h1>
 </div>
 
 
@@ -160,9 +251,193 @@ ul.task-list{list-style: none;}
 
 </header>
 
-<p>This is a post!</p>
+<p>This posting will walk through the steps to perform power and minimum detectable effect calculations via simulation.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(mcreplicate)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tictoc)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(CVXR)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="define-the-data-generation-process" class="level1">
+<h1>Define the Data Generation Process</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>params <span class="ot">&lt;-</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">list</span>(</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">n =</span> <span class="dv">100</span>,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">p =</span> <span class="dv">1</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">beta =</span> <span class="dv">0</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Now we define the data generation process formula:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>dgp <span class="ot">&lt;-</span> <span class="cf">function</span>(params) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">with</span>(params,{</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        X <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(n <span class="sc">*</span> p), <span class="at">nrow=</span>n)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">colnames</span>(X) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"beta_"</span>, beta)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        Y <span class="ot">&lt;-</span> X <span class="sc">%*%</span> beta <span class="sc">+</span> <span class="fu">rnorm</span>(n)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">data.frame</span>(Y,X)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="define-the-estimator" class="level1">
+<h1>Define the Estimator</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>est <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    Y <span class="ot">&lt;-</span> df[,<span class="st">"Y"</span>]</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    X <span class="ot">&lt;-</span> <span class="fu">as.matrix</span>(df[,<span class="fu">setdiff</span>(<span class="fu">colnames</span>(df),<span class="st">"Y"</span>)])</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    ls.model <span class="ot">&lt;-</span> <span class="fu">lm</span>(Y <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> X)   <span class="co"># There is no intercept in our model above</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    m <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">ls.est =</span> <span class="fu">coef</span>(ls.model))</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rownames</span>(m) <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"Xbeta"</span>,<span class="st">"beta"</span>,<span class="fu">rownames</span>(m))</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    m <span class="ot">&lt;-</span> <span class="fu">cbind</span>(m,<span class="fu">confint</span>(ls.model))</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    m</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="define-the-discrimination-function" class="level1">
+<h1>Define the discrimination function</h1>
+<ul>
+<li>Reject if 0 is within the 95% confidence interval.</li>
+<li>Accept is 1 minus the above.</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>disc <span class="ot">&lt;-</span> <span class="cf">function</span>(fit) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    beta.hat <span class="ot">&lt;-</span> fit[<span class="st">"X"</span>,]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    accept <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">-</span><span class="fu">as.integer</span>(dplyr<span class="sc">::</span><span class="fu">between</span>(<span class="dv">0</span>,beta.hat[,<span class="dv">2</span>],beta.hat[,<span class="dv">3</span>]))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(accept)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>est_power <span class="ot">&lt;-</span> <span class="cf">function</span>(params) {</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(params<span class="sc">$</span>beta)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    params <span class="sc">%&gt;%</span>  </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dgp</span>() <span class="sc">%&gt;%</span>  </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="fu">est</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>          <span class="fu">disc</span>()</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="results" class="level1">
+<h1>Results</h1>
+<section id="power" class="level2">
+<h2 class="anchored" data-anchor-id="power">Power</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>B <span class="ot">=</span> <span class="dv">1000</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>power <span class="ot">=</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">seq</span>(<span class="dv">100</span>,<span class="dv">1000</span>,<span class="dv">100</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">map</span>(<span class="sc">~</span>(<span class="fu">mc_replicate</span>(B,<span class="fu">est_power</span>(<span class="fu">modifyList</span>(params,<span class="fu">list</span>(<span class="at">beta =</span> .<span class="dv">1</span>,<span class="at">n=</span>.x))),<span class="at">mc.cores=</span><span class="dv">10</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">map_dbl</span>(<span class="sc">~</span>(<span class="fu">mean</span>(.x)))  <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">row.names =</span> <span class="fu">seq</span>(<span class="dv">100</span>,<span class="dv">1000</span>,<span class="dv">100</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rownames_to_column</span>(<span class="at">var =</span> <span class="st">"N"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">set_names</span>(<span class="fu">c</span>(<span class="st">"N"</span>,<span class="st">"power"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">N =</span> <span class="fu">as.numeric</span>(<span class="fu">paste0</span>(N)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>power <span class="sc">%&gt;%</span> knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: right;">N</th>
+<th style="text-align: right;">power</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">0.165</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">200</td>
+<td style="text-align: right;">0.304</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">300</td>
+<td style="text-align: right;">0.385</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">400</td>
+<td style="text-align: right;">0.508</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">500</td>
+<td style="text-align: right;">0.598</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">600</td>
+<td style="text-align: right;">0.657</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">700</td>
+<td style="text-align: right;">0.770</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">800</td>
+<td style="text-align: right;">0.809</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">900</td>
+<td style="text-align: right;">0.846</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1000</td>
+<td style="text-align: right;">0.882</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>power <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> N , <span class="at">y =</span> power)) <span class="sc">+</span> <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    ggthemes<span class="sc">::</span><span class="fu">theme_few</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="post1_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="minimum-detectable-effects" class="level1">
+<h1>Minimum Detectable Effects</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>calc_mde <span class="ot">&lt;-</span> <span class="cf">function</span>(.x, <span class="at">B=</span><span class="dv">10000</span>) {</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    power <span class="ot">&lt;-</span> <span class="fu">mc_replicate</span>(B,<span class="fu">est_power</span>(<span class="fu">modifyList</span>(params,<span class="fu">list</span>(<span class="at">beta =</span> .x,<span class="at">n=</span><span class="dv">1000</span>))),<span class="at">mc.cores=</span><span class="dv">10</span>) <span class="sc">%&gt;%</span> <span class="fu">mean</span>()</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">abs</span>(power<span class="fl">-.8</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>search_grid <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>,.<span class="dv">1</span>,<span class="fl">0.01</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>mde <span class="ot">=</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    search_grid <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">map</span>(<span class="sc">~</span>(<span class="fu">mc_replicate</span>(B,<span class="fu">est_power</span>(<span class="fu">modifyList</span>(params,<span class="fu">list</span>(<span class="at">beta =</span> .x,<span class="at">n=</span><span class="dv">1000</span>))),<span class="at">mc.cores=</span><span class="dv">10</span>))) <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">map_dbl</span>(<span class="sc">~</span>(<span class="fu">mean</span>(.x)))  <span class="sc">%&gt;%</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">row.names =</span> search_grid) <span class="sc">%&gt;%</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rownames_to_column</span>(<span class="at">var =</span> <span class="st">"N"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">set_names</span>(<span class="fu">c</span>(<span class="st">"beta"</span>,<span class="st">"power"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">beta =</span> <span class="fu">as.numeric</span>(<span class="fu">paste0</span>(beta)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>mde <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> beta, <span class="at">y =</span> power)) <span class="sc">+</span> <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    ggthemes<span class="sc">::</span><span class="fu">theme_few</span>() <span class="sc">+</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ylim</span>(<span class="fu">c</span>(<span class="dv">0</span>,<span class="dv">1</span>)) <span class="sc">+</span> <span class="fu">geom_hline</span>(<span class="fu">aes</span>(<span class="at">yintercept =</span><span class="fl">0.8</span>),<span class="at">lty=</span><span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="post1_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>closest <span class="ot">&lt;-</span> mde<span class="sc">$</span>beta[<span class="fu">which</span>(<span class="fu">abs</span>(mde<span class="sc">$</span>power<span class="fl">-.8</span>)<span class="sc">==</span><span class="fu">min</span>(<span class="fu">abs</span>(mde<span class="sc">$</span>power<span class="fl">-.8</span>)))]</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>closest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.09</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tic</span>()</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">optim</span>(closest,calc_mde,<span class="at">method =</span> <span class="fu">c</span>(<span class="st">"Nelder-Mead"</span>))</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">toc</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
