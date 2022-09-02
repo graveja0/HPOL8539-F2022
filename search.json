@@ -144,7 +144,7 @@
     "href": "blog/posts/post1.html#power",
     "title": "Using Simulation to Calculate Power and Minimum Detectable Effects",
     "section": "Power",
-    "text": "Power\n\nB = 1000\npower =\n    seq(100,1000,100) %>%\n    map(~(mc_replicate(B,est_power(modifyList(params,list(beta = .1,n=.x))),mc.cores=10))) %>%\n    map_dbl(~(mean(.x)))  %>%\n    data.frame(row.names = seq(100,1000,100)) %>%\n    rownames_to_column(var = \"N\") %>%\n    set_names(c(\"N\",\"power\")) %>%\n    as_tibble() %>%\n    mutate(N = as.numeric(paste0(N)))\npower %>% knitr::kable()\n\n\n\n\nN\npower\n\n\n\n\n100\n0.165\n\n\n200\n0.304\n\n\n300\n0.385\n\n\n400\n0.508\n\n\n500\n0.598\n\n\n600\n0.657\n\n\n700\n0.770\n\n\n800\n0.809\n\n\n900\n0.846\n\n\n1000\n0.882\n\n\n\n\npower %>%\n    ggplot(aes(x = N , y = power)) + geom_line() +\n    ggthemes::theme_few()"
+    "text": "Power\n\nB = 1000\npower =\n    seq(100,1000,100) %>%\n    map(~(mc_replicate(B,est_power(modifyList(params,list(beta = .1,n=.x))),mc.cores=10))) %>%\n    map_dbl(~(mean(.x)))  %>%\n    data.frame(row.names = seq(100,1000,100)) %>%\n    rownames_to_column(var = \"N\") %>%\n    set_names(c(\"N\",\"power\")) %>%\n    as_tibble() %>%\n    mutate(N = as.numeric(paste0(N)))\npower %>% knitr::kable()\n\n\n\n\nN\npower\n\n\n\n\n100\n0.155\n\n\n200\n0.302\n\n\n300\n0.395\n\n\n400\n0.542\n\n\n500\n0.600\n\n\n600\n0.673\n\n\n700\n0.746\n\n\n800\n0.797\n\n\n900\n0.855\n\n\n1000\n0.867\n\n\n\n\npower %>%\n    ggplot(aes(x = N , y = power)) + geom_line() +\n    ggthemes::theme_few()"
   },
   {
     "objectID": "blog/posts/twfe-twm-and-did.html",
