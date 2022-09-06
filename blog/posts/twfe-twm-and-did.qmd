@@ -1,0 +1,1751 @@
+---
+title: "Two-Way Fixed Effects, the Two-Way Mundlak Regression, and Difference-in-Difference Estimators"
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+The objective of this posting is to walk through various data structuring and estimation issues for fitting two-way fixed effects, two-way Mundlak regressions, and difference-in-difference estimators.
+
+Note that this is adapted from `staggered_6.do`.
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(fastDummies)
+library(glue)
+library(broom)
+library(lme4)
+library(fixest)
+library(directlabels)
+library(ggthemes)
+library(knitr)
+library(kableExtra)
+library(gt)
+library(did)
+
+options("RStata.StataPath" = "/Applications/Stata/StataSE.app/Contents/MacOS/stata-se")
+options("RStata.StataVersion" = 16)
+    
+options(dplyr.summarise.inform = FALSE)
+
+theme_tufte_grid <- function(base_size = 16, base_family = "Gill Sans", ticks = TRUE) {
+  
+  ret <- ggplot2::theme_bw(base_family = base_family, base_size = base_size) +
+    ggplot2::theme(
+      axis.line = ggplot2::element_blank(),
+      axis.ticks = ggplot2::element_blank(),
+      axis.title.x = ggplot2::element_text(vjust = -0.3),
+      axis.title.y = ggplot2::element_text(vjust = 0.8),
+      legend.background = ggplot2::element_blank(),
+      legend.key = ggplot2::element_blank(),
+      legend.title = ggplot2::element_text(face="plain"),
+      panel.background = ggplot2::element_blank(),
+      panel.border = ggplot2::element_blank(),
+      panel.grid = ggplot2::element_blank(),
+      plot.background = ggplot2::element_blank(),
+      strip.background = ggplot2::element_blank()
+    )
+  
+  if (!ticks) {
+    ret <- ret + ggplot2::theme(axis.ticks = ggplot2::element_blank())
+  }
+  
+  ret
+}
+invthm <- theme_minimal() + 
+  theme(
+    panel.background = element_rect(fill = "transparent", colour = NA), 
+    plot.background = element_rect(fill = "transparent", colour = NA),
+    legend.background = element_rect(fill = "transparent", colour = NA),
+    legend.key = element_rect(fill = "transparent", colour = NA),
+    text = element_text(colour = "black"),
+    axis.text = element_text(colour = "black"),
+    legend.position = 'none',
+    legend.title = element_blank(),
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.title.y = element_text(hjust = 0.5, vjust = 0.5, angle = 360)
+  )
+make_data <- function(params, N = 1000, start = 1980, stop = 2015) {
+  mu <- params$mu
+  mu_t <- params$mu_t
+  tx = params$tx
+  bin <- params$bin
+
+  # year fixed effects
+  year <- tibble(
+    year = start:stop,
+    year_fe = rnorm(length(start:stop), 0, 0.5))
+
+  df_truth_ <-suppressWarnings({
+    map(tx,~(.x %>% data.frame())) %>%
+      bind_rows(.id = "tx") %>%
+      set_names(c("group","state")) %>%
+      as_tibble() %>%
+      suppressMessages(mutate(group = as.numeric(paste0(group)))) %>%
+      left_join(
+        map(mu,~(.x %>% data.frame())) %>%
+          bind_rows(.id = "tx") %>%
+          set_names(c("group","mu")) %>%
+          inner_join(
+            map(mu_t,~(.x %>% data.frame())) %>%
+              bind_rows(.id = "tx") %>%
+              set_names(c("group","mu_t")),"group"
+          ), c("group")
+      ) %>%
+      mutate(group = ifelse(!is.na(group),as.numeric(paste0(group)),NA))
+  })
+
+  # For dynamic treatment effects
+  df_truth_t <-
+    crossing(state = unique(df_truth_$state), year = unique(year$year)) %>%
+    left_join(df_truth_,"state") %>%
+    mutate(rel_time = pmax(year-group)) %>%
+    mutate(tau = ifelse(!is.na(mu) & rel_time>=0,mu,0),
+           tau_t = ifelse(!is.na(mu_t) &rel_time>=0,mu_t,0)) %>%
+    group_by(group, state) %>%
+    mutate(cumtau = tau + cumsum(tau_t))   %>%
+    group_by(rel_time) %>%
+    summarise(mu_truth = mean(cumtau)) %>% na.omit()
+
+
+
+  df_truth <-
+    crossing(state = unique(df_truth_$state), year = unique(year$year)) %>%
+    left_join(df_truth_,"state") %>%
+    mutate(rel_time = pmax(year-group)) %>%
+    mutate(tau = ifelse(!is.na(mu) & rel_time>=0,mu,0),
+           tau_t = ifelse(!is.na(mu_t) &rel_time>=0,mu_t,0)) %>%
+    group_by(group, state) %>%
+    mutate(cumtau = tau + cumsum(tau_t)) %>%
+    mutate(max_time_post = max(year-group)) %>%
+    ungroup() %>%
+    mutate(max_time_post = min(max_time_post,na.rm=TRUE)) %>%
+    #filter(rel_time <= max_time_post) %>%
+    filter(cumtau>0) %>% group_by(group) %>% summarise(mean = mean(cumtau)) %>%
+    as_tibble() %>%
+    left_join(
+      tx %>% map_dbl(~(length(.x))) %>% data.frame() %>% rownames_to_column(var = "group") %>% set_names(c("group","weight")) %>%
+        filter(group != "NA") %>%
+        mutate(total_weight = sum(weight)) %>%
+        mutate(group = as.numeric(paste0(group))),
+      "group") %>%
+    mutate(mu_truth = mean*weight/total_weight) %>%
+    summarise(mu_truth = sum(mu_truth)) %>%
+    mutate(rel_time = NA) %>%
+    mutate(type = "Static")  %>%
+    bind_rows(
+      df_truth_t %>%
+        mutate(type = "Dynamic")
+    )
+
+  # Units
+  unit <- 
+    tibble(
+    unit = 1:N,
+    unit_fe = rnorm(N, 0, 0.5),
+    # generate state
+    state = sample(rep(1:50, N/50), N, replace = FALSE)) %>%
+    left_join(
+      df_truth_,c("state")
+    ) %>%
+        ungroup() %>% 
+    mutate(evertreated = ifelse(is.na(as.numeric(group)),"C","T")) %>%
+    mutate(hat_gamma = mu) %>%
+    mutate(hat_gamma_t = mu_t) %>%
+    # generate unit specific yearly treatment effects
+    rowwise() %>%
+    mutate(gamma = rnorm(1, hat_gamma, .2)) %>%
+    mutate(gamma_t = ifelse(mu_t!=0,rnorm(1,hat_gamma_t,0.2),0))
+
+
+  # full interaction of unit X year
+  df <- crossing(unit, year) %>%
+    # make error term and get treatment indicators and treatment effects
+    mutate(error = rnorm(nrow(.), 0, 0.5),
+           treat = ifelse(year >= group & !is.na(group), 1, 0),
+           tau = ifelse(treat == 1, gamma, 0),
+           tau_t = ifelse(treat==1,gamma_t,0)) %>%
+    # calculate the dep variable
+    group_by(unit) %>%
+    mutate(cumtau = tau + cumsum(tau_t)) %>%
+    mutate(dep_var = unit_fe + year_fe + cumtau + error) %>%
+    mutate(rel_year = year - as.numeric(group)) %>%
+    mutate(rel_year = ifelse(rel_year == -Inf, NA, rel_year))%>%
+    dummy_cols(select_columns = "rel_year") %>%
+    mutate(across(starts_with("rel_year_"), ~replace_na(., 0))) %>%
+    # generate pre and post dummies
+    mutate(Pre = ifelse((rel_year < bin[1]) * (!is.na(rel_year)), 1, 0),
+           Post = ifelse((rel_year > bin[2]) * (!is.na(rel_year)), 1, 0)) %>%
+    mutate(bin1 = bin[1],
+           bin2 = bin[2])
+
+  out <- list(
+    df = df,
+    truth =   df_truth,
+    truth_g = df_truth_,
+    params = params
+  )
+}
+plot_data <- function(df) {
+
+  year_range <- range(df$df$year)
+  
+  staggered <- ifelse(length(unique(na.omit(df$df$group)))>1,"Staggered","Single Treatment Time")
+
+  control <- ifelse("C" %in% unique(df$df$evertreated),TRUE,FALSE)
+
+  if (control) {
+    df_ <- df$df %>%
+      mutate(group = ifelse(evertreated=="C","Never Treated",paste0(group)))
+  } else {
+    df_ <- df$df
+  }
+  unique_groups <- unique(df_$group)
+  colors <- c("#A7473A","#4B5F6C","#51806a")[1:length(unique_groups)]
+  names(colors) = unique(df_$group)
+
+  df_vline <- suppressWarnings({
+    data.frame(group = unique(df_$group),xintercept = unique(as.numeric(df_$group)) - 0.5) %>%
+      mutate(color = colors[factor(group)])
+  })
+
+  suppressWarnings({
+    df_ %>%
+      ggplot(aes(x = year, y = dep_var)) +
+      # unit specific lines
+      geom_line(alpha = 1/10, color = "grey",aes(group = unit)) +
+      # group specific averages
+      geom_line(
+        data = . %>%
+          group_by(group, year) %>%
+          summarize(dep_var = mean(dep_var)) ,
+        aes(x = year, y = dep_var, group = factor(group),
+            color = factor(group)), size = 1) +
+      labs(x = "", y = "", color = "Group") +
+      geom_vline(data = df_vline, aes(xintercept = xintercept, color = factor(group)),linetype="dashed",size=1) +
+      ggsci::scale_color_aaas()+
+      geom_dl(data =
+                . %>%
+                group_by(group, year) %>%
+                summarize(dep_var = mean(dep_var)), method = "last.bumpup",aes(label = group)) +
+      scale_y_continuous(limits = c(-3, 20)) +
+      #labs(subtitle = expression(paste("Staggered + Dynamic/Unequal ", tau))) +
+      # theme_clean() + theme(plot.background = element_blank()) +
+      # theme(legend.position = 'none',
+      #       legend.title = element_blank(),
+      #       plot.title = element_text(hjust = 0.5),
+      #       plot.subtitle = element_text(hjust = 0.5),
+      #       axis.title.y = element_text(hjust = 0.5, vjust = 0.5, angle = 360))+
+      
+      scale_x_continuous(limits = year_range) + 
+      scale_x_continuous(expand = c(0.25,0)) + invthm
+  })
+}
+```
+
+# Case 1: Common Treatment Time, Constant Treatment Effects
+
+```{r}
+#| warning: false
+#| message: false
+#| code-fold: true
+
+params1 <- list(
+  mu = list("1998" = 2),
+  mu_t = list("1998" = 0),
+  tx = list("1998" = 1:25,
+            "NA" = 26:50),
+  bin = c(-5,5)
+)
+
+set.seed(123)
+df1 <- make_data(params1,N=200) 
+data1 <- df1$df %>% 
+  select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
+  mutate_at(vars(treatment_time, year), factor)
+plot_data(df1) 
+
+df = data1
+```
+
+## Data Setup
+
+Figure @fig-df-raw shows the first five rows of the raw data frame.
+
+-   `dep_var` is the outcome
+-   `treatment_time` is the treatment group indicator set to the first treatment year for those treated, and set to missing for nontreated units.
+-   `state` is the state of residence for the underlying unit.
+-   `unit` is the individual unit identifier
+-   `year` is the time variable
+-   `treat` takes a value of 1 if the unit is treated and the observation is in the post-treatment period.
+
+```{r}
+#| code-fold: true
+#| fig-cap: First five rows of data
+#| label: fig-df-raw
+
+df %>% 
+  head(n=5) %>% 
+  kable() %>% 
+  kable_styling() %>%
+  scroll_box(width = "100%", height = "400px")
+```
+
+We next need to construct a series of dummy indicators
+
+1.  Define all the years where at least one group is treated (`treatment_years`)
+2.  Define all the treated groups (`treatment_groups`)
+
+### 1. Define all the years where at least one group is treated (`treatment_years`)
+
+```{r}
+treatment_years <-
+  df %>%
+  count(treat, year) %>%
+  filter(treat== 1 ) %>%
+  pull(year) %>%
+  as.vector()
+treatment_years
+```
+
+### 2. Define all the treated groups (`treatment_groups`)
+
+```{r}
+treatment_groups <-
+  unique(df[df$treatment_time != 0 & !is.na(df$treatment_time),]$treatment_time) %>% 
+  paste()
+treatment_groups
+```
+
+We will next structure the model matrix to fit the regression models. This involves:
+
+1.  Creating dummy variables for all treatment times, but limiting the final set to only those times identified by `treatment_times` above.
+
+2.  Creating dummy variables for all treatment groups.
+
+We will also prefix all dummy variables created in (1) with `f` and those created in (2) with `d`. Figure @fig-df-model-matrix shows the final data frame used for the regressions.
+
+```{r}
+#| warning: false
+#| message: false
+
+df_ <-
+  df %>%
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,as.numeric(paste0(treatment_time)))) %>% 
+  select(y = dep_var,w = treat, id = unit,year, treatment_time) %>%
+  fastDummies::dummy_cols(c("year","treatment_time")) %>%
+  select_at(vars(y,w,id,year,glue("year_{treatment_years}") %>% as.vector(),
+                 glue("treatment_time_{treatment_groups}"))) %>%
+  rename_at(vars(starts_with("year_")),~gsub("year_","f",.)) %>%
+  rename_at(vars(starts_with("treatment_time_")),~gsub("treatment_time_","d",.))
+
+```
+
+```{r}
+#| code-fold: true
+#| fig-cap: First five rows of data
+#| label: fig-df-model-matrix
+
+df_ %>% 
+  head(n=5) %>% 
+  kable() %>% 
+  kable_styling() %>%
+  scroll_box(width = "100%", height = "300px")
+```
+
+## Estimate Models
+
+We next estimate the models
+
+| Method                | Command   | Design Variables  | Fixed or Random Effect |
+|-----------------------|-----------|-------------------|------------------------|
+| Two-Way Fixed Effects | `feols()` | `w` + `f*`        | Unit Fixed Effect      |
+| Pooled OLS            | `lm()`    | `w` + `f*` + `d*` |                        |
+| Two-Way Mundlak       | `lmer()`  | `w` + `f*` + `d*` | Unit Random Effect     |
+
+```{r}
+#| code-fold: true
+
+# TWFE
+fmla_twfe1 <- glue("y ~ w + {paste0('f',treatment_years,collapse= '+')} | id ") %>% as.formula()
+fit_twfe1 <- feols(fmla_twfe1, data = df_)
+est_twfe1 <- tibble(method = "TWFE", estimate = coef(fit_twfe1)["w"], formula = glue("feols({Reduce(paste,deparse(fmla_twfe1))}, data = df_)"))
+
+# Alternative version based on a standard TWFE regression. 
+fmla_twfe1_v2 <- glue("y ~ w + factor(year) | id ") %>% as.formula()
+fit_twfe1_v2 <- feols(fmla_twfe1_v2, data = df_) 
+est_twfe1_v2 <- tibble(method = "TWFE-V2", estimate = coef(fit_twfe1_v2)["w"], formula = glue("feols({Reduce(paste,deparse(fmla_twfe1_v2))}, data = df_)"))
+
+# POLS
+fmla_lm1 <- glue("y ~ w + {paste0('f',treatment_years,collapse= '+')} + {paste0('d',treatment_groups,collapse= '+')}") %>% as.formula()
+fit_lm1 <- lm(fmla_lm1, data = df_) 
+est_lm1 <- tibble(method = "POLS", estimate = coef(fit_lm1)["w"], formula = glue("lm({Reduce(paste,deparse(fmla_lm1))}, data = df_)"))
+
+# TWM 
+fmla_twm1 <- glue("y ~ w + {paste0('f',treatment_years,collapse= '+')} + {paste0('d',treatment_groups,collapse= '+')} + (1|id)") %>% as.formula()
+fit_twm1 <- lmer( fmla_twm1 , data = df_) 
+est_twm1 <- tibble(method = "TWM", estimate = coef(summary(fit_twm1))["w",][1] %>% unname(), formula = glue("lmer({Reduce(paste,deparse(fmla_twm1))}, data = df_)"))
+
+# CS
+data1_cs <- 
+  data1 %>% 
+  mutate(year = as.numeric(paste0(year)),
+         treatment_time = as.numeric(paste0(treatment_time)))  %>% 
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time))
+
+
+fit_cs1 <- att_gt(yname = "dep_var",
+                  tname = "year",
+                  idname = "unit",
+                  gname = "treatment_time",
+                  control_group = "notyettreated",
+                  data = data1_cs
+)
+
+est_cs1 <-  tibble(group = paste0(fit_cs1$group), year = fit_cs1$t, estimate = fit_cs1$att) %>% 
+  mutate(method = "CS") 
+
+tibble(method = c("TWFE","TWFE-V2","POLS","TWM"),
+         formula = c(glue("feols({Reduce(paste,deparse(fmla_twfe1))}, data = df_)"),
+                     glue("feols({Reduce(paste,deparse(fmla_twfe1_v2))}, data = df_)"),
+                     glue("lm({Reduce(paste,deparse(fmla_lm1))}, data = df_)"),
+                     glue("lmer({Reduce(paste,deparse(fmla_twm1))}, data = df_)"))) %>% 
+  gt() %>% 
+  cols_label("method" = "Estimator",
+             "formula" = "Regression Call")
+                     
+```
+
+## Summary of Estimates
+
+Table @fig-sum-case1 summarizes the treatment effect estimates across all three approaches. These estimates are also plotted as lines in @fig-plot-case1.
+
+```{r}
+#| fig-cap: Summary of Estimates - Common Treatment Time, Constant Treatment Effects
+#| label: fig-sum-case1
+#| code-fold: true
+
+est1 <- 
+  est_twfe1 %>% 
+  bind_rows(est_twfe1_v2) %>% 
+  bind_rows(est_lm1) %>% 
+  bind_rows(est_twm1) 
+
+est1 %>% 
+  select(-formula) %>% 
+  mutate(group = "Intervention") %>% 
+  spread(method,estimate) %>% 
+  mutate(truth = df1$truth %>% filter(type=="Static") %>% pull(mu_truth))  %>% 
+  gt::gt() %>%
+  fmt_number(columns = c(TWFE,`TWFE-V2`,TWM, POLS),decimals=3) %>% 
+  cols_label("group" = "",
+             "truth"= "Truth")
+
+```
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+#| fig-cap: Treatment Effect Estimates
+#| label: fig-plot-case1
+
+df_est1 <- crossing(group= treatment_groups, year = treatment_years) %>% 
+                      as_tibble() %>%
+                      mutate(tmp = 1) %>% 
+                      left_join(est1 %>% mutate(tmp=1)) %>% 
+              mutate(year = as.numeric(paste0(year))) %>% 
+  bind_rows(est_cs1 )
+  
+plot_data(df1) + 
+  geom_line(data = df_est1, aes(x = year, y = estimate, colour = factor(group),lty=factor(method)), lwd=2)  +
+  theme(legend.position="bottom") 
+
+```
+
+# Case 2: Common Treatment Time, Dynamic Treatment Effects
+
+```{r}
+#| warning: false
+#| message: false
+#| code-fold: true
+
+params2=  list(
+  mu = list("1998" = 0),
+  mu_t = list("1998" = 0.3),
+  tx = list("1998" = 1:25,
+            "NA" = 26:50),
+  bin = c(-5,5))
+
+set.seed(123)
+df2 <- make_data(params2,N=200) 
+data2 <- df2$df %>% 
+  select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
+  mutate_at(vars(treatment_time, year), factor)
+plot_data(df2) 
+
+treatment_years2 <-
+  data2 %>%
+  count(treat, year) %>%
+  filter(treat== 1 ) %>%
+  pull(year) %>%
+  as.vector()
+
+treatment_groups2 <-
+  unique(data2[data2$treatment_time != 0 & !is.na(data2$treatment_time),]$treatment_time) %>% 
+  paste()
+
+df_ <-
+  data2 %>%
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,as.numeric(paste0(treatment_time)))) %>% 
+  select(y = dep_var,w = treat, id = unit,year, treatment_time) %>%
+  fastDummies::dummy_cols(c("year","treatment_time")) %>%
+  select_at(vars(y,w,id,year,glue("year_{treatment_years2}") %>% as.vector(),
+                 glue("treatment_time_{treatment_groups2}"))) %>%
+  rename_at(vars(starts_with("year_")),~gsub("year_","f",.)) %>%
+  rename_at(vars(starts_with("treatment_time_")),~gsub("treatment_time_","d",.))
+```
+
+## Estimate Models
+
+We next estimate the models
+
+| Method                | Command   | Design Variables       | Fixed or Random Effect |
+|------------------|------------------|------------------|------------------|
+| Two-Way Fixed Effects | `feols()` | `w : f*` + `f*`        | Unit Fixed Effect      |
+| Pooled OLS            | `lm()`    | `w : f*` + `f*` + `d*` |                        |
+| Two-Way Mundlak       | `lmer()`  | `w : f*` + `f*` + `d*` | Unit Random Effect     |
+
+```{r}
+#| code-fold: true
+fmla_twfe2 <- glue("y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + {paste0('f',treatment_years2,collapse=' + ')} | id") %>% as.formula()
+fit_twfe2 <- feols(fmla_twfe2, data = df_)
+
+fmla_lm2 <- glue("y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + {paste0('f',treatment_years2,collapse=' + ')} + {paste0('d',treatment_groups2,collapse= '+')}") %>% as.formula()
+fit_lm2 <- lm(fmla_lm2, data = df_) 
+
+fmla_twm2 <- glue("y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + {paste0('f',treatment_years2,collapse=' + ')} + {paste0('d',treatment_groups2,collapse= '+')} + (1|id)") %>% as.formula()
+fit_twm2 <- lmer( fmla_twm2 , data = df_) 
+
+# CS
+data2_cs <- 
+  data2 %>% 
+  mutate(year = as.numeric(paste0(year)),
+         treatment_time = as.numeric(paste0(treatment_time)))  %>% 
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time))
+
+
+fit_cs2 <- att_gt(yname = "dep_var",
+                  tname = "year",
+                  idname = "unit",
+                  gname = "treatment_time",
+                  control_group = "notyettreated",
+                  data = data2_cs
+)
+
+est_cs2 <-  tibble(group = paste0(fit_cs2$group), year = fit_cs2$t, estimate = fit_cs2$att) %>% 
+  mutate(method = "CS")  
+
+  tibble(method = c("TWFE","POLS","TWM"),
+         formula = c(glue("feols({Reduce(paste,deparse(fmla_twfe2))}, data = df_)"),
+                     glue("lm({Reduce(paste,deparse(fmla_lm2))}, data = df_)"),
+                     glue("lmer({Reduce(paste,deparse(fmla_twm2))}, data = df_)"))) %>% 
+  gt() %>% 
+  cols_label("method" = "Estimator",
+             "formula" = "Regression Call")
+                     
+```
+
+## Summary of Estimates
+
+```{r}
+#| fig-cap: Summary of Estimates - Common Treatment Time, Dynamic Treatment Effects
+#| label: fig-sum-case2
+#| code-fold: true
+#| 
+est_twfe2 <- 
+  fit_twfe2 %>% tidy() %>% 
+  mutate(method = "TWFE") %>% 
+  mutate(call = glue("feols({Reduce(paste,deparse(fmla_twfe2))}, data = df_)"))
+
+est_lm2 <- 
+  fit_lm2 %>% tidy() %>% 
+  mutate(call = glue("lm({Reduce(paste,deparse(fmla_lm2))}, data = df_)"))  %>% 
+  mutate(method = "POLS")
+
+est_twm2 <- 
+  fit_twm2  %>% summary() %>% 
+  coef() %>% 
+  data.frame() %>% 
+  rownames_to_column(var = "term") %>% 
+  janitor::clean_names() %>% 
+  as_tibble() %>% 
+  mutate(method = "TWM") %>% 
+  mutate(call = glue("lmer({Reduce(paste,deparse(fmla_twm2))}, data = df_)"))
+
+est2 <- 
+  est_twfe2 %>% 
+  bind_rows(est_lm2) %>% 
+  bind_rows(est_twm2) %>% 
+  filter(grepl("^w:",term)) %>% 
+  separate(term,into=c("tmp","year"), sep = ":") %>% 
+  mutate(year = gsub("f","",year)) %>% 
+  mutate(year = as.numeric(paste0(year))) %>% 
+  select(-tmp) %>% 
+  bind_rows(est_cs2 %>% filter(!is.na(group))) %>% 
+  select(-group)
+
+df_est2 <- 
+  crossing(group= treatment_groups, year = treatment_years) %>% 
+  as_tibble() %>%
+  mutate(year = as.numeric(paste0(year))) %>% 
+  left_join(est2, "year") %>% 
+  mutate(year = as.numeric(paste0(year))) 
+
+df_est2 %>% 
+  select(year,estimate,method) %>% 
+  spread(method,estimate) %>% 
+  select(year,TWFE,POLS,TWM, CS) %>% 
+  gt() %>% 
+  fmt_number(columns=c(TWFE,POLS,TWM,CS),decimals=3)
+
+```
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+#| fig-cap: Treatment Effect Estimates
+#| label: fig-plot-case2
+
+plot_data(df2) + 
+  geom_line(data = df_est2, aes(x = year, y = estimate, colour = factor(group),lty=factor(method)), lwd=2)  +
+  theme(legend.position="bottom")
+
+
+```
+
+# Case 3: Multiple Treatment Periods and Constant Equal Treatment Effects
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+
+# Case 3: Multiple Treatment Periods and Constant Equal Treatment Effects
+params3=  list(
+  mu = list("1989" = 3,
+            "1998" = 3,
+            "2007" = 3),
+  mu_t = list("1989" = 0,
+              "1998" = 0,
+              "2007" = 0),
+  tx = list("1989" = 1:17,
+            "1998" = 18:35,
+            "2007" = 36:50),
+  bin = c(-5,5))
+
+set.seed(123)
+df3 <- make_data(params3,N=200) 
+data3 <- df3$df %>% 
+  select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
+  mutate_at(vars(treatment_time, year), factor)
+plot_data(df3) 
+
+treatment_years3 <-
+  data3 %>%
+  count(treat, year) %>%
+  filter(treat== 1 ) %>%
+  pull(year) %>%
+  as.vector()
+
+treatment_groups3 <-
+  unique(data3[data3$treatment_time != 0 & !is.na(data3$treatment_time),]$treatment_time) %>% 
+  paste()
+
+df_ <-
+  data3 %>%
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,as.numeric(paste0(treatment_time)))) %>% 
+  select(y = dep_var,w = treat, id = unit,year, treatment_time) %>%
+  fastDummies::dummy_cols(c("year","treatment_time")) %>%
+  select_at(vars(y,w,id,year,glue("year_{treatment_years3}") %>% as.vector(),
+                 glue("treatment_time_{treatment_groups3}"))) %>%
+  rename_at(vars(starts_with("year_")),~gsub("year_","f",.)) %>%
+  rename_at(vars(starts_with("treatment_time_")),~gsub("treatment_time_","d",.))
+```
+
+## Estimate Models
+
+We next estimate the models
+
+| Method                | Command   | Design Variables  | Fixed or Random Effect |
+|-----------------------|-----------|-------------------|------------------------|
+| Two-Way Fixed Effects | `feols()` | `w` + `f*`        | Unit Fixed Effect      |
+| Pooled OLS            | `lm()`    | `w` + `f*` + `d*` |                        |
+| Two-Way Mundlak       | `lmer()`  | `w` + `f*` + `d*` | Unit Random Effect     |
+
+```{r}
+#| code-fold: true
+#| message: false
+#| warning: false
+
+fmla_twfe3 <- glue("y ~ w + {paste0('f',treatment_years3,collapse= '+')} | id ") %>% as.formula()
+fit_twfe3 <- feols(fmla_twfe3, data = df_)
+est_twfe3 <- tibble(method = "TWFE", estimate = coef(fit_twfe3)["w"], formula = glue("feols({Reduce(paste,deparse(fmla_twfe3))}, data = df_)"))
+
+fmla_lm3 <- glue("y ~ w + {paste0('f',treatment_years3,collapse= '+')} + {paste0('d',treatment_groups3,collapse= '+')}") %>% as.formula()
+fit_lm3 <- lm(fmla_lm3, data = df_) 
+est_lm3 <- tibble(method = "POLS", estimate = coef(fit_lm3)["w"], formula = glue("lm({Reduce(paste,deparse(fmla_lm3))}, data = df_)"))
+
+fmla_twm3 <- glue("y ~ w + {paste0('f',treatment_years3,collapse= '+')} + {paste0('d',treatment_groups3,collapse= '+')} + (1|id)") %>% as.formula()
+fit_twm3 <- lmer( fmla_twm3 , data = df_) 
+est_twm3 <- tibble(method = "TWM", estimate = coef(summary(fit_twm3))["w",][1] %>% unname(), formula = glue("lmer({Reduce(paste,deparse(fmla_twm3))}, data = df_)"))
+
+# CS
+data3_cs <- 
+  data3 %>% 
+  mutate(year = as.numeric(paste0(year)),
+         treatment_time = as.numeric(paste0(treatment_time)))  %>% 
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time))
+
+
+fit_cs3 <- att_gt(yname = "dep_var",
+                  tname = "year",
+                  idname = "unit",
+                  gname = "treatment_time",
+                  control_group = "notyettreated",
+                  data = data3_cs
+)
+
+est_cs3 <-  tibble(group = paste0(fit_cs3$group), year = fit_cs3$t, estimate = fit_cs3$att) %>% 
+  mutate(method = "CS") 
+
+tibble(method = c("TWFE","POLS","TWM"),
+         formula = c(glue("feols({Reduce(paste,deparse(fmla_twfe3))}, data = df_)"),
+                     glue("lm({Reduce(paste,deparse(fmla_lm3))}, data = df_)"),
+                     glue("lmer({Reduce(paste,deparse(fmla_twm3))}, data = df_)"))) %>% 
+  gt() %>% 
+  cols_label("method" = "Estimator",
+             "formula" = "Regression Call")
+```
+
+## Summary of Estimates
+
+```{r}
+#| fig-cap: Summary of Estimates - Common Treatment Time, Constant Treatment Effects
+#| label: fig-sum-case3
+#| code-fold: true
+
+est3 <- 
+  est_twfe3 %>% 
+  bind_rows(est_lm3) %>% 
+  bind_rows(est_twm3) 
+
+est3 %>% 
+  select(-formula) %>% 
+  mutate(group = "Intervention") %>% 
+  spread(method,estimate) %>% 
+  gt::gt() %>%
+  fmt_number(columns = c(TWFE,TWM, POLS),decimals=3) %>% 
+  cols_label("group" = "")
+```
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+#| fig-cap: Treatment Effect Estimates
+#| label: fig-plot-case3
+
+df_est3 <- crossing(group= treatment_groups3, year = treatment_years3) %>% 
+                      as_tibble() %>%
+                      mutate(tmp = 1) %>% 
+                      left_join(est3 %>% mutate(tmp=1)) %>% 
+              mutate(year = as.numeric(paste0(year))) %>% 
+  bind_rows(est_cs3)
+  
+plot_data(df3)  + 
+  geom_line(data = df_est3, aes(x = year, y = estimate, colour = factor(group),lty=factor(method)), lwd=2)  +
+  theme(legend.position="bottom")
+
+
+```
+
+# Case 4a: Multiple Treatment Periods and Constant Different Treatment Effects
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+
+
+params4a =  list(
+  mu = list("1989" = 5,
+            "1998" = 3,
+            "2007" = 1),
+  mu_t = list("1989" = 0,
+              "1998" = 0,
+              "2007" = 0),
+  tx = list("1989" = 1:17,
+            "1998" = 18:35,
+            "2007" = 36:50),
+  bin = c(-5,5))
+
+set.seed(123)
+df4a <- make_data(params4a,N=200) 
+data4a <- df4a$df %>% 
+  select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
+  mutate_at(vars(treatment_time, year), factor)
+plot_data(df4a) 
+
+treatment_years4a <-
+  data4a %>%
+  count(treat, year) %>%
+  filter(treat== 1 ) %>%
+  pull(year) %>%
+  as.vector()
+
+treatment_groups4a <-
+  unique(data4a[data4a$treatment_time != 0 & !is.na(data4a$treatment_time),]$treatment_time) %>% 
+  paste()
+
+df4a_ <-
+  data4a %>%
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,as.numeric(paste0(treatment_time)))) %>% 
+  select(y = dep_var,w = treat, id = unit,year, treatment_time) %>%
+  fastDummies::dummy_cols(c("year","treatment_time")) %>%
+  select_at(vars(y,w,id,year,glue("year_{treatment_years4a}") %>% as.vector(),
+                 glue("treatment_time_{treatment_groups4a}"))) %>%
+  rename_at(vars(starts_with("year_")),~gsub("year_","f",.)) %>%
+  rename_at(vars(starts_with("treatment_time_")),~gsub("treatment_time_","d",.))
+
+```
+
+## Estimate Models
+
+We next estimate the models
+
+| Method                | Command   | Design Variables       | Fixed or Random Effect |
+|------------------|------------------|------------------|------------------|
+| Two-Way Fixed Effects | `feols()` | `w : d*` + `f*`        | Unit Fixed Effect      |
+| Pooled OLS            | `lm()`    | `w : d*` + `f*` + `d*` |                        |
+| Two-Way Mundlak       | `lmer()`  | `w : d*` + `f*` + `d*` | Unit Random Effect     |
+
+```{r}
+#| code-fold: true
+#| message: false
+#| warning: false
+
+fmla_twfe4a <- glue("y ~ {paste0('w : ',paste0('d',treatment_groups4a), collapse = ' + ')} + {paste0('f',treatment_years4a,collapse=' + ')} | id") %>% as.formula()
+fit_twfe4a <- feols(fmla_twfe4a, data = df4a_)
+
+fmla_lm4a <- glue("y ~ {paste0('w : ',paste0('d',treatment_groups4a), collapse = ' + ')} + {paste0('f',treatment_years4a,collapse=' + ')} + {paste0('d',treatment_groups4a,collapse=' + ')}") %>% as.formula()
+fit_lm4a <- lm(fmla_lm4a, data = df4a_) 
+
+
+fmla_twm4a <- glue("y ~ {paste0('w : ',paste0('d',treatment_groups4a), collapse = ' + ')} + {paste0('f',treatment_years4a,collapse=' + ')} + {paste0('d',treatment_groups4a,collapse=' + ')} + (1|id)") %>% as.formula()
+fit_twm4a <- lmer( fmla_twm4a , data = df4a_) 
+
+# CS
+data4a_cs <- 
+  data4a %>% 
+  mutate(year = as.numeric(paste0(year)),
+         treatment_time = as.numeric(paste0(treatment_time)))  %>% 
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time))
+
+
+fit_cs4a <- att_gt(yname = "dep_var",
+                  tname = "year",
+                  idname = "unit",
+                  gname = "treatment_time",
+                  control_group = "notyettreated",
+                  data = data4a_cs
+)
+
+est_cs4a <-  tibble(group = paste0(fit_cs4a$group), year = fit_cs4a$t, estimate = fit_cs4a$att) %>% 
+  mutate(method = "CS")  
+
+tibble(method = c("TWFE","POLS","TWM"),
+         formula = c(glue("feols({Reduce(paste,deparse(fmla_twfe4a))}, data = df_)"),
+                     glue("lm({Reduce(paste,deparse(fmla_lm4a))}, data = df_)"),
+                     glue("lmer({Reduce(paste,deparse(fmla_twm4a))}, data = df_)"))) %>% 
+  gt() %>% 
+  cols_label("method" = "Estimator",
+             "formula" = "Regression Call")
+
+```
+
+```{r}
+#| fig-cap: Summary of Estimates - Multiple Treatment Periods and Constant Different Treatment Effects
+#| label: fig-sum-case4a
+#| code-fold: true
+#| 
+est_twfe4a <- 
+  fit_twfe4a %>% tidy() %>% 
+  mutate(method = "TWFE") %>% 
+  mutate(call = glue("feols({Reduce(paste,deparse(fmla_twfe4a))}, data = df4a_)"))
+
+est_lm4a <- 
+  fit_lm4a %>% tidy() %>% 
+  mutate(call = glue("lm({Reduce(paste,deparse(fmla_lm4a))}, data = df4a_)"))  %>% 
+  mutate(method = "POLS")
+
+est_twm4a <- 
+  fit_twm4a  %>% summary() %>% 
+  coef() %>% 
+  data.frame() %>% 
+  rownames_to_column(var = "term") %>% 
+  janitor::clean_names() %>% 
+  as_tibble() %>% 
+  mutate(method = "TWM") %>% 
+  mutate(call = glue("lmer({Reduce(paste,deparse(fmla_twm4a))}, data = df4a_)"))
+
+est4a <- 
+  est_twfe4a %>% 
+  bind_rows(est_lm4a) %>% 
+  bind_rows(est_twm4a) %>% 
+  filter(grepl("^w:",term)) %>% 
+  separate(term,into=c("tmp","group"), sep = ":") %>% 
+  mutate(group = gsub("d","",group)) %>% 
+  select(-tmp) #%>% 
+  #bind_rows(est_cs4a %>% filter(!is.na(group))) 
+
+df_est4a <- 
+  crossing(group= treatment_groups4a) %>% 
+  as_tibble() %>%
+  left_join(est4a, "group") %>% 
+  mutate(group = factor(group))
+
+df_est4a %>% 
+  select(group,estimate,method) %>% 
+  spread(method,estimate) %>% 
+  select(group,TWFE,POLS,TWM) %>% 
+  gt() %>% 
+  fmt_number(columns=c(TWFE,POLS,TWM),decimals=3)
+
+```
+
+## Summary of Estimates
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+#| fig-cap: Treatment Effect Estimates - Multiple Treatment Periods and Constant Different Treatment Effects
+#| label: fig-plot-case4a
+
+df_est4a_ <- 
+  crossing(year = treatment_years4a,group = treatment_groups4a) %>%
+  mutate(group = as.numeric(paste0(group))) %>% 
+  mutate(year = as.numeric(paste0(year))) %>% 
+  filter(year>=group) %>% 
+  mutate(group = factor(group)) %>% 
+  left_join(
+    df_est4a,"group"
+  ) %>% 
+  bind_rows(est_cs4a)
+
+plot_data(df4a) + 
+  geom_line(data = df_est4a_, aes(x = year, y = estimate, colour = factor(group),lty=factor(method)), lwd=2)  +
+  theme(legend.position="bottom")
+
+
+```
+
+# Case 4b: Multiple Treatment Periods and Constant Different Treatment Effects
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+
+params4b =  list(
+  mu = list("1989" = 5,
+            "1998" = 3),
+  mu_t = list("1989" = 0,
+              "1998" = 0),
+  tx = list("1989" = 1:17,
+            "1998" = 18:35,
+            "NA" = 36:50),
+  bin = c(-5,5))
+
+
+set.seed(123)
+df4b <- make_data(params4b,N=200) 
+data4b <- df4b$df %>% 
+  select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
+  mutate_at(vars(treatment_time, year), factor)
+plot_data(df4b) 
+
+treatment_years4b <-
+  data4b %>%
+  count(treat, year) %>%
+  filter(treat== 1 ) %>%
+  pull(year) %>%
+  as.vector()
+
+treatment_groups4b <-
+  unique(data4b[data4b$treatment_time != 0 & !is.na(data4b$treatment_time),]$treatment_time) %>% 
+  paste()
+
+df4b_ <-
+  data4b %>%
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,as.numeric(paste0(treatment_time)))) %>% 
+  select(y = dep_var,w = treat, id = unit,year, treatment_time) %>%
+  fastDummies::dummy_cols(c("year","treatment_time")) %>%
+  select_at(vars(y,w,id,year,treatment_time,glue("year_{treatment_years4b}") %>% as.vector(),
+                 glue("treatment_time_{treatment_groups4b}"))) %>%
+  rename_at(vars(starts_with("year_")),~gsub("year_","f",.)) %>%
+  rename_at(vars(starts_with("treatment_time_")),~gsub("treatment_time_","d",.))
+
+```
+
+## Estimate Models
+
+We next estimate the models
+
+| Method                | Command   | Design Variables       | Fixed or Random Effect |
+|------------------|------------------|------------------|------------------|
+| Two-Way Fixed Effects | `feols()` | `w : d*` + `f*`        | Unit Fixed Effect      |
+| Pooled OLS            | `lm()`    | `w : d*` + `f*` + `d*` |                        |
+| Two-Way Mundlak       | `lmer()`  | `w : d*` + `f*` + `d*` | Unit Random Effect     |
+
+```{r}
+#| code-fold: true
+#| message: false
+#| warning: false
+
+fmla_twfe4b <- glue("y ~ {paste0('w : ',paste0('d',treatment_groups4b), collapse = ' + ')} + {paste0('f',treatment_years4b,collapse=' + ')} | id") %>% as.formula()
+fit_twfe4b <- feols(fmla_twfe4b, data = df4b_)
+
+fmla_lm4b <- glue("y ~ {paste0('w : ',paste0('d',treatment_groups4b), collapse = ' + ')} + {paste0('f',treatment_years4b,collapse=' + ')} + {paste0('d',treatment_groups4b,collapse=' + ')}") %>% as.formula()
+fit_lm4b <- lm(fmla_lm4b, data = df4b_) 
+
+fmla_twm4b <- glue("y ~ {paste0('w : ',paste0('d',treatment_groups4b), collapse = ' + ')} + {paste0('f',treatment_years4b,collapse=' + ')} + {paste0('d',treatment_groups4b,collapse=' + ')} + (1|id)") %>% as.formula()
+fit_twm4b <- lmer( fmla_twm4b , data = df4b_) 
+
+tibble(method = c("TWFE","POLS","TWM"),
+         formula = c(glue("feols({Reduce(paste,deparse(fmla_twfe4b))}, data = df_)"),
+                     glue("lm({Reduce(paste,deparse(fmla_lm4b))}, data = df_)"),
+                     glue("lmer({Reduce(paste,deparse(fmla_twm4b))}, data = df_)"))) %>% 
+  gt() %>% 
+  cols_label("method" = "Estimator",
+             "formula" = "Regression Call")
+
+# CS
+data4b_cs <- 
+  data4b %>% 
+  mutate(year = as.numeric(paste0(year)),
+         treatment_time = as.numeric(paste0(treatment_time)))  %>% 
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time))
+
+
+fit_cs4b <- att_gt(yname = "dep_var",
+                  tname = "year",
+                  idname = "unit",
+                  gname = "treatment_time",
+                  control_group = "nevertreated",
+                  data = data4b_cs
+)
+
+est_cs4b <-  tibble(group = paste0(fit_cs4b$group), year = fit_cs4b$t, estimate = fit_cs4b$att) %>% 
+  mutate(method = "CS")  
+
+```
+
+## Summary of Estimates
+
+```{r}
+#| fig-cap: Summary of Estimates -  Multiple Treatment Periods and Constant Different Treatment Effects
+#| label: fig-sum-case4b
+#| code-fold: true
+#| 
+est_twfe4b <- 
+  fit_twfe4b %>% tidy() %>% 
+  mutate(method = "TWFE") %>% 
+  mutate(call = glue("feols({Reduce(paste,deparse(fmla_twfe4b))}, data = df4b_)")) 
+
+est_lm4b <- 
+  fit_lm4b %>% tidy() %>% 
+  mutate(call = glue("lm({Reduce(paste,deparse(fmla_lm4b))}, data = df4b_)"))  %>% 
+  mutate(method = "POLS")
+
+est_twm4b <- 
+  fit_twm4b  %>% summary() %>% 
+  coef() %>% 
+  data.frame() %>% 
+  rownames_to_column(var = "term") %>% 
+  janitor::clean_names() %>% 
+  as_tibble() %>% 
+  mutate(method = "TWM") %>% 
+  mutate(call = glue("lmer({Reduce(paste,deparse(fmla_twm4b))}, data = df4b_)"))
+
+est4b <- 
+  est_twfe4b %>% 
+  bind_rows(est_lm4b) %>% 
+  bind_rows(est_twm4b) %>% 
+  filter(grepl("^w:",term)) %>% 
+  separate(term,into=c("tmp","group"), sep = ":") %>% 
+  mutate(group = gsub("d","",group)) %>% 
+  mutate(group = as.numeric(paste0(group))) %>% 
+  select(-tmp) %>% 
+  mutate(group = factor(group))
+
+df_est4b <- 
+  crossing(group= treatment_groups4b) %>% 
+  as_tibble() %>%
+  left_join(est4b, "group") %>% 
+  mutate(group = factor(group))
+
+df_est4b %>% 
+  select(group,estimate,method) %>% 
+  spread(method,estimate) %>% 
+  select(group,TWFE,POLS,TWM) %>% 
+  gt() %>% 
+  fmt_number(columns=c(TWFE,POLS,TWM),decimals=3)
+
+```
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+#| fig-cap: Treatment Effect Estimates - Multiple Treatment Periods and Constant Different Treatment Effects
+#| label: fig-plot-case4b
+
+df_est4b_ <- 
+  crossing(year = treatment_years4b,group = treatment_groups4b) %>%
+  mutate(group = as.numeric(paste0(group))) %>% 
+  mutate(year = as.numeric(paste0(year))) %>% 
+  filter(year>=group) %>% 
+  mutate(group = factor(group)) %>% 
+  left_join(
+    df_est4b,"group"
+  ) %>% 
+  bind_rows(est_cs4b)
+
+plot_data(df4b) + 
+  geom_line(data = df_est4b_, aes(x = year, y = estimate, colour = factor(group),lty=factor(method)), lwd=2)  +
+  theme(legend.position="bottom")
+
+
+```
+
+# Case 4c: Multiple Treatment Periods and Constant Different Treatment Effects - Never Treated as Control
+
+### 1. Define all the years where at least one group is treated (`treatment_years`)
+
+Note that we define these years across *the entire sample* and do not restrict to only post-treatment years, as we did above.
+
+```{r}
+treatment_years4b_nev <-
+  data4b %>%
+  count(treat, year) %>%
+  #!!!! NOTE THAT WE DON'T RESTRICT TO POST-TREATMENT YEARS AS BEFORE
+  #filter(treat== 1 ) %>%
+  pull(year) %>%
+  as.vector()
+treatment_years4b_nev
+```
+
+## Estimate Models
+
+We next estimate the models
+
+| Method                | Command   | Design Variables       | Fixed or Random Effect |
+|------------------|------------------|------------------|------------------|
+| Two-Way Fixed Effects | `feols()` | `w : d*` + `f*`        | Unit Fixed Effect      |
+| Pooled OLS            | `lm()`    | `w : d*` + `f*` + `d*` |                        |
+| Two-Way Mundlak       | `lmer()`  | `w : d*` + `f*` + `d*` | Unit Random Effect     |
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+
+df4b_nev_ <-
+  data4b %>%
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,as.numeric(paste0(treatment_time)))) %>% 
+  select(y = dep_var,w = treat, id = unit,year, treatment_time) %>%
+  fastDummies::dummy_cols(c("year","treatment_time")) %>%
+  select_at(vars(y,w,id,year,treatment_time,glue("year_{treatment_years4b_nev}") %>% as.vector(),
+                 glue("treatment_time_{treatment_groups4b}"))) %>%
+  rename_at(vars(starts_with("year_")),~gsub("year_","f",.)) %>%
+  rename_at(vars(starts_with("treatment_time_")),~gsub("treatment_time_","d",.))
+
+fmla_twfe4b_nev <- glue("y ~ {paste0('w : ',paste0('d',treatment_groups4b), collapse = ' + ')} + {paste0('f',treatment_years4b_nev[-1],collapse=' + ')} | id") %>% as.formula()
+fit_twfe4b_nev <- feols(fmla_twfe4b_nev, data = df4b_nev_)
+
+fmla_lm4b_nev <- glue("y ~ {paste0('w : ',paste0('d',treatment_groups4b), collapse = ' + ')} + {paste0('f',treatment_years4b_nev[-1],collapse=' + ')} + {paste0('d',treatment_groups4b,collapse=' + ')}") %>% as.formula()
+fit_lm4b_nev <- lm(fmla_lm4b_nev, data = df4b_nev_) 
+
+fmla_twm4b_nev <- glue("y ~ {paste0('w : ',paste0('d',treatment_groups4b), collapse = ' + ')} + {paste0('f',treatment_years4b_nev[-1],collapse=' + ')} + {paste0('d',treatment_groups4b,collapse=' + ')} + (1|id)") %>% as.formula()
+fit_twm4b_nev <- lmer( fmla_twm4b_nev , data = df4b_nev_) 
+
+tibble(method = c("TWFE","POLS","TWM"),
+         formula = c(glue("feols({Reduce(paste,deparse(fmla_twfe4b_nev))}, data = df_)"),
+                     glue("lm({Reduce(paste,deparse(fmla_lm4b_nev))}, data = df_)"),
+                     glue("lmer({Reduce(paste,deparse(fmla_twm4b_nev))}, data = df_)"))) %>% 
+  gt() %>% 
+  cols_label("method" = "Estimator",
+             "formula" = "Regression Call")
+
+# CS
+data4b_nev_cs <- 
+  data4b %>% 
+  mutate(year = as.numeric(paste0(year)),
+         treatment_time = as.numeric(paste0(treatment_time)))  %>% 
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time))
+
+
+fit_cs4b_nev <- att_gt(yname = "dep_var",
+                  tname = "year",
+                  idname = "unit",
+                  gname = "treatment_time",
+                  control_group = "nevertreated",
+                  data = data4b_nev_cs
+)
+
+est_cs4b_nev <-  tibble(group = paste0(fit_cs4b$group), year = fit_cs4b$t, estimate = fit_cs4b$att) %>% 
+  mutate(method = "CS")  
+
+```
+
+## Summary of Estimates
+
+```{r}
+#| fig-cap: Summary of Estimates -  Multiple Treatment Periods and Constant Different Treatment Effects (Never Treated as Only Control)
+#| label: fig-sum-case4b-nev
+#| code-fold: true
+#| 
+est_twfe4b_nev <- 
+  fit_twfe4b_nev %>% tidy() %>% 
+  mutate(method = "TWFE") %>% 
+  mutate(call = glue("feols({Reduce(paste,deparse(fmla_twfe4b_nev))}, data = df4b_nev_)"))
+
+est_lm4b_nev <- 
+  fit_lm4b_nev %>% tidy() %>% 
+  mutate(call = glue("lm({Reduce(paste,deparse(fmla_lm4b_nev))}, data = df4b_nev_)"))  %>% 
+  mutate(method = "POLS")
+
+est_twm4b_nev <- 
+  fit_twm4b_nev  %>% summary() %>% 
+  coef() %>% 
+  data.frame() %>% 
+  rownames_to_column(var = "term") %>% 
+  janitor::clean_names() %>% 
+  as_tibble() %>% 
+  mutate(method = "TWM") %>% 
+  mutate(call = glue("lmer({Reduce(paste,deparse(fmla_twm4b_nev))}, data = df4b_nev_)"))
+
+est4b_nev <- 
+  est_twfe4b_nev %>% 
+  bind_rows(est_lm4b_nev) %>% 
+  bind_rows(est_twm4b_nev) %>% 
+  filter(grepl("^w:",term)) %>% 
+  separate(term,into=c("tmp","group"), sep = ":") %>% 
+  mutate(group = gsub("d","",group)) %>% 
+  mutate(group = as.numeric(paste0(group))) %>% 
+  select(-tmp) %>% 
+  mutate(group = factor(group))
+
+df_est4b_nev <- 
+  crossing(group= treatment_groups4b) %>% 
+  as_tibble() %>%
+  left_join(est4b_nev, "group") %>% 
+  mutate(group = factor(group))
+
+df_est4b_nev %>% 
+  select(group,estimate,method) %>% 
+  spread(method,estimate) %>% 
+  select(group,TWFE,POLS,TWM) %>% 
+  gt() %>% 
+  fmt_number(columns=c(TWFE,POLS,TWM),decimals=3)
+
+```
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+#| fig-cap: Treatment Effect Estimates - Multiple Treatment Periods and Constant Different Treatment Effects (Never Treated as Only Control)
+#| label: fig-plot-case4b-nev
+
+df_est4b_nev_ <- 
+  crossing(year = treatment_years4b_nev,group = treatment_groups4b) %>%
+  mutate(group = as.numeric(paste0(group))) %>% 
+  mutate(year = as.numeric(paste0(year))) %>% 
+  filter(year>=group) %>% 
+  mutate(group = factor(group)) %>% 
+  left_join(
+    df_est4b,"group"
+  ) %>% 
+  bind_rows(est_cs4b)
+
+plot_data(df4b) + 
+  geom_line(data = df_est4b_nev_, aes(x = year, y = estimate, colour = factor(group),lty=factor(method)), lwd=2)  +
+  theme(legend.position="bottom")
+
+
+```
+
+# Case 5: Multiple Treatment Periods and Constant Dynamic Treatment Effects
+
+In this case we need to first limit our sample to years \< the maximum treatment time.
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+
+params5=  list(
+  mu = list("1989" = 0,
+            "1998" = 0,
+            "2007" = 0),
+  mu_t = list("1989" = 0.3,
+              "1998" = 0.3,
+              "2007" = 0.3),
+  tx = list("1989" = 1:17,
+            "1998" = 18:35,
+            "2007" = 36:50),
+  bin = c(-5,5))
+
+
+set.seed(123)
+df5 <- make_data(params5,N=200) 
+
+data5 <- df5$df %>% 
+  select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
+  mutate_at(vars(treatment_time, year), factor) %>% 
+  # Impose sample restriction
+  mutate(max_treatment_time= max(as.numeric(paste0(treatment_time)),na.rm=TRUE)) %>% 
+  filter(as.numeric(paste0(year))<max_treatment_time)
+
+plot_data(df5) 
+
+treatment_years5 <-
+  data5 %>%
+  count(treat, year) %>%
+  filter(treat== 1 ) %>%
+  pull(year) %>%
+  as.vector()
+
+treatment_groups5_ <-
+  unique(data5[data5$treatment_time != 0 & !is.na(data5$treatment_time),]$treatment_time) %>% 
+  paste() %>% 
+  as.numeric(paste0(.))
+  
+# Remove the last year since we have no control group for it. 
+
+treatment_groups5 <- treatment_groups5_[treatment_groups5_<max(as.numeric(paste0(data5$year)),na.rm = TRUE)]
+  
+treatment_years5 <-
+  data5 %>%
+  count(treat, year) %>%
+  filter(treat== 1 ) %>%
+  pull(year) %>%
+  as.vector()
+
+treatment_interactions5 <-
+  crossing(treatment_groups5,treatment_years5) %>%
+    filter(treatment_years5>= treatment_groups5) %>%
+    mutate(interaction = glue("d{treatment_groups5} : f{treatment_years5}")) %>%
+    pull(interaction) %>%
+    as.vector()
+
+df5_ <-
+  data5 %>%
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,as.numeric(paste0(treatment_time)))) %>% 
+  select(y = dep_var,w = treat, id = unit,year, treatment_time) %>%
+  fastDummies::dummy_cols(c("year","treatment_time")) %>%
+  select_at(vars(y,w,id,year,treatment_time,glue("year_{treatment_years5}") %>% as.vector(),
+                 glue("treatment_time_{treatment_groups5}"))) %>%
+  rename_at(vars(starts_with("year_")),~gsub("year_","f",.)) %>%
+  rename_at(vars(starts_with("treatment_time_")),~gsub("treatment_time_","d",.))
+
+```
+
+## Estimate Models
+
+We next estimate the models
+
+| Method                | Command   | Design Variables        | Fixed or Random Effect |
+|------------------|------------------|------------------|------------------|
+| Two-Way Fixed Effects | `feols()` | `d* : f*` + `f*`        | Unit Fixed Effect      |
+| Pooled OLS            | `lm()`    | `d* : f*` + `f*` + `d*` |                        |
+| Two-Way Mundlak       | `lmer()`  | `d* : f*` + `f*` + `d*` | Unit Random Effect     |
+
+```{r}
+#| code-fold: true
+
+fmla_twfe5 <-   fmla <- glue("y ~ {paste0(treatment_interactions5, collapse = ' + ')} + {paste0('f',treatment_years5,collapse=' + ')} | id") %>% as.formula()
+fit_twfe5 <- feols(fmla_twfe5, data = df5_)
+
+fmla_lm5 <- glue("y ~ {paste0(treatment_interactions5, collapse = ' + ')} + {paste0('f',treatment_years5,collapse=' + ')} + {paste0('d',treatment_groups5,collapse=' + ')}") %>% as.formula()
+fit_lm5 <- lm(fmla_lm5, data = df5_) 
+
+fmla_twm5 <- glue("y ~ {paste0(treatment_interactions5, collapse = ' + ')} + {paste0('f',treatment_years5,collapse=' + ')} + {paste0('d',treatment_groups5,collapse=' + ')} + (1|id)") %>% as.formula()
+fit_twm5 <- lmer( fmla_twm5 , data = df5_) 
+
+tibble(method = c("TWFE","POLS","TWM"),
+         formula = c(glue("feols({Reduce(paste,deparse(fmla_twfe5))}, data = df_)"),
+                     glue("lm({Reduce(paste,deparse(fmla_lm5))}, data = df_)"),
+                     glue("lmer({Reduce(paste,deparse(fmla_twm5))}, data = df_)"))) %>% 
+  gt() %>% 
+  cols_label("method" = "Estimator",
+             "formula" = "Regression Call")
+
+# CS
+data5_cs <- 
+  data5 %>% 
+  mutate(year = as.numeric(paste0(year)),
+         treatment_time = as.numeric(paste0(treatment_time)))  %>% 
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time))
+
+
+fit_cs5 <- att_gt(yname = "dep_var",
+                  tname = "year",
+                  idname = "unit",
+                  gname = "treatment_time",
+                  control_group = "notyettreated",
+                  data = data5_cs
+)
+
+est_cs5 <-  tibble(group = paste0(fit_cs5$group), year = fit_cs5$t, estimate = fit_cs5$att) %>% 
+  mutate(method = "CS")  
+
+```
+
+```{r}
+#| code-fold: true
+#| message: false
+#| warning: false
+#| 
+est_twfe5 <- 
+  fit_twfe5 %>% tidy() %>% 
+  mutate(method = "TWFE") %>% 
+  mutate(call = glue("feols({Reduce(paste,deparse(fmla_twfe5))}, data = df5_)"))
+
+est_lm5 <- 
+  fit_lm5 %>% tidy() %>% 
+  mutate(call = glue("lm({Reduce(paste,deparse(fmla_lm5))}, data = df5_)"))  %>% 
+  mutate(method = "POLS")
+
+est_twm5 <- 
+  fit_twm5  %>% summary() %>% 
+  coef() %>% 
+  data.frame() %>% 
+  rownames_to_column(var = "term") %>% 
+  janitor::clean_names() %>% 
+  as_tibble() %>% 
+  mutate(method = "TWM") %>% 
+  mutate(call = glue("lmer({Reduce(paste,deparse(fmla_twm5))}, data = df5_)"))
+
+est5 <- 
+  est_twfe5 %>% 
+  bind_rows(est_lm5) %>% 
+  bind_rows(est_twm5) %>% 
+  filter(grepl("^f|^d",term)) %>% 
+  filter(grepl(":",term)) %>%   
+  #data.frame() %>% select(term,estimate) %>% 
+  separate(term,into=c("one","two"), sep = ":")  %>% 
+  mutate(group = case_when(grepl("^d",one) ~ one, 
+                           TRUE ~ two)) %>% 
+  mutate(year = case_when(grepl("^f",one) ~ one, 
+                           TRUE ~ two))     %>% 
+  mutate(group = gsub("d","",group)) %>% 
+  mutate(group = as.numeric(paste0(group)))  %>% 
+  mutate(year = gsub("f","",year)) %>%     
+  mutate(year = as.numeric(paste0(year))) %>% 
+  select(-one,-two) %>% 
+  bind_rows(est_cs5 %>% mutate(group = as.numeric(paste0(group))))
+
+df_est5 <- 
+  crossing(group= treatment_groups5, year = treatment_years5) %>% 
+  as_tibble() %>%
+  mutate(year = as.numeric(paste0(year))) %>% 
+  left_join(est5, c("group","year")) %>% 
+  mutate(year = as.numeric(paste0(year))) %>% 
+  filter(!is.na(estimate))
+
+df_est5 %>% 
+  select(group, year,estimate,method) %>% 
+  spread(method,estimate) %>% 
+  select(group, year,TWFE,POLS,TWM,CS) %>% 
+  na.omit() %>% 
+  gt() %>% 
+  fmt_number(columns=c(TWFE,POLS,TWM,CS),decimals=3)
+
+
+```
+
+## Summary of Estimates
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+#| fig-cap: Treatment Effect Estimates - Multiple Treatment Periods and Constant Dynamic Treatment Effects 
+#| label: fig-plot-case5
+
+plot_data(df5)  + 
+  geom_line(data = df_est5, aes(x = year, y = estimate, colour = factor(group),lty=factor(method)), lwd=2)  +
+  theme(legend.position="bottom")
+
+
+```
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+#| fig-cap: Comparison of Treatment Effect Estimates - Multiple Treatment Periods and Constant Dynamic Treatment Effects 
+#| label: fig-plot-case5-comp
+
+df_est5 %>% 
+  select(group,year, estimate,method) %>% 
+  filter(method %in% c("TWFE","CS")) %>% 
+  spread(method,estimate) %>% 
+  ggplot(aes(x = TWFE, y = CS, group = year, colour = factor(group)))+
+  geom_point() + 
+  #facet_wrap(~group) + 
+  theme_few() + 
+  geom_abline(aes(slope=1,intercept=0),lty=3)  + 
+  theme(legend.position = "bottom") + 
+  ggsci::scale_color_aaas(name="Treatment Cohort")
+```
+
+# Case 6 : Multiple Treatment Periods and Heterogeneous Dynamic Treatment Effects
+
+In this case we need to first limit our sample to years \< the maximum treatment time.
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+
+params6=  list(
+  mu = list("1989" = 0,
+            "1998" = 0,
+            "2007" = 0),
+  mu_t = list("1989" = 0.5,
+              "1998" = 0.3,
+              "2007" = 0.1),
+  tx = list("1989" = 1:17,
+            "1998" = 18:35,
+            "2007" = 36:50),
+  bin = c(-5,5))
+
+
+set.seed(123)
+df6 <- make_data(params6,N=200) 
+
+data6 <- df6$df %>% 
+  select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
+  mutate_at(vars(treatment_time, year), factor) %>% 
+  # Impose sample restriction
+  mutate(max_treatment_time= max(as.numeric(paste0(treatment_time)),na.rm=TRUE)) %>% 
+  filter(as.numeric(paste0(year))<max_treatment_time)
+
+plot_data(df6) 
+
+treatment_years6 <-
+  data6 %>%
+  count(treat, year) %>%
+  filter(treat== 1 ) %>%
+  pull(year) %>%
+  as.vector()
+
+treatment_groups6_ <-
+  unique(data6[data6$treatment_time != 0 & !is.na(data6$treatment_time),]$treatment_time) %>% 
+  paste() %>% 
+  as.numeric(paste0(.))
+  
+# Remove the last year since we have no control group for it. 
+
+treatment_groups6 <- treatment_groups6_[treatment_groups6_<max(as.numeric(paste0(data6$year)),na.rm = TRUE)]
+  
+treatment_years6 <-
+  data6 %>%
+  count(treat, year) %>%
+  filter(treat== 1 ) %>%
+  pull(year) %>%
+  as.vector()
+
+treatment_interactions6 <-
+  crossing(treatment_groups6,treatment_years6) %>%
+    filter(treatment_years6>= treatment_groups6) %>%
+    mutate(interaction = glue("d{treatment_groups6} : f{treatment_years6}")) %>%
+    pull(interaction) %>%
+    as.vector()
+
+df6_ <-
+  data6 %>%
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,as.numeric(paste0(treatment_time)))) %>% 
+  select(y = dep_var,w = treat, id = unit,year, treatment_time) %>%
+  fastDummies::dummy_cols(c("year","treatment_time")) %>%
+  select_at(vars(y,w,id,year,treatment_time,glue("year_{treatment_years6}") %>% as.vector(),
+                 glue("treatment_time_{treatment_groups6}"))) %>%
+  rename_at(vars(starts_with("year_")),~gsub("year_","f",.)) %>%
+  rename_at(vars(starts_with("treatment_time_")),~gsub("treatment_time_","d",.))
+
+```
+
+## Estimate Models
+
+We next estimate the models
+
+| Method                | Command   | Design Variables        | Fixed or Random Effect |
+|------------------|------------------|------------------|------------------|
+| Two-Way Fixed Effects | `feols()` | `d* : f*` + `f*`        | Unit Fixed Effect      |
+| Pooled OLS            | `lm()`    | `d* : f*` + `f*` + `d*` |                        |
+| Two-Way Mundlak       | `lmer()`  | `d* : f*` + `f*` + `d*` | Unit Random Effect     |
+
+```{r}
+#| code-fold: true
+
+fmla_twfe6 <-   fmla <- glue("y ~ {paste0(treatment_interactions6, collapse = ' + ')} + {paste0('f',treatment_years6,collapse=' + ')} | id") %>% as.formula()
+fit_twfe6 <- feols(fmla_twfe6, data = df6_)
+
+fmla_lm6 <- glue("y ~ {paste0(treatment_interactions6, collapse = ' + ')} + {paste0('f',treatment_years6,collapse=' + ')} + {paste0('d',treatment_groups6,collapse=' + ')}") %>% as.formula()
+fit_lm6 <- lm(fmla_lm6, data = df6_) 
+
+fmla_twm6 <- glue("y ~ {paste0(treatment_interactions6, collapse = ' + ')} + {paste0('f',treatment_years6,collapse=' + ')} + {paste0('d',treatment_groups6,collapse=' + ')} + (1|id)") %>% as.formula()
+fit_twm6 <- lmer( fmla_twm6 , data = df6_) 
+
+tibble(method = c("TWFE","POLS","TWM"),
+         formula = c(glue("feols({Reduce(paste,deparse(fmla_twfe6))}, data = df_)"),
+                     glue("lm({Reduce(paste,deparse(fmla_lm6))}, data = df_)"),
+                     glue("lmer({Reduce(paste,deparse(fmla_twm6))}, data = df_)"))) %>% 
+  gt() %>% 
+  cols_label("method" = "Estimator",
+             "formula" = "Regression Call")
+
+# CS
+data6_cs <- 
+  data6 %>% 
+  mutate(year = as.numeric(paste0(year)),
+         treatment_time = as.numeric(paste0(treatment_time)))  %>% 
+  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time))
+
+
+fit_cs6 <- att_gt(yname = "dep_var",
+                  tname = "year",
+                  idname = "unit",
+                  gname = "treatment_time",
+                  control_group = "notyettreated",
+                  data = data6_cs
+)
+
+est_cs6 <-  tibble(group = paste0(fit_cs6$group), year = fit_cs6$t, estimate = fit_cs6$att) %>% 
+  mutate(method = "CS")  
+
+```
+
+## Summary of Estimates
+
+```{r}
+#| code-fold: true
+#| message: false
+#| warning: false
+#| 
+est_twfe6 <- 
+  fit_twfe6 %>% tidy() %>% 
+  mutate(method = "TWFE") %>% 
+  mutate(call = glue("feols({Reduce(paste,deparse(fmla_twfe6))}, data = df6_)"))
+
+est_lm6 <- 
+  fit_lm6 %>% tidy() %>% 
+  mutate(call = glue("lm({Reduce(paste,deparse(fmla_lm6))}, data = df6_)"))  %>% 
+  mutate(method = "POLS")
+
+est_twm6 <- 
+  fit_twm6  %>% summary() %>% 
+  coef() %>% 
+  data.frame() %>% 
+  rownames_to_column(var = "term") %>% 
+  janitor::clean_names() %>% 
+  as_tibble() %>% 
+  mutate(method = "TWM") %>% 
+  mutate(call = glue("lmer({Reduce(paste,deparse(fmla_twm6))}, data = df6_)"))
+
+est6 <- 
+  est_twfe6 %>% 
+  bind_rows(est_lm6) %>% 
+  bind_rows(est_twm6) %>% 
+  filter(grepl("^f|^d",term)) %>% 
+  filter(grepl(":",term)) %>%   
+  #data.frame() %>% select(term,estimate) %>% 
+  separate(term,into=c("one","two"), sep = ":")  %>% 
+  mutate(group = case_when(grepl("^d",one) ~ one, 
+                           TRUE ~ two)) %>% 
+  mutate(year = case_when(grepl("^f",one) ~ one, 
+                           TRUE ~ two))     %>% 
+  mutate(group = gsub("d","",group)) %>% 
+  mutate(group = as.numeric(paste0(group)))  %>% 
+  mutate(year = gsub("f","",year)) %>%     
+  mutate(year = as.numeric(paste0(year))) %>% 
+  select(-one,-two) %>% 
+  bind_rows(est_cs6 %>% mutate(group = as.numeric(paste0(group))))
+
+df_est6 <- 
+  crossing(group= treatment_groups6, year = treatment_years6) %>% 
+  as_tibble() %>%
+  mutate(year = as.numeric(paste0(year))) %>% 
+  left_join(est6, c("group","year")) %>% 
+  mutate(year = as.numeric(paste0(year))) %>% 
+  filter(!is.na(estimate))
+
+df_est6 %>% 
+  select(group, year,estimate,method) %>% 
+  spread(method,estimate) %>% 
+  select(group, year,TWFE,POLS,TWM,CS) %>% 
+  na.omit() %>% 
+  gt() %>% 
+  fmt_number(columns=c(TWFE,POLS,TWM,CS),decimals=3)
+
+```
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+#| fig-cap: Treatment Effect Estimates - Multiple Treatment Periods and Heterogeneous Dynamic Treatment Effects
+#| label: fig-plot-case6
+
+plot_data(df6) + 
+  geom_line(data = df_est6, aes(x = year, y = estimate, colour = factor(group),lty=factor(method)), lwd=2)  +
+  theme(legend.position="bottom")
+
+
+```
+
+```{r}
+#| code-fold: true
+#| warning: false
+#| message: false
+#| fig-cap: Comparison of Treatment Effect Estimates - Multiple Treatment Periods and Heterogeneous Dynamic Treatment Effects
+#| label: fig-plot-case6-comp
+
+df_est6 %>% 
+  select(group,year, estimate,method) %>% 
+  filter(method %in% c("TWFE","CS")) %>% 
+  spread(method,estimate) %>% 
+  ggplot(aes(x = TWFE, y = CS, group = year, colour = factor(group)))+
+  geom_point() + 
+  #facet_wrap(~group) + 
+  theme_few() + 
+  geom_abline(aes(slope=1,intercept=0),lty=3) +  theme(legend.position = "bottom") + 
+  ggsci::scale_color_aaas(name="Treatment Cohort")
+  
+
+
+```
+
+
+[Nice video discussion](https://www.res.org.uk/resources-page/res2022-special-session-ectj-the-new-difference-in-differences.html) of hte above. 

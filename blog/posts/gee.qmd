@@ -1,0 +1,154 @@
+---
+title: "Generalized Estimating Equations"
+editor: source
+editor_options: 
+  chunk_output_type: console
+---
+
+[Source](https://data.library.virginia.edu/getting-started-with-generalized-estimating-equations/)
+
+```{r}
+
+library(tidyverse)
+library(lme4)
+library(broom)
+library(knitr)
+library(gee)
+theme_set(theme_bw())
+options("scipen" = 100, "digits" = 5)
+```
+
+
+```{r dgp_panel_setup}
+#| echo: false
+#| code-fold: true
+
+params_panel <- list(
+  N = 1000,
+  T = 2,
+  tx_time = 2, 
+  rho_t = 0.8,
+  beta_0 = 0.5,
+  beta_1 = 2,
+  tau = 0.5,
+  p_d = 0.5
+)
+
+dgp_panel <- function(params) {
+  with(params, {
+
+    # Time effects
+    t_ <-
+      data.frame(t = 1:T,
+                 gamma_t = arima.sim(n=T, list(ar = rho_t, order=c(1,0,0))) %>% as.vector())
+
+    # Individual measures and effects
+    i_ <-
+      data.frame(
+        unit_id = 1:N,
+        x_i = rnorm(N, mean = 0, sd = 1),
+        u_i = rnorm(N, mean = 0, sd = 1)) %>%
+      rowwise() %>% # This allows us to get each value's pr_treated in the line below. 
+      mutate(pr_treated = 0.5) %>% 
+      ungroup() %>%  # This undoes the rowwise 
+      # Treatment indicator
+      mutate(d_i = rbinom(N, size = 1, prob = pr_treated)) %>% 
+      ungroup()
+
+    crossing(unit_id = i_$unit_id,t = t_$t) %>%
+      left_join(i_,"unit_id") %>%
+      left_join(t_,"t") %>%
+      mutate(d_i = ifelse(t<tx_time,0,d_i)) %>%
+      mutate(y_i = beta_0 + beta_1 * x_i + tau * d_i + u_i + gamma_t + rnorm(N, mean = 0, sd = 1)) %>% 
+      select(unit_id, t, y_i , x_i, d_i)
+  })
+}
+
+estimator_fn_re <- function(df) {
+  lmer(y_i ~  d_i + (1|unit_id) , df)
+}
+
+disc_fn_re <- function(fit) {
+  fit %>% summary() %>% pluck("coefficients") %>%
+    data.frame() %>%
+    rownames_to_column() %>%
+    janitor::clean_names() %>%
+    filter(rowname=="d_i") %>%
+    pull(estimate) %>%
+    as.vector()
+}
+
+generate_estimate_discriminate_re <- function(params) {
+  params %>% # Step 1: Parameterize the problem
+      dgp_panel() %>%  # Step 2: Define the data generation process
+        estimator_fn_re() %>%  # Step 3: Estimate 
+          disc_fn_re() %>% # Step 4: Pull out what you need
+            data.frame(tau_hat = .) # store the result as a data frame object
+}
+
+construct_dm <- function(df) {
+  df_ <- 
+    df %>% 
+      # mutate(y_i = y_i + mean(y_i),
+      #       d_i = d_i + mean(d_i)) %>% 
+      #       group_by(t) %>% 
+      #       mutate(y_i = y_i - mean(y_i),
+      #       d_i = d_i - mean(d_i)) %>% 
+            group_by(unit_id) %>% 
+            mutate(y_i = y_i - mean(y_i),
+            d_i = d_i - mean(d_i))
+
+  return(df_)
+}
+
+estimate_dm <- function(df) {
+  lm(y_i ~ d_i   , data = df)
+}
+
+disc_fn_dm = function(fit) {
+  fit_ =broom::tidy(fit)   # This cleans up the fitted regression object
+  out =fit_ %>% 
+    filter(term=="d_i") %>% 
+    pull(estimate)
+  
+  return(out)
+}
+
+
+set.seed(1234)
+df_c <- 
+  modifyList(params_panel,list(T=400,tx_time=200,N=2000)) %>% 
+  dgp_panel() %>% 
+  mutate(index = t-200) %>% 
+  mutate(T2= as.integer(index %in% c(-1,0))) %>% 
+  mutate(T4 = as.integer(index > -3 & index <2)) %>%
+  mutate(T10 = as.integer(index >= -5 & index<5)) %>% 
+  mutate(T20 = as.integer(index >= -10 & index <10 )) %>%
+  mutate(T50 = 1 ) 
+
+df <- df_c %>% filter(T20==1)
+
+params_panel %>% 
+  dgp_panel() %>% 
+  head() %>% 
+  kable(digits=3)
+
+```
+
+```{r}
+library(geepack)
+library(nlme)
+#https://m-clark.github.io/clustered-data/gee.html
+geeglm(y_i ~ d_i, data=df, id=unit_id)
+
+lme(y_i ~ d_i, data=df, random = ~1|unit_id, 
+                        control=lmeControl(opt='optim'), method='ML')  
+df %>% construct_dm() %>% estimate_dm() 
+gee(y_i ~ x_i + d_i, data = df, id = unit_id,
+    family = gaussian,corstr="exchangeable") %>% summary() %>% {.$coefficients} %>% {.["d_i",]} %>% round(.,3)
+
+```
+
+
+
+

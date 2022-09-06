@@ -16,6 +16,12 @@ website:
       - section: "Slides"
         contents:
           - slides/lec_introduction.qmd
+      - section: "Case Studies"
+        contents:
+          - text: Simulation as a Guide for Study Design and Inference
+            href: https://graves-vanderbilt.shinyapps.io/HPOL8539-Simulation/
+          - text: Panel Data Methods I - Fixed, Random and Correlated Random Effects
+            href: https://graves-vanderbilt.shinyapps.io/panel-data-methods1/
       - text: "Blog"
         href: blog/index.qmd
       - section: "Useful Links"
@@ -26,6 +32,14 @@ website:
             href: https://mixtape.scunning.com/
           - text: The Effect (Huntington-Klein)
             href: https://theeffectbook.net/
+          - text: Comprehensive Discussion of Difference-in-Differences
+            href: https://diff.healthpolicydatascience.org/
+          - text: Difference-in-Differences Respository (code, packages, etc.)
+            href: https://asjadnaqvi.github.io/DiD/
+          - text: Resources on multiple nextGen DID estimators
+            href: https://kylebutts.com/did2s/articles/event_study.html
+          - text: Mixtape Seesiosn
+            href: https://github.com/Mixtape-Sessions
 
 format:
   html:

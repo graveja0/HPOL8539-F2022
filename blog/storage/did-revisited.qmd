@@ -14,7 +14,7 @@ library(tidyverse)
 library(directlabels)
 library(ggthemes)
 library(fastDummies)
-library(lfe)
+# library(lfe)
 library(did)
 library(glue)
 library(furrr)
@@ -28,10 +28,13 @@ library(here)
 library(ggsci)
 library(fixest)
 library(RStata)
+library(broom)
+library(lme4)
+library(fixest)
+
 options("RStata.StataPath" = "/Applications/Stata/StataSE.app/Contents/MacOS/stata-se")
 options("RStata.StataVersion" = 16)
     
-
 options(dplyr.summarise.inform = FALSE)
 
 theme_tufte_grid <- function(base_size = 16, base_family = "Gill Sans", ticks = TRUE) {
@@ -98,7 +101,7 @@ params_4x4 =  list(
               "1991" = 0),
   tx = list("1989" = 1:17,
             "1990" = 18:35,
-            "1991" = 35:50),
+            "1991" = 36:50),
   bin = c(-5,5))
 
 
@@ -145,7 +148,7 @@ params4 =  list(
               "2007" = 0),
   tx = list("1989" = 1:17,
             "1998" = 18:35,
-            "2007" = 35:50),
+            "2007" = 36:50),
   bin = c(-5,5))
 
 params4b =  list(
@@ -155,7 +158,7 @@ params4b =  list(
               "1998" = 0),
   tx = list("1989" = 1:17,
             "1998" = 18:35,
-            "NA" = 35:50),
+            "NA" = 36:50),
   bin = c(-5,5))
 
 # Case 5: Multiple Treatment Periods and Constant Dynamic Treatment Effects
@@ -169,7 +172,7 @@ params5=  list(
               "2007" = 0.3),
   tx = list("1989" = 1:17,
             "1998" = 18:35,
-            "2007" = 35:50),
+            "2007" = 36:50),
   bin = c(-5,5))
 
 # Sant'Anna Case 2: One group never treated
@@ -180,7 +183,7 @@ params5b=  list(
               "1998" = 0.3),
   tx = list("1989" = 1:17,
             "1998" = 18:35,
-            "NA" = 35:50),
+            "NA" = 36:50),
   bin = c(-5,5))
 
 # Sant'Anna Case 2: One group never treated, but use all leads and lags
@@ -191,11 +194,25 @@ params5c=  list(
               "1998" = 0.3),
   tx = list("1989" = 1:17,
             "1998" = 18:35,
-            "NA" = 35:50),
+            "NA" = 36:50),
   bin = c(-100,100))
 
 
 # Case 6: Multiple Treatment Periods and Heterogeneous Dynamic Treatment Effects
+
+
+params_w =  list(
+  mu = list("2014" = 0,
+            "2015" = 0,
+            "2016" = 0),
+  mu_t = list("2014" = 0.5,
+              "2015" = 0.3,
+              "2016" = 0.1),
+  tx = list("2014" = 10:17,
+            "2015" = 18:35,
+            "2016" = 36:50),
+  bin = c(-5,5))
+
 
 params6=  list(
   mu = list("1989" = 0,
@@ -206,7 +223,7 @@ params6=  list(
               "2007" = 0.1),
   tx = list("1989" = 1:17,
             "1998" = 18:35,
-            "2007" = 35:50),
+            "2007" = 36:50),
   bin = c(-5,5))
 
 
@@ -217,8 +234,15 @@ params6b=  list(
               "1998" = 0.3),
   tx = list("1989" = 1:17,
             "1998" = 18:35,
-            "NA" = 35:50),
+            "NA" = 36:50),
   bin = c(-5,5))
+``` 
+
+```{r, echo = FALSE}
+# params = params6 
+# N = 1000
+# start = 1980
+# stop = 2015
 
 make_data <- function(params, N = 1000, start = 1980, stop = 2015) {
   mu <- params$mu
@@ -294,7 +318,8 @@ make_data <- function(params, N = 1000, start = 1980, stop = 2015) {
     )
 
   # Units
-  unit <- tibble(
+  unit <- 
+    tibble(
     unit = 1:N,
     unit_fe = rnorm(N, 0, 0.5),
     # generate state
@@ -302,14 +327,15 @@ make_data <- function(params, N = 1000, start = 1980, stop = 2015) {
     left_join(
       df_truth_,c("state")
     ) %>%
+        ungroup() %>% 
     mutate(evertreated = ifelse(is.na(as.numeric(group)),"C","T")) %>%
     mutate(hat_gamma = mu) %>%
     mutate(hat_gamma_t = mu_t) %>%
     # generate unit specific yearly treatment effects
     rowwise() %>%
     mutate(gamma = rnorm(1, hat_gamma, .2)) %>%
-    mutate(gamma_t = ifelse(mu_t!=0,rnorm(1,hat_gamma_t,0.2),0)) %>%
-    ungroup()
+    mutate(gamma_t = ifelse(mu_t!=0,rnorm(1,hat_gamma_t,0.2),0))
+
 
   # full interaction of unit X year
   df <- crossing(unit, year) %>%
@@ -339,8 +365,6 @@ make_data <- function(params, N = 1000, start = 1980, stop = 2015) {
     params = params
   )
 }
-
-
 plot_data <- function(df) {
 
   year_range <- range(df$df$year)
@@ -394,7 +418,6 @@ plot_data <- function(df) {
       scale_x_continuous(limits = year_range)
   })
 }
-
 plot_tx_grid <- function(df) {
   df <- df$df
   year_range <- range(df$year)
@@ -429,6 +452,12 @@ plot_tx_grid <- function(df) {
 #| message: false
 #| 
 set.seed(12345)
+
+df_w <- make_data(params_w,N=1000, start = 2011, stop = 2016) 
+data_w <- df_w$df %>% 
+  select(y = dep_var,treatment_time = group, c = state, id = unit, year, w = treat) 
+haven::write_dta(data_w, path = "~/Desktop/data_w.dta")
+
 df1 <- make_data(params1,N=1000) 
 data1 <- df1$df %>% 
   select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
@@ -438,6 +467,37 @@ df3 <- make_data(params3,N=1000)
 data3 <- df3$df %>% 
   select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
   mutate_at(vars(treatment_time, year), factor)
+
+
+df4 <- make_data(params4,N=1000) 
+data4 <- df4$df %>% 
+  select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
+  mutate_at(vars(treatment_time, year), factor)
+haven::write_dta(data4 %>% mutate_at(vars(treatment_time,year),function(x) as.numeric(paste0(x))), path = "~/Desktop/data4.dta")
+
+df4b <- make_data(params4b,N=1000) 
+data4b <- df4b$df %>% 
+  select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
+  mutate_at(vars(treatment_time, year), factor) %>% 
+  mutate(treated =1)
+haven::write_dta(data4b %>% mutate_at(vars(treatment_time,year),function(x) as.numeric(paste0(x))), path = "~/Desktop/data4b.dta")
+
+
+
+df5 <- make_data(params5,N=1000) 
+data5 <- df5$df %>% 
+  select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
+  mutate_at(vars(treatment_time, year), factor)
+haven::write_dta(data5 %>% mutate_at(vars(treatment_time,year),function(x) as.numeric(paste0(x))), path = "~/Desktop/data5.dta")
+
+df5b <- make_data(params5b,N=1000) 
+data5b <- df5b$df %>% 
+  select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
+  mutate_at(vars(treatment_time, year), factor) %>% 
+  mutate(treated =1)
+haven::write_dta(data5b %>% mutate_at(vars(treatment_time,year),function(x) as.numeric(paste0(x))), path = "~/Desktop/data5b.dta")
+
+
 
 df6 <- make_data(params6,N=1000) 
 data6 <- df6$df %>% 
@@ -457,299 +517,10 @@ df6 %>%  plot_data() + ylim(c(-2,6)) + scale_x_continuous(expand = expand_scale(
 
 df6b %>%  plot_data() + ylim(c(-2,6)) + scale_x_continuous(expand = expand_scale(mult = c(0,.25)))
 
-
 ```
 
-## Extended TWFE Model
-
-The problem I'm running into here is as follows. In a panel where there is a later treated unit (e.g., 2007) there should be no interactions with years at or above this. The problem is that when I run it this way, the constant term that is fit in Stata is not fit in R,so the coefficients are off. Only if I allow for these interactions will the coefficients be correct for the *first* treated groups, but not the latter.
-
-Maybe see [here](https://www.statalist.org/forums/forum/general-stata-discussion/general/630290-interpreting-the-constant-in-reghdfe)?
-
-### Debugging
-
-### Structuring the data
-
--   Need to only make interactions between group (`treatment_time`) and time (`year`) where `year>treatment_time`
-
-```{r}
-#| echo: true
-#| warning: false
-#| message: false
 
 
-# This data frame is structured to use not-yet-treated groups as controls.
-
-df_etwfe6 <- 
-  data6 %>% 
-  mutate_at(vars(treatment_time,year), function(x) as.numeric(paste0(x))) %>% 
-  mutate(max_treat = max(treatment_time, na.rm=TRUE)) %>% 
-  # DROP ALL OBSERVATIONS THAT AREN'T iDENTIFIED
-  filter(year < max_treat) %>% 
-  mutate(year_lt_treatment_time = as.integer(year < treatment_time)) %>% 
-  mutate(year_tmp = case_when(year >= treatment_time ~ year)) %>% 
-  #mutate(year_tmp = case_when(year >= treatment_time & year < max(treatment_time,na.rm=TRUE) ~ year)) %>%  THIS IS THE PROBLEMATIC LINE
-  mutate(treatment_time_tmp = case_when(year >= treatment_time ~ treatment_time)) %>% 
-  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time)) %>% 
-  mutate(treatment_time = factor(treatment_time),
-         year = factor(year)) %>% 
-  mutate(treatment_time_tmp = factor(treatment_time_tmp),
-         year_tmp = factor(year_tmp)) %>%   
-  mutate(i = interaction(treat,treatment_time_tmp,year_tmp,sep=":")) %>% 
-  mutate(i = paste0(i)) %>% 
-  dummy_cols("i") %>%
-  janitor::clean_names() 
-  
-```
-
-#### All Groups Eventually Treated
-
-Using group fixed effects.
-
-```{r}
-#| warning: false
-#| message: false
-
-#1a  jwdid  dep_var , ivar(unit) tvar(year) gvar(treatment_time)  group
-fmla1a <- as.formula(glue("dep_var ~ {paste0(grep('i_1_',colnames(df_etwfe6),value=TRUE),collapse = '+')} | treatment_time + year"))
-fmla1a
-fit1a <- feols(fmla1a,df_etwfe6); fit1a
-
-est1a <- 
-  tidy(fit1a) %>% 
-  separate(term, into =c("tmp","tmp2","group","year"))  %>% 
-  mutate(att = estimate) %>% 
-  select(group, year , att) %>% 
-  mutate(estimator = "ETWFE - Group FE") %>% 
-  mutate_at(vars(group,year), as.numeric)
-    
-stata("jwdid  dep_var , ivar(unit) tvar(year) gvar(treatment_time)  group", data.in = data6 %>% mutate_at(vars(year,treatment_time),function(x) as.numeric(paste0(x))))
-
-est1a %>% kable()
-
-
-```
-
-Using unit fixed effects -- this one runs into p
-
-```{r}
-#| warning: false
-#| message: false
-#2b jwdid  dep_var , ivar(unit) tvar(year) gvar(treatment_time) 
-fmla1b <- as.formula(glue("dep_var ~ {paste0(grep('i_1_',colnames(df_etwfe6),value=TRUE),collapse = '+')} | unit + year"))
-fit1b <- feols(fmla1b,df_etwfe6)
-
-est1b <- 
-  tidy(fit1b) %>% 
-  separate(term, into =c("tmp","tmp2","group","year"))  %>% 
-  mutate(att = estimate) %>% 
-  select(group, year , att) %>% 
-  mutate(estimator = "ETWFE - Unit FE") %>% 
-  mutate_at(vars(group,year), as.numeric)
-```
-
-#### Only Use a Never Treated Group as Control
-
-```{r}
-#| warning: false
-#| message: false
-
-df_etwfe6b <- 
-  data6b %>% 
-  mutate_at(vars(treatment_time,year), function(x) as.numeric(paste0(x))) %>% 
-  
-  group_by(treatment_time) %>% 
-  arrange(treatment_time,year) %>% 
-  mutate(first_year = as.integer(row_number()==1)) %>% 
-  
-  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time)) %>% 
-  
-  mutate(year_tmp = case_when(year >= treatment_time  ~ year)) %>% 
-  mutate(treatment_time_tmp = case_when(year >= treatment_time~ treatment_time)) %>% 
-  
- 
-  mutate(treatment_time = factor(treatment_time),
-         year = factor(year)) %>% 
-  
-  mutate(treatment_time_tmp = factor(treatment_time_tmp),
-         year_tmp = factor(year_tmp)) %>%   
-  mutate(i = interaction(treat,treatment_time_tmp,year_tmp,sep=":")) %>% 
-  mutate(i = paste0(i)) %>% 
-  dummy_cols("i") %>%
-  janitor::clean_names() %>% 
-  select(-i_na)
-
-
-
-# This data frame is structured to only use never-treated groups as controls. 
-df_etwfe6b_nt <- 
-  data6b %>% 
-  mutate_at(vars(treatment_time,year), function(x) as.numeric(paste0(x))) %>% 
-  
-  mutate(treat = 1) %>% 
-  
-  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time)) %>% 
-  
-  group_by(treatment_time) %>% 
-  mutate(first_year = as.integer(year == min(year,na.rm=TRUE))) %>% 
-  ungroup()  %>% 
-  # mutate(year_tmp = year,
-         # treatment_time_tmp = treatment_time) %>% 
-  mutate(year_tmp = case_when(first_year!=1  ~ year)) %>% 
-
-  mutate(treatment_time_tmp = case_when( first_year != 1~ treatment_time)) %>% 
-    
-
-  mutate(treatment_time_tmp = factor(treatment_time_tmp),
-         year_tmp = factor(year_tmp)) %>%   
-  
-    
-  mutate(treatment_time = factor(treatment_time),
-         year = factor(year)) %>% 
-  
-  
-  mutate(i = interaction(treat,treatment_time_tmp,year_tmp,sep=":")) %>% 
-  mutate(i = paste0(i)) %>% 
-  dummy_cols("i") %>%
-  janitor::clean_names() %>% 
-  select(-contains("i_1_0_"))
-
-
-#2a  jwdid  dep_var , ivar(unit) tvar(year) gvar(treatment_time)  group
-fmla2a <- as.formula(glue("dep_var ~ {paste0(grep('i_1_',colnames(df_etwfe6b),value=TRUE),collapse = '+')} | treatment_time + year"))
-fmla2a
-fit2a <- feols(fmla2a,df_etwfe6b)
-est2a <- 
-  tidy(fit2a) %>% 
-  separate(term, into =c("tmp","tmp2","group","year"))  %>% 
-  mutate(att = estimate) %>% 
-  select(group, year , att) %>% 
-  mutate(estimator = "ETWFE - Group FE") %>% 
-  mutate_at(vars(group,year), as.numeric)
-
-#2b  jwdid  dep_var , ivar(unit) tvar(year) gvar(treatment_time)  
-fmla2b <- as.formula(glue("dep_var ~ {paste0(grep('i_1_',colnames(df_etwfe6b),value=TRUE),collapse = '+')} | unit + year"))
-fmla2b
-fit2b <- feols(fmla2b,df_etwfe6b)
-est2b <- 
-  tidy(fit2b) %>% 
-  separate(term, into =c("tmp","tmp2","group","year"))  %>% 
-  mutate(att = estimate) %>% 
-  select(group, year , att) %>% 
-  mutate(estimator = "ETWFE - Unit FE") %>% 
-  mutate_at(vars(group,year), as.numeric)#2b  jwdid  dep_var , ivar(unit) tvar(year) gvar(treatment_time)  
-fmla2b <- as.formula(glue("dep_var ~ {paste0(grep('i_1_',colnames(df_etwfe6b),value=TRUE),collapse = '+')} | unit + year"))
-fmla2b
-fit2b <- feols(fmla2b,df_etwfe6b)
-est2b <- 
-  tidy(fit2b) %>% 
-  separate(term, into =c("tmp","tmp2","group","year"))  %>% 
-  mutate(att = estimate) %>% 
-  select(group, year , att) %>% 
-  mutate(estimator = "ETWFE - Unit FE") %>% 
-  mutate_at(vars(group,year), as.numeric)
-
-
-
-
-## NEED TO GET RID OF ONE MORE CATEGORY (1998 x 1980)
-#2c  jwdid  dep_var , ivar(unit) tvar(year) gvar(treatment_time) group never
-fmla2c <- as.formula(glue("dep_var ~ {paste0(grep('i_1_',colnames(df_etwfe6b_nt),value=TRUE),collapse = '+')} | treatment_time + year"))
-fit2c <- feols(fmla2c,df_etwfe6b_nt)
-est2c <- 
-  tidy(fit2c) %>% 
-  separate(term, into =c("tmp","tmp2","group","year"))  %>% 
-  mutate(att = estimate) %>% 
-  select(group, year , att) %>% 
-  mutate(estimator = "ETWFE - NT Cx - Group FE") %>% 
-  mutate_at(vars(group,year), as.numeric); est2c
-
-#2d jwdid  dep_var , ivar(unit) tvar(year) gvar(treatment_time) never !!!! THIS ONE SEEMS TO BE WRONG IN STATA ... 
-fmla2d <- as.formula(glue("dep_var ~ {paste0(grep('i_1_',colnames(df_etwfe6b_nt),value=TRUE),collapse = '+')} | unit + year"))
-fit2d <- feols(fmla2d,df_etwfe6b_nt %>% mutate(unit = factor(unit)))
-est2d <- 
-  tidy(fit2d) %>% 
-  separate(term, into =c("tmp","tmp2","group","year"))  %>% 
-  mutate(att = estimate) %>% 
-  select(group, year , att) %>% 
-  mutate(estimator = "ETWFE - NT Cx - Unit FE") %>% 
-  mutate_at(vars(group,year), as.numeric); est2d
-
-
-
-stata("
-      replace treatment_time = 0 if treatment_time==.
-      jwdid  dep_var , ivar(unit) tvar(year) gvar(treatment_time) never
-      ", data.in = data6b %>% mutate_at(vars(year,treatment_time),function(x) as.numeric(paste0(x))))
-```
-
-## Estimate CS
-
-```{r}
-data6_cs <- 
-  data6 %>% 
-  mutate(year = as.numeric(paste0(year)),
-         treatment_time = as.numeric(paste0(treatment_time)))  %>% 
-  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time))
-  
-
-fit_cs6 <- att_gt(yname = "dep_var",
-                        tname = "year",
-                        idname = "unit",
-                        gname = "treatment_time",
-                        control_group = "notyettreated",
-                        data = data6_cs
-                        )
-
-est_cs6 <-  tibble(group = fit_cs6$group, year = fit_cs6$t, att = fit_cs6$att) %>% 
-  mutate(estimator = "CS") 
-         
-
-```
-
-```{r}
-data6b_cs <- 
-  data6b %>% 
-  mutate(year = as.numeric(paste0(year)),
-         treatment_time = as.numeric(paste0(treatment_time)))  %>% 
-  mutate(treatment_time = ifelse(is.na(treatment_time),0,treatment_time))
-  
-
-fit_cs6b <- att_gt(yname = "dep_var",
-                        tname = "year",
-                        idname = "unit",
-                        gname = "treatment_time",
-                        control_group = "nevertreated",
-                        data = data6b_cs
-                        )
-
-est_cs6b <-  tibble(group = fit_cs6b$group, year = fit_cs6b$t, att = fit_cs6b$att) %>% 
-  mutate(estimator = "CS")
-```
-
-## Compare
-
-```{r}
-est1a %>% 
-  bind_rows(est1b) %>% 
-  bind_rows(est_cs6) %>% 
-  ggplot(aes(x = year, y = att, colour = factor(group), pch = estimator)) + 
-  geom_point() +
-  #ggthemes::theme_clean() +
-  ggsci::scale_color_aaas() 
-
-est2a %>% 
-  bind_rows(est2b) %>% 
-  bind_rows(est2c) %>% 
-  bind_rows(est2d) %>% 
-  bind_rows(est_cs6b) %>% 
-  ggplot(aes(x = year, y = att, colour = factor(group), pch = estimator)) + 
-  geom_point() +
-  #theme_clean() +
-  ggsci::scale_color_aaas() +
-  #scale_shape_manual(values =c(19,4,3)) +
-  facet_grid(~group)
-```
 
 [Source](https://friosavila.github.io/playingwithstata/main_jwdid.html)
 

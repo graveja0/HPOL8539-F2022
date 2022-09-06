@@ -1,0 +1,191 @@
+---
+title: "Random vs. Fixed Effects"
+format: revealjs
+editor: visual
+---
+
+```{r, eval = FALSE, echo = FALSE}
+#install.packages("correlation")
+library(correlation)
+library(tidyverse)
+library(gganimate)
+library(ggthemes)
+data <- simulate_simpson(n = 100, groups = 5, r = 0.5)
+
+library(ggplot2)
+
+df <- data %>%
+  rename(X = V1, Y = V2, Unit = Group) %>%
+  group_by(Unit) %>%
+  mutate(mean_X=mean(X),mean_Y=mean(Y)) %>%
+  ungroup()
+
+p1 <- ggplot(df,aes(x=X, y=Y)) + geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_clean() + labs(x="X",y="Y")+scale_color_colorblind()
+
+```
+
+## Fixed and Random Effects {.smaller}
+
+::: incremental
+::: columns
+
+::: {.column width="50%"}
+- (Bio)statisticians and social scientists mean different things when they say "random" and (especially) "fixed" effects. Ugh.
+
+- I will almost always refer to things from the social science angle.
+
+- I'll try to tease out the intuition for what each discipline is referring to in the next few slides.
+:::
+
+::: {.column width="50%"}
+![](media/spiderman.jpeg)
+:::
+:::
+:::
+
+## The most important thing to know
+
+> How do we think about unit level heterogeneity and its (statistical) relationship to the included (observed) variables in our regression model?
+
+
+
+## Fixed vs. Random Effects: The Statistics Angle
+
+- We're interested in the relationship between some unit-level factor $X$ and our outcome $Y$.
+
+- Units in our data have attributes or factors that we inherently care about for our research or evaluation, such as whether they received treatment or not. 
+
+- Treatment may not be explicit (i.e., randomized binary treatment), but rather could be some unit-level attribute or exposure (e.g., an individual's diet, education, etc.) and we want to understand the relationship between this implicit "treatment" and the outcome.
+
+## Fixed vs. Random Effects: The Statistics Angle
+
+- These unit-level **factors that are of inherent interest** to our study are referred to as "fixed effects" by statisticians.
+
+- Let's take the example of the effect of diet on health outcomes. 
+  
+    - We collect longitudinal patient data on diet and outcomes from various different physician practices. 
+    
+- Our encoded measure of "diet" is the envisioned "treatment" and we want to understand the relationship between diet and health outcomes.
+
+    - The effect of our encoded diet measure on outcomes is a "fixed effect" in statistical parlance. 
+    
+
+## Fixed vs. Random Effects: The Statistics Angle
+
+- But in our quest to estimate this fixed effect, we likely have endogeneity/omitted variables that may arise from additional unit-level heterogeneity. 
+
+- Example: physicians have various levels of engagement with their patients on their dietary habits. 
+
+- One unit of analysis in our data is physicians (since we sample from patients in various physician practices). 
+  
+- But we're really not interested in the effect of one physician vs. another on outcomes, so this variation in our data is not really of inherent interest to us. 
+    
+- We still need to account for it though, because failing to will  confound our estimated effects. 
+
+## Fixed vs. Random Effects: The Statistics Angle
+
+- Also remember we have **panel data**, or repeated (longitudinal) measures on our units of interest.
+
+- Usual regression assumes each observation in our data is the result of an independent draw from the population of interest.
+
+- But this assumption (likely) fails here because we observe each person more than once!  
+
+- Therefore, observations are also likely correlated within persons.
+
+
+## Fixed vs. Random Effects: The Statistics Angle
+
+- Repeated measurements within various units (e.g., time) results in "pseudoreplication," or the fact that even though our data are $N*T$ rows long, we likely have an effective sample size closer to $N$. 
+
+- Same logic could hold for different patients who see the same physician -- are they really truly independent from each other? If physicians impact both diets *and* health outcomes, we may have an effective sample size less than that!
+
+  - These types of considerations are a key motivation for the use of hierarchical modeling---you can take entire courses on this, so I will only tease it here!
+
+## Fixed vs. Random Effects: The Statistics Angle
+
+::: columns 
+::: {.column width="50%"}
+- We need some additional way to account for these features in our panel data. 
+
+- This is where the statistical concept of "random effects" comes in. 
+
+- These effects capture unit-level heterogeneity, but are not really of inherent interest. 
+
+- If heterogeneity is an unobserved confounder, failing to account for it results in the figure on the top-right. Accounting for heterogeneity can help us get the (correct) relationships, as shown on the bottom right.
+
+- And even if it's not confounding the relationships, we still have this concern over pseudoreplication to worry about---this would throw our inferences off (standard errors that are too low)
+:::
+
+
+::: {.column width="50%"}
+```{r, echo = FALSE,out.width="65%"}
+knitr::include_graphics("media/03_simpsons.png")
+```
+:::
+:::
+
+
+## Econometric Fixed Effects
+
+- We'll now start to walk towards the econometric differentiation of a "fixed" effect.
+
+- We can do this by finding some common ground on "random" effects. 
+
+- Again, it boils down to modeling unit-level heterogeneity.
+
+
+---
+# Fixed and Random Effects
+
+- Panel data structure: $n$ units ( $i$ ) and $T$ time periods ( $t$ )
+
+- Binary (time-varying) policy indicator $D_{it}$ and outcome $Y_{it}$.
+
+- Time-varying covariates $X_{it}$.
+
+- Regression:
+
+$$
+Y_{it} = X_{it}'\beta + \tau D_{it} + U_i + \epsilon_{it}
+$$
+
+- Note that I'm ignoring the physician-level heterogeneity for now. 
+
+## Fixed and Random Effects
+
+$$
+Y_{it} = X_{it}'\beta + \tau D_{it} + U_i + \epsilon_{it}
+$$
+
+- Remember our (confounding) friend $U$? There it is in the model!
+
+- Notice how it is only indexed by $i$ and not $it$?
+  
+    - That means that *within* units (patients) in our panel (time) it remains ... **fixed**!
+    
+    - This is what econometricians meand by a "fixed effect."
+    
+    - Confusing, no?
+
+
+## Fixed and Random Effects
+
+- Ok, so now we have differentiated between what statisticians mean by "fixed effects" and what social scientists mean by "fixed effect"
+
+- But again, lets focus on that individual heterogeneity term $U_i$.
+
+- This heterogeneity is "fixed" but may be unobserved. 
+
+- We need to account for it in some way, either because it is correlated with treatment (i.e., is a confounder) and/or because it allows us to account for pseudo-replication in our data (i.e., correlated observations within units). 
+
+
+## Key Question
+
+> How strong a set of assumptions are we willing to place on the statistical relationship between $U_i$ and what is observed (i.e., $X_{it}$ and $D_{it}$)?
+
+- Let's think of $U_i$ as a summary measure capturing all fixed attributes of the unit.
+
+
+

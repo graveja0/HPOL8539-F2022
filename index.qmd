@@ -8,7 +8,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-
 ```{r, echo = FALSE}
 #| fig-align: center
 library(downloadthis)
@@ -22,7 +21,6 @@ download_link(
   self_contained = FALSE
 )
 ```
-
 
 <!-- https://github.com/rstudio-conf-2022/teach-ds -->
 
@@ -94,7 +92,10 @@ schedule <- list(
   day15 = list(
      "8:45 - 8:45" = "CAP] Final Methods Writeup Due to John",
      "8:45 - 10:45" = "CS] Student Methods Presentations"
-  )  
+  )  ,
+   day16 = list(
+     "8:45 - 8:45" = "CAP] GEE"
+  )
 )
 schedule %>% 
   map(~(
@@ -142,7 +143,7 @@ schedule %>%
                 rows = day=="day4") %>% 
       tab_row_group(label = "September 7, 2022",
                 rows = day=="day3") %>% 
-      tab_row_group(label = "August 30, 2022",
+      tab_row_group(label = "August 31, 2022",
                 rows = day=="day2") %>% 
       tab_row_group(label = "August 24, 2022",
                 rows = day=="day1") %>% 
@@ -171,6 +172,7 @@ schedule %>%
     locations = cells_body(
       columns = c(start,stop,desc),
       rows = type=="CAP"
+      
     )
   )
   
