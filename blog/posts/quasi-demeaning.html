@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.0.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Advanced Program and Policy Evaluation (HPOL8539) - Quasi-Demeaning: The Relationship Between Fixed and Random Effects</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">Quasi-Demeaning: The Relationship Between Fixed and Random Effects</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../../">Advanced Program and Policy Evaluation (HPOL8539)</a> 
+    </div>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">Advanced Program and Policy Evaluation</a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">Slides</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/lec_introduction.html" class="sidebar-item-text sidebar-link">Introduction and Course Details</a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">Case Studies</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://graves-vanderbilt.shinyapps.io/HPOL8539-Simulation/" class="sidebar-item-text sidebar-link">Simulation as a Guide for Study Design and Inference</a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../blog/index.html" class="sidebar-item-text sidebar-link">Blog</a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">Useful Links</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://github.com/graveja0/HPOL8539-F2022/raw/main/current-syllabus.pdf" class="sidebar-item-text sidebar-link">Current Syllabus</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://mixtape.scunning.com/" class="sidebar-item-text sidebar-link">Causal Inference - The Mixtape (Cunningham)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://theeffectbook.net/" class="sidebar-item-text sidebar-link">The Effect (Huntington-Klein)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://diff.healthpolicydatascience.org/" class="sidebar-item-text sidebar-link">Comprehensive Discussion of Difference-in-Differences</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://asjadnaqvi.github.io/DiD/" class="sidebar-item-text sidebar-link">Difference-in-Differences Respository (code, packages, etc.)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://kylebutts.com/did2s/articles/event_study.html" class="sidebar-item-text sidebar-link">Resources on multiple nextGen DID estimators</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://github.com/Mixtape-Sessions" class="sidebar-item-text sidebar-link">Mixtape Seesiosn</a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a>
+  <ul class="collapse">
+  <li><a href="#estimation-random-vs.-fixed-effects" id="toc-estimation-random-vs.-fixed-effects" class="nav-link" data-scroll-target="#estimation-random-vs.-fixed-effects">Estimation: Random vs.&nbsp;Fixed Effects</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    <div class="quarto-margin-footer"><div class="margin-footer-item">
+<p><img src="vu-logo.png" class="img-fluid"></p>
+</div></div></div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">Quasi-Demeaning: The Relationship Between Fixed and Random Effects</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    
+  </div>
+  
+
+</header>
+
+<section id="setup" class="level1">
+<h1>Setup</h1>
+<p>Assume the following data generation process:</p>
+<p><span class="math display">\[
+Y_{it} = \mathbf{X}_{i}'\beta + \tau D_{it} + U_i +\epsilon_{it}
+\]</span></p>
+<p>where <span class="math inline">\(i\)</span> indexes individual units and <span class="math inline">\(t\)</span> indexes time, <span class="math inline">\(\mathbf{X}_i\)</span> are unit-level attributes, <span class="math inline">\(D_{it}\)</span> is a treatment indicator (set to 1 if the observation is treated and in the post-treatment period). Finally, <span class="math inline">\(U_i\)</span> captures unobserved unit-level heterogeneity.</p>
+<section id="estimation-random-vs.-fixed-effects" class="level2">
+<h2 class="anchored" data-anchor-id="estimation-random-vs.-fixed-effects">Estimation: Random vs.&nbsp;Fixed Effects</h2>
+<ul>
+<li><p>Random effects uses an approach called “quasi-demeaning” or “partial pooling.”</p></li>
+<li><p>The random effects model can be represented as:</p></li>
+</ul>
+<p><span class="math display">\[
+\begin{align}
+(Y_{it}-\theta \bar{Y_i}) = (\mathbf{X}_{it}-\theta \bar{\mathbf{X}_i})'\beta + \tau (D_{it}-\theta \bar{D_i})  + (\epsilon_{it} - \theta \bar{\epsilon_i}) \quad \quad \quad Eq. 9
+\end{align}
+\]</span></p>
+<p>where</p>
+<p><span class="math display">\[
+\theta = 1 - \bigg [\frac{\sigma^2_\epsilon}{(\sigma^2_\epsilon + T\sigma^2_u)}\bigg ]^{1/2}
+\]</span></p>
+<p>In the above, <span class="math inline">\(\sigma_u\)</span> is the variance of unit-level heterogeneity, and <span class="math inline">\(\sigma_{\epsilon}\)</span> is the variance of <span class="math inline">\(\epsilon_{it}\)</span>. And recall <span class="math inline">\(T\)</span> is the total number of repeated unit-level observations in our panel (e.g., the total number of time periods, the total number of patients for a given physician, etc.)</p>
+<ul>
+<li><p>When <span class="math inline">\(\theta = 0\)</span>, it just reduces pooled regression.</p></li>
+<li><p>When <span class="math inline">\(\theta = 1\)</span>, it is equivalent to fixed effects regression. This <em>only</em> isolates variation within units to estimate the regression coefficients (i.e., units are only compared to themselves, which is why the unobserved heterogeneity is accounted for).</p></li>
+<li><p>Essentially, when you fit a random effects regression, Stata estimates <span class="math inline">\(\theta\)</span> and then plugs that estimate it into the above model.</p></li>
+<li><p>(When you fit a fixed effects regression, Stata uses the demeaning approach–unless, of course, you manually fit a dummy variable model)</p></li>
+<li><p>Often <span class="math inline">\(0 &lt; \theta &lt; 1\)</span>, hence the term “partial-pooling.” That is, the regression draws on both variation “within” units and variation “between” units.</p></li>
+<li><p>The degree to which within and between variation is used depends on the data context.</p></li>
+<li><p>Remember, when <span class="math inline">\(\theta=0\)</span> the random effects regression reduces to pooled OLS. When is this the case?</p>
+<ul>
+<li>If the term <span class="math inline">\(T\sigma^2_u\)</span> is 0, i.e., <span class="math inline">\(\sigma^2_u=0\)</span> or there is no variation in individual heterogeneity.</li>
+</ul></li>
+<li><p>Remember, when <span class="math inline">\(\theta=1\)</span> the random effects regression reduces to fixed effects. When is this the case?</p>
+<ul>
+<li><p>If the term <span class="math inline">\(T\sigma^2_u\)</span> gets super large (more formally, it would need to blast off towards infinity…).</p></li>
+<li><p>If we have a very “large” panel of observations on each unit (i.e., large <span class="math inline">\(T\)</span>) there is sufficient “within” variation and we really don’t need to do any pooling across units. # Setup</p></li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
+✔ ggplot2 3.3.6     ✔ purrr   0.3.4
+✔ tibble  3.1.8     ✔ dplyr   1.0.9
+✔ tidyr   1.2.0     ✔ stringr 1.4.1
+✔ readr   2.1.2     ✔ forcats 0.5.2
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lme4)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: Matrix
+
+Attaching package: 'Matrix'
+
+The following objects are masked from 'package:tidyr':
+
+    expand, pack, unpack</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(broom)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(<span class="fu">theme_bw</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>params_panel <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">N =</span> <span class="dv">1000</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">T =</span> <span class="dv">2</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">tx_time =</span> <span class="dv">2</span>, </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">rho_t =</span> <span class="fl">0.8</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">beta_0 =</span> <span class="fl">0.5</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">beta_1 =</span> <span class="dv">2</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">tau =</span> <span class="fl">0.5</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">p_d =</span> <span class="fl">0.5</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>dgp_panel <span class="ot">&lt;-</span> <span class="cf">function</span>(params) {</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">with</span>(params, {</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Time effects</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    t_ <span class="ot">&lt;-</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>      <span class="fu">data.frame</span>(<span class="at">t =</span> <span class="dv">1</span><span class="sc">:</span>T,</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>                 <span class="at">gamma_t =</span> <span class="fu">arima.sim</span>(<span class="at">n=</span>T, <span class="fu">list</span>(<span class="at">ar =</span> rho_t, <span class="at">order=</span><span class="fu">c</span>(<span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">0</span>))) <span class="sc">%&gt;%</span> <span class="fu">as.vector</span>())</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Individual measures and effects</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    i_ <span class="ot">&lt;-</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>      <span class="fu">data.frame</span>(</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        <span class="at">unit_id =</span> <span class="dv">1</span><span class="sc">:</span>N,</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        <span class="at">x_i =</span> <span class="fu">rnorm</span>(N, <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">1</span>),</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>        <span class="at">u_i =</span> <span class="fu">rnorm</span>(N, <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">1</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>      <span class="fu">rowwise</span>() <span class="sc">%&gt;%</span> <span class="co"># This allows us to get each value's pr_treated in the line below. </span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">pr_treated =</span> boot<span class="sc">::</span><span class="fu">inv.logit</span>(u_i)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>      <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span>  <span class="co"># This undoes the rowwise </span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>      <span class="co"># Treatment indicator</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">d_i =</span> <span class="fu">rbinom</span>(N, <span class="at">size =</span> <span class="dv">1</span>, <span class="at">prob =</span> pr_treated)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>      <span class="fu">ungroup</span>()</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">crossing</span>(<span class="at">unit_id =</span> i_<span class="sc">$</span>unit_id,<span class="at">t =</span> t_<span class="sc">$</span>t) <span class="sc">%&gt;%</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>      <span class="fu">left_join</span>(i_,<span class="st">"unit_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>      <span class="fu">left_join</span>(t_,<span class="st">"t"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">d_i =</span> <span class="fu">ifelse</span>(t<span class="sc">&lt;</span>tx_time,<span class="dv">0</span>,d_i)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">y_i =</span> beta_0 <span class="sc">+</span> beta_1 <span class="sc">*</span> x_i <span class="sc">+</span> tau <span class="sc">*</span> d_i <span class="sc">+</span> u_i <span class="sc">+</span> gamma_t <span class="sc">+</span> <span class="fu">rnorm</span>(N, <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> <span class="dv">1</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(unit_id, t, y_i , x_i, d_i)</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>estimator_fn_re <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lmer</span>(y_i <span class="sc">~</span>  d_i <span class="sc">+</span> (<span class="dv">1</span><span class="sc">|</span>unit_id) , df)</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>disc_fn_re <span class="ot">&lt;-</span> <span class="cf">function</span>(fit) {</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>  fit <span class="sc">%&gt;%</span> <span class="fu">summary</span>() <span class="sc">%&gt;%</span> <span class="fu">pluck</span>(<span class="st">"coefficients"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rownames_to_column</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    janitor<span class="sc">::</span><span class="fu">clean_names</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(rowname<span class="sc">==</span><span class="st">"d_i"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pull</span>(estimate) <span class="sc">%&gt;%</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.vector</span>()</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>generate_estimate_discriminate_re <span class="ot">&lt;-</span> <span class="cf">function</span>(params) {</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>  params <span class="sc">%&gt;%</span> <span class="co"># Step 1: Parameterize the problem</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dgp_panel</span>() <span class="sc">%&gt;%</span>  <span class="co"># Step 2: Define the data generation process</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>        <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span>  <span class="co"># Step 3: Estimate </span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>          <span class="fu">disc_fn_re</span>() <span class="sc">%&gt;%</span> <span class="co"># Step 4: Pull out what you need</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>            <span class="fu">data.frame</span>(<span class="at">tau_hat =</span> .) <span class="co"># store the result as a data frame object</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>construct_dm <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>  df_ <span class="ot">&lt;-</span> </span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>    df <span class="sc">%&gt;%</span> </span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>      <span class="co"># mutate(y_i = y_i + mean(y_i),</span></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>      <span class="co">#       d_i = d_i + mean(d_i)) %&gt;% </span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>      <span class="co">#       group_by(t) %&gt;% </span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>      <span class="co">#       mutate(y_i = y_i - mean(y_i),</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>      <span class="co">#       d_i = d_i - mean(d_i)) %&gt;% </span></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>            <span class="fu">group_by</span>(unit_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>            <span class="fu">mutate</span>(<span class="at">y_i =</span> y_i <span class="sc">-</span> <span class="fu">mean</span>(y_i),</span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>            <span class="at">d_i =</span> d_i <span class="sc">-</span> <span class="fu">mean</span>(d_i))</span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(df_)</span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>estimate_dm <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lm</span>(y_i <span class="sc">~</span> d_i   , <span class="at">data =</span> df)</span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>disc_fn_dm <span class="ot">=</span> <span class="cf">function</span>(fit) {</span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>  fit_ <span class="ot">=</span>broom<span class="sc">::</span><span class="fu">tidy</span>(fit)   <span class="co"># This cleans up the fitted regression object</span></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>  out <span class="ot">=</span>fit_ <span class="sc">%&gt;%</span> </span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(term<span class="sc">==</span><span class="st">"d_i"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pull</span>(estimate)</span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(out)</span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>df_c <span class="ot">&lt;-</span> </span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>  <span class="fu">modifyList</span>(params_panel,<span class="fu">list</span>(<span class="at">T=</span><span class="dv">400</span>,<span class="at">tx_time=</span><span class="dv">200</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dgp_panel</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">index =</span> t<span class="dv">-200</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">T2=</span> <span class="fu">as.integer</span>(index <span class="sc">%in%</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>,<span class="dv">0</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">T4 =</span> <span class="fu">as.integer</span>(index <span class="sc">&gt;</span> <span class="sc">-</span><span class="dv">3</span> <span class="sc">&amp;</span> index <span class="sc">&lt;</span><span class="dv">2</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">T10 =</span> <span class="fu">as.integer</span>(index <span class="sc">&gt;=</span> <span class="sc">-</span><span class="dv">5</span> <span class="sc">&amp;</span> index<span class="sc">&lt;</span><span class="dv">5</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">T20 =</span> <span class="fu">as.integer</span>(index <span class="sc">&gt;=</span> <span class="sc">-</span><span class="dv">10</span> <span class="sc">&amp;</span> index <span class="sc">&lt;</span><span class="dv">10</span> )) <span class="sc">%&gt;%</span></span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">T50 =</span> <span class="dv">1</span> ) </span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T4<span class="sc">==</span><span class="dv">1</span>)</span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a>params_panel <span class="sc">%&gt;%</span> </span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dgp_panel</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits=</span><span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: right;">unit_id</th>
+<th style="text-align: right;">t</th>
+<th style="text-align: right;">y_i</th>
+<th style="text-align: right;">x_i</th>
+<th style="text-align: right;">d_i</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2.855</td>
+<td style="text-align: right;">0.502</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2.825</td>
+<td style="text-align: right;">0.502</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">5.893</td>
+<td style="text-align: right;">1.434</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">7.620</td>
+<td style="text-align: right;">1.434</td>
+<td style="text-align: right;">1</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">3.225</td>
+<td style="text-align: right;">2.166</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6.555</td>
+<td style="text-align: right;">2.166</td>
+<td style="text-align: right;">0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Let’s first show the equivalance between the random effect model and a quasi-demeaned linear regression model. We’ll do so by focusing on a case where <span class="math inline">\(T=4\)</span>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>fit_re <span class="ot">&lt;-</span> </span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  df <span class="sc">%&gt;%</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">estimator_fn_re</span>()</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_re)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Linear mixed model fit by REML ['lmerMod']
+Formula: y_i ~ d_i + (1 | unit_id)
+   Data: df
+
+REML criterion at convergence: 14733.6
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.0705 -0.7249  0.1037  0.6245  2.0637 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ unit_id  (Intercept) 5.462    2.337   
+ Residual             1.085    1.041   
+Number of obs: 4000, groups:  unit_id, 1000
+
+Fixed effects:
+            Estimate Std. Error t value
+(Intercept)  0.29151    0.07661   3.805
+d_i         -0.51889    0.04550 -11.403
+
+Correlation of Fixed Effects:
+    (Intr)
+d_i -0.152</code></pre>
+</div>
+</div>
+<ul>
+<li>Notice the use of the term “fixed effects” is based on a traditional statistical definition–these are the regression parameters not assumed to come from a stochastic (statsitical) distribution, such as the random effects.</li>
+</ul>
+<p>Let’s now extract out the variance parameter estimates <span class="math inline">\(\sigma^2_{\epsilon}\)</span> and <span class="math inline">\(\sigma^2_u\)</span>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>get_re <span class="ot">&lt;-</span> <span class="cf">function</span>(fit) {</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    x <span class="ot">&lt;-</span> <span class="fu">VarCorr</span>(fit) <span class="sc">%&gt;%</span> <span class="fu">data.frame</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(grp,var1,vcov)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>re_est <span class="ot">&lt;-</span> </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  fit_re <span class="sc">%&gt;%</span> </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">get_re</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">grp</th>
+<th style="text-align: left;">var1</th>
+<th style="text-align: right;">vcov</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">unit_id</td>
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: right;">5.462082</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Residual</td>
+<td style="text-align: left;">NA</td>
+<td style="text-align: right;">1.084670</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>We can then use these to calculatate <span class="math inline">\(\theta\)</span>:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>sigma2_e <span class="ot">=</span> fit_re <span class="sc">%&gt;%</span> <span class="fu">get_re</span>() <span class="sc">%&gt;%</span> <span class="fu">filter</span>(grp<span class="sc">==</span><span class="st">"Residual"</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(vcov)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>sigma2_ui <span class="ot">=</span> fit_re <span class="sc">%&gt;%</span> <span class="fu">get_re</span>() <span class="sc">%&gt;%</span> <span class="fu">filter</span>(grp<span class="sc">==</span><span class="st">"unit_id"</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(vcov)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>theta_i <span class="ot">=</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">sqrt</span>(sigma2_e<span class="sc">/</span>(<span class="dv">4</span><span class="sc">*</span>sigma2_ui <span class="sc">+</span> sigma2_e))</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>theta_i</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.7825205</code></pre>
+</div>
+</div>
+<p>Next we will create a quasi-demeaned version of our input data:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>df_ <span class="ot">&lt;-</span> </span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  df <span class="sc">%&gt;%</span> </span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(unit_id) <span class="sc">%&gt;%</span> </span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">y_i =</span> y_i <span class="sc">-</span> theta_i <span class="sc">*</span> <span class="fu">mean</span>(y_i),</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">d_i =</span> d_i <span class="sc">-</span> theta_i <span class="sc">*</span> <span class="fu">mean</span>(d_i))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We now fit a quasi-demeaned</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fit_qdm <span class="ot">&lt;-</span> <span class="fu">lm</span>(y_i <span class="sc">~</span> d_i, <span class="at">data =</span> df_)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit_qdm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = y_i ~ d_i, data = df_)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.1586 -0.7768  0.0980  0.7425  3.2119 
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  0.06340    0.01666   3.805 0.000144 ***
+d_i         -0.51889    0.04550 -11.403  &lt; 2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 1.041 on 3998 degrees of freedom
+Multiple R-squared:  0.0315,    Adjusted R-squared:  0.03126 
+F-statistic:   130 on 1 and 3998 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<p>Now let’s compare:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  fit_qdm <span class="sc">%&gt;%</span> <span class="fu">tidy</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(term,<span class="at">estimate_qdm =</span> estimate) </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cbind</span>(res,df <span class="sc">%&gt;%</span> <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span> <span class="fu">summary</span>() <span class="sc">%&gt;%</span> <span class="fu">pluck</span>(<span class="st">"coefficients"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">estimate_re =</span> Estimate)) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">theta =</span> theta_i) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(term, estimate_re, estimate_qdm, theta) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">remove_rownames</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<table class="table table-sm table-striped">
+<thead>
+<tr class="header">
+<th style="text-align: left;">term</th>
+<th style="text-align: right;">estimate_re</th>
+<th style="text-align: right;">estimate_qdm</th>
+<th style="text-align: right;">theta</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">(Intercept)</td>
+<td style="text-align: right;">0.292</td>
+<td style="text-align: right;">0.063</td>
+<td style="text-align: right;">0.783</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">d_i</td>
+<td style="text-align: right;">-0.519</td>
+<td style="text-align: right;">-0.519</td>
+<td style="text-align: right;">0.783</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>get_theta <span class="ot">&lt;-</span> <span class="cf">function</span>(fit) {</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  sigma2_e <span class="ot">=</span> fit <span class="sc">%&gt;%</span> <span class="fu">get_re</span>() <span class="sc">%&gt;%</span> <span class="fu">filter</span>(grp<span class="sc">==</span><span class="st">"Residual"</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(vcov)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  sigma2_ui <span class="ot">=</span> fit <span class="sc">%&gt;%</span> <span class="fu">get_re</span>() <span class="sc">%&gt;%</span> <span class="fu">filter</span>(grp<span class="sc">==</span><span class="st">"unit_id"</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(vcov)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>  theta <span class="ot">=</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">sqrt</span>(sigma2_e<span class="sc">/</span>(<span class="dv">4</span><span class="sc">*</span>sigma2_ui <span class="sc">+</span> sigma2_e))</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  theta </span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>t_qdm <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">T2 =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T2<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span> <span class="fu">disc_fn_re</span>(),</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">theta2  =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T2<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span> <span class="fu">get_theta</span>(),</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">T2fe =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T2<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">construct_dm</span>() <span class="sc">%&gt;%</span> <span class="fu">estimate_dm</span>() <span class="sc">%&gt;%</span> <span class="fu">disc_fn_dm</span>()  ,</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">T4 =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T4<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span> <span class="fu">disc_fn_re</span>(),</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">theta4  =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T4<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span> <span class="fu">get_theta</span>(),</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">T4fe =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T4<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">construct_dm</span>() <span class="sc">%&gt;%</span> <span class="fu">estimate_dm</span>() <span class="sc">%&gt;%</span> <span class="fu">disc_fn_dm</span>()    ,</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">T10 =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T10<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span> <span class="fu">disc_fn_re</span>(),</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">theta10  =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T10<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span> <span class="fu">get_theta</span>(),  </span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">T10fe =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T10<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">construct_dm</span>() <span class="sc">%&gt;%</span> <span class="fu">estimate_dm</span>() <span class="sc">%&gt;%</span> <span class="fu">disc_fn_dm</span>()   ,</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">T20 =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T20<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span> <span class="fu">disc_fn_re</span>(),</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">theta20  =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T20<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span> <span class="fu">get_theta</span>(),  </span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">T20fe =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">filter</span>(T20<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">construct_dm</span>() <span class="sc">%&gt;%</span> <span class="fu">estimate_dm</span>() <span class="sc">%&gt;%</span> <span class="fu">disc_fn_dm</span>()  ,</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">T400 =</span> df_c <span class="sc">%&gt;%</span>  <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span> <span class="fu">disc_fn_re</span>(),</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">theta400 =</span>  df_c <span class="sc">%&gt;%</span>  <span class="fu">estimator_fn_re</span>() <span class="sc">%&gt;%</span> <span class="fu">get_theta</span>(),</span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">T400fe =</span> df_c <span class="sc">%&gt;%</span> <span class="fu">construct_dm</span>() <span class="sc">%&gt;%</span> <span class="fu">estimate_dm</span>() <span class="sc">%&gt;%</span> <span class="fu">disc_fn_dm</span>()</span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>t_qdm <span class="sc">%&gt;%</span> </span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">starts_with</span>(<span class="st">"theta"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(measure,value) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">method =</span> <span class="fu">ifelse</span>(<span class="fu">grepl</span>(<span class="st">"fe"</span>,measure),<span class="st">"FE"</span>,<span class="st">"RE"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">measure =</span> <span class="fu">gsub</span>(<span class="st">"fe"</span>,<span class="st">""</span>,measure)) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">measure =</span> <span class="fu">case_when</span>(measure <span class="sc">==</span> <span class="st">"T2"</span> <span class="sc">~</span> <span class="st">"T = 2"</span>,</span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a>                             measure <span class="sc">==</span> <span class="st">"T4"</span> <span class="sc">~</span> <span class="st">"T = 4"</span>,</span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a>                             measure <span class="sc">==</span> <span class="st">"T10"</span> <span class="sc">~</span> <span class="st">"T = 10"</span>,</span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a>                             measure <span class="sc">==</span> <span class="st">"T20"</span> <span class="sc">~</span> <span class="st">"T = 20"</span>,</span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>                             measure <span class="sc">==</span> <span class="st">"T400"</span> <span class="sc">~</span> <span class="st">"T = 400"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">time_periods =</span> measure) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">spread</span>(method, value) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time_periods =</span> <span class="fu">factor</span>(time_periods, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"T = 2"</span>,<span class="st">"T = 4"</span>, <span class="st">"T = 10"</span>,<span class="st">"T = 20"</span> , <span class="st">"T = 400"</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(time_periods) <span class="sc">%&gt;%</span> </span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
