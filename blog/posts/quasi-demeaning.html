@@ -179,6 +179,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <a href="https://graves-vanderbilt.shinyapps.io/HPOL8539-Simulation/" class="sidebar-item-text sidebar-link">Simulation as a Guide for Study Design and Inference</a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://graves-vanderbilt.shinyapps.io/HPOL8539-panel-data-1/" class="sidebar-item-text sidebar-link">Panel Data Methods I - Fixed, Random and Correlated Random Effects</a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item">
@@ -244,6 +249,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <ul class="collapse">
   <li><a href="#estimation-random-vs.-fixed-effects" id="toc-estimation-random-vs.-fixed-effects" class="nav-link" data-scroll-target="#estimation-random-vs.-fixed-effects">Estimation: Random vs.&nbsp;Fixed Effects</a></li>
   </ul></li>
+  <li><a href="#setup-1" id="toc-setup-1" class="nav-link" data-scroll-target="#setup-1">Setup</a></li>
   </ul>
 </nav>
     <div class="quarto-margin-footer"><div class="margin-footer-item">
@@ -305,9 +311,13 @@ Y_{it} = \mathbf{X}_{i}'\beta + \tau D_{it} + U_i +\epsilon_{it}
 <li><p>Remember, when <span class="math inline">\(\theta=1\)</span> the random effects regression reduces to fixed effects. When is this the case?</p>
 <ul>
 <li><p>If the term <span class="math inline">\(T\sigma^2_u\)</span> gets super large (more formally, it would need to blast off towards infinity…).</p></li>
-<li><p>If we have a very “large” panel of observations on each unit (i.e., large <span class="math inline">\(T\)</span>) there is sufficient “within” variation and we really don’t need to do any pooling across units. # Setup</p></li>
+<li><p>If we have a very “large” panel of observations on each unit (i.e., large <span class="math inline">\(T\)</span>) there is sufficient “within” variation and we really don’t need to do any pooling across units.</p></li>
 </ul></li>
 </ul>
+</section>
+</section>
+<section id="setup-1" class="level1">
+<h1>Setup</h1>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
@@ -710,7 +720,6 @@ F-statistic:   130 on 1 and 3998 DF,  p-value: &lt; 2.2e-16</code></pre>
 </div>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->
