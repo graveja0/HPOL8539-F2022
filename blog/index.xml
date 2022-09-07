@@ -10,7 +10,7 @@
 <atom:link href="https://graveja0.github.io/HPOL8539-F2022/blog/index.xml" rel="self" type="application/rss+xml"/>
 <description></description>
 <generator>quarto-1.0.36</generator>
-<lastBuildDate>Tue, 06 Sep 2022 21:28:07 GMT</lastBuildDate>
+<lastBuildDate>Wed, 07 Sep 2022 02:11:01 GMT</lastBuildDate>
 <item>
   <title>Generalized Estimating Equations</title>
   <link>https://graveja0.github.io/HPOL8539-F2022/blog/posts/gee.html</link>
@@ -192,7 +192,7 @@ Coefficients:
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/gee.html</guid>
-  <pubDate>Tue, 06 Sep 2022 21:28:07 GMT</pubDate>
+  <pubDate>Wed, 07 Sep 2022 02:11:01 GMT</pubDate>
 </item>
 <item>
   <title>Using Simulation to Calculate Power and Minimum Detectable Effects</title>
@@ -296,43 +296,43 @@ Coefficients:
 <tbody>
 <tr class="odd">
 <td style="text-align: right;">100</td>
-<td style="text-align: right;">0.181</td>
+<td style="text-align: right;">0.166</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">200</td>
-<td style="text-align: right;">0.266</td>
+<td style="text-align: right;">0.300</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">300</td>
-<td style="text-align: right;">0.395</td>
+<td style="text-align: right;">0.420</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">400</td>
-<td style="text-align: right;">0.479</td>
+<td style="text-align: right;">0.511</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">500</td>
-<td style="text-align: right;">0.601</td>
+<td style="text-align: right;">0.622</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">600</td>
-<td style="text-align: right;">0.701</td>
+<td style="text-align: right;">0.660</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">700</td>
-<td style="text-align: right;">0.754</td>
+<td style="text-align: right;">0.757</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">800</td>
-<td style="text-align: right;">0.804</td>
+<td style="text-align: right;">0.800</td>
 </tr>
 <tr class="odd">
 <td style="text-align: right;">900</td>
-<td style="text-align: right;">0.853</td>
+<td style="text-align: right;">0.849</td>
 </tr>
 <tr class="even">
 <td style="text-align: right;">1000</td>
-<td style="text-align: right;">0.888</td>
+<td style="text-align: right;">0.884</td>
 </tr>
 </tbody>
 </table>
@@ -391,7 +391,7 @@ Coefficients:
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/post1.html</guid>
-  <pubDate>Tue, 06 Sep 2022 21:28:07 GMT</pubDate>
+  <pubDate>Wed, 07 Sep 2022 02:11:01 GMT</pubDate>
 </item>
 <item>
   <title>Two-Way Fixed Effects, the Two-Way Mundlak Regression, and Difference-in-Difference Estimators</title>
@@ -10289,7 +10289,7 @@ d1998
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/twfe-twm-and-did.html</guid>
-  <pubDate>Tue, 06 Sep 2022 21:28:07 GMT</pubDate>
+  <pubDate>Wed, 07 Sep 2022 02:11:01 GMT</pubDate>
 </item>
 <item>
   <title>Quasi-Demeaning: The Relationship Between Fixed and Random Effects</title>
@@ -10740,7 +10740,7 @@ F-statistic:   130 on 1 and 3998 DF,  p-value: &lt; 2.2e-16</code></pre>
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/quasi-demeaning.html</guid>
-  <pubDate>Tue, 06 Sep 2022 21:28:07 GMT</pubDate>
+  <pubDate>Wed, 07 Sep 2022 02:11:01 GMT</pubDate>
 </item>
 </channel>
 </rss>
