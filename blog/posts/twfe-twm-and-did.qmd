@@ -363,7 +363,7 @@ df_ %>%
 We next estimate the models
 
 | Method                | Command   | Design Variables  | Fixed or Random Effect |
-|-----------------------|-----------|-------------------|------------------------|
+|-------------------|-----------------|-----------------|-------------------|
 | Two-Way Fixed Effects | `feols()` | `w` + `f*`        | Unit Fixed Effect      |
 | Pooled OLS            | `lm()`    | `w` + `f*` + `d*` |                        |
 | Two-Way Mundlak       | `lmer()`  | `w` + `f*` + `d*` | Unit Random Effect     |
@@ -524,12 +524,14 @@ We next estimate the models
 ```{r}
 #| code-fold: true
 fmla_twfe2 <- glue("y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + {paste0('f',treatment_years2,collapse=' + ')} | id") %>% as.formula()
+fmla_twfe2 <- glue("y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + factor(year) | id") %>% as.formula()
 fit_twfe2 <- feols(fmla_twfe2, data = df_)
 
 fmla_lm2 <- glue("y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + {paste0('f',treatment_years2,collapse=' + ')} + {paste0('d',treatment_groups2,collapse= '+')}") %>% as.formula()
+fmla_lm2 <- glue("y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + factor(year) + {paste0('d',treatment_groups2,collapse= '+')}") %>% as.formula()
 fit_lm2 <- lm(fmla_lm2, data = df_) 
 
-fmla_twm2 <- glue("y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + {paste0('f',treatment_years2,collapse=' + ')} + {paste0('d',treatment_groups2,collapse= '+')} + (1|id)") %>% as.formula()
+fmla_twm2 <- glue("y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + factor(year) + {paste0('d',treatment_groups2,collapse= '+')} + (1|id)") %>% as.formula()
 fit_twm2 <- lmer( fmla_twm2 , data = df_) 
 
 # CS
@@ -684,7 +686,7 @@ df_ <-
 We next estimate the models
 
 | Method                | Command   | Design Variables  | Fixed or Random Effect |
-|-----------------------|-----------|-------------------|------------------------|
+|-------------------|-----------------|-----------------|-------------------|
 | Two-Way Fixed Effects | `feols()` | `w` + `f*`        | Unit Fixed Effect      |
 | Pooled OLS            | `lm()`    | `w` + `f*` + `d*` |                        |
 | Two-Way Mundlak       | `lmer()`  | `w` + `f*` + `d*` | Unit Random Effect     |
@@ -1747,5 +1749,4 @@ df_est6 %>%
 
 ```
 
-
-[Nice video discussion](https://www.res.org.uk/resources-page/res2022-special-session-ectj-the-new-difference-in-differences.html) of hte above. 
+[Nice video discussion](https://www.res.org.uk/resources-page/res2022-special-session-ectj-the-new-difference-in-differences.html) of hte above.

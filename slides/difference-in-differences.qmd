@@ -1,0 +1,1102 @@
+---
+title: "Extending Difference-in-Differences"
+format: 
+  revealjs:
+    incremental: true   
+editor: visual
+editor_options: 
+  chunk_output_type: console
+filters:
+  - roughnotation  
+---
+
+## Peer Review
+
+[Good source](https://www.scisnack.com/wp-content/uploads/2018/10/A-Peer-Review-Process-Guide.pdf)
+
+[Nature Masterclass on Peer Review](https://masterclasses.nature.com/online-course-on-peer-review/16507836)
+
+## Outline
+
+1.  Review DID identifying assumptions.
+2.  DID Estimators
+
+-   Canonical $2\times2$
+-   Two-Way Fixed Effects (TWFE) DID
+-   TWFE Event Study DID
+-   Extended DID (TWFE, random effects, and pooled OLS)
+
+## Notation
+
+-   Binary treatment
+-   $y_z^{t}(d)$ is the potential outcome in treatment group $z$ (e.g., comparison, intervention) at time $t$.
+    -   $y_1^{post}(1)$ is the observed post-intervention outcome of individuals in the intervention group.
+    -   $y_1^{post}(0)$ is the counterfactual post-intervention outcome of individuals in the intervention group.
+
+## Estimand of Interest
+
+-   Average effect of treatment on the treated (ATT)
+
+$$
+\pi_1 = y_1^{post}(1) - y_1^{post}(0)
+$$
+
+-   This is the difference in the post-period potential outcome under treatment versus no treatment in the intervention group.
+
+## Estimand of Interest
+
+-   In the post-period, we only observe the intervention group under treatment, so its potential outcome distribution under no treatment, $y_1^{post} (0)$, is an unobservable counterfactual.
+-   Thus, we must make identifying assumptions to estimate $\pi_1$ with observable quantities.
+
+## Identifying Assumptions
+
+-   We can use a parallel trends assumption that the comparison group's (additive, linear) pre- to post-period change in untreated potential outcome distribution is the same as the intervention group's:
+
+$$
+y_0^{post} (0)-y_0^{pre}(0)=y_1^{post} (0)-y_1^{pre} (0)  
+$$
+
+## Identifying Assumptions
+
+-   Solving for the unobservable quantity we need
+
+$$
+y_1^{post} (0)=y_0^{post} (0)-y_0^{pre} (0)+y_1^{pre} (0)
+$$
+
+## Identifying Assumptions
+
+-   Plugging in to the target estimand, we have
+
+$$
+\pi_1=y_1^{post} (1)-y_0^{post} (0)+y_0^{pre} (0)-y_1^{pre} (0).
+$$
+
+## Estimator
+
+-   We further assume that observed outcomes correspond to potential outcomes under observed treatments (called the consistency assumption) and write the estimand in terms of observable quantities,
+
+$$
+\pi_1=(y_1^{post}-y_1^{pre} )-(y_0^{post}-y_0^{pre} )
+$$ where $y_z^{t}$ is the observed outcome in group $z$ during period $t$.
+
+## Estimator
+
+-   For the canonical 2x2 case, we can estimate this quantity using simple summaries of the proportions in each outcome value, group, and period.
+    -   Alternatively, if we need to condition on covariates to make identifying assumptions plausible, we can use regression or semi-parametric approaches.
+
+## Dimensions of an Intervention and its Effect
+
+-   Number of treatment groups (single, multiple).
+-   Treatment timing (single, staggered rollout).
+-   Cohort-level treatment effect heterogeneity (yes, no)
+-   Treatment effect type (constant, dynamic)\
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+#| cache: false
+
+
+library(tidyverse)
+library(fixest)
+library(glue)
+library(here)
+library(janitor)
+library(haven)
+library(fastDummies)
+library(broom)
+library(lme4)
+library(directlabels)
+library(ggthemes)
+library(knitr)
+library(kableExtra)
+library(gt)
+library(did)
+library(DiagrammeR)
+library(mcreplicate)
+library(furrr)
+library(tictoc)
+library(progressr)
+library(ggsci)
+library(patchwork)
+
+theme_set(ggthemes::theme_tufte())
+
+```
+
+```{r dgp, eval = TRUE, echo = FALSE, cache=TRUE}
+make_data <- function(params, N = 500, start = 1980, stop = 2015,rho_t = 0.8) {
+  mu <- params$mu
+  mu_t <- params$mu_t
+  tx = params$tx
+  bin <- params$bin
+  T = length(start:stop)
+
+ # year fixed effects
+  year <- tibble(
+    year = start:stop,
+    year_fe = rnorm(length(start:stop), 0, 0.5)); year
+
+  #Year fixed effects
+  year <-
+      data.frame(year = start:stop,
+                 year_fe = arima.sim(n=length(start:stop), list(ar = rho_t, order=c(1,0,0))) %>% as.vector()) %>%
+    as_tibble()
+
+  
+  df_truth_ <-suppressWarnings({
+    map(tx,~(.x %>% data.frame())) %>%
+      bind_rows(.id = "tx") %>%
+      set_names(c("group","state")) %>%
+      as_tibble() %>%
+      suppressMessages(mutate(group = as.numeric(paste0(group)))) %>%
+      left_join(
+        map(mu,~(.x %>% data.frame())) %>%
+          bind_rows(.id = "tx") %>%
+          set_names(c("group","mu")) %>%
+          inner_join(
+            map(mu_t,~(.x %>% data.frame())) %>%
+              bind_rows(.id = "tx") %>%
+              set_names(c("group","mu_t")),"group"
+          ), c("group")
+      ) %>%
+      mutate(group = ifelse(!is.na(group),as.numeric(paste0(group)),NA))
+  })
+
+  # For dynamic treatment effects
+  df_truth_t <-
+    crossing(state = unique(df_truth_$state), year = unique(year$year)) %>%
+    left_join(df_truth_,"state") %>%
+    mutate(rel_time = pmax(year-group)) %>%
+    mutate(tau = ifelse(!is.na(mu) & rel_time>=0,mu,0),
+           tau_t = ifelse(!is.na(mu_t) &rel_time>=0,mu_t,0)) %>%
+    group_by(group, state) %>%
+    mutate(cumtau = tau + cumsum(tau_t))   %>%
+    group_by(rel_time) %>%
+    summarise(mu_truth = mean(cumtau)) %>% na.omit()
+
+  df_truth <-
+    crossing(state = unique(df_truth_$state), year = unique(year$year)) %>%
+    left_join(df_truth_,"state") %>%
+    mutate(rel_time = pmax(year-group)) %>%
+    mutate(tau = ifelse(!is.na(mu) & rel_time>=0,mu,0),
+           tau_t = ifelse(!is.na(mu_t) &rel_time>=0,mu_t,0)) %>%
+    group_by(group, state) %>%
+    mutate(cumtau = tau + cumsum(tau_t)) %>%
+    mutate(max_time_post = max(year-group)) %>%
+    ungroup() %>%
+    mutate(max_time_post = min(max_time_post,na.rm=TRUE)) %>%
+    #filter(rel_time <= max_time_post) %>%
+    filter(cumtau>0) %>% group_by(group) %>% summarise(mean = mean(cumtau)) %>%
+    as_tibble() %>%
+    left_join(
+      tx %>% map_dbl(~(length(.x))) %>% data.frame() %>% rownames_to_column(var = "group") %>% set_names(c("group","weight")) %>%
+        filter(group != "NA") %>%
+        mutate(total_weight = sum(weight)) %>%
+        mutate(group = as.numeric(paste0(group))),
+      "group") %>%
+    mutate(mu_truth = mean*weight/total_weight) %>%
+    summarise(mu_truth = sum(mu_truth)) %>%
+    mutate(rel_time = NA) %>%
+    mutate(type = "Static")  %>%
+    bind_rows(
+      df_truth_t %>%
+        mutate(type = "Dynamic")
+    )
+
+  # Units
+  unit <- 
+    tibble(
+    unit = 1:N,
+    unit_fe = rnorm(N, 0, 0.5),
+    # generate state
+    state = sample(rep(1:50, N/50), N, replace = FALSE)) %>%
+    left_join(
+      df_truth_,c("state")
+    ) %>%
+        ungroup() %>% 
+    mutate(evertreated = ifelse(is.na(as.numeric(group)),"C","T")) %>%
+    mutate(hat_gamma = mu) %>%
+    mutate(hat_gamma_t = mu_t) %>%
+    # generate unit specific yearly treatment effects
+    rowwise() %>%
+    mutate(gamma = rnorm(1, hat_gamma, .2)) %>%
+    mutate(gamma_t = ifelse(mu_t!=0,rnorm(1,hat_gamma_t,0.2),0)) %>% 
+    mutate(x_i = rgamma(1,1))
+
+  df_x_it <- 
+    unit %>% 
+    select(unit) %>% 
+    mutate(x_it = map(unit,~(arima.sim(n=length(start:stop), list(ar = rho_t, order=c(1,0,0)))))) %>% 
+    mutate(year = map(unit,~(start:stop))) %>% 
+    unnest(cols = c(x_it,year)) %>% 
+    select(unit,year,x_it)
+    
+  
+  # full interaction of unit X year
+  df <- 
+    crossing(unit, year) %>%
+    left_join(df_x_it, c("unit","year")) %>% 
+    # make error term and get treatment indicators and treatment effects
+    mutate(error = rnorm(nrow(.), 0, 0.5),
+           treat = ifelse(year >= group & !is.na(group), 1, 0),
+           tau = ifelse(treat == 1, gamma, 0),
+           tau_t = ifelse(treat==1,gamma_t,0)) %>%
+    # calculate the dep variable
+    group_by(unit) %>%
+    mutate(cumtau = tau + cumsum(tau_t)) %>%
+    mutate(dep_var = unit_fe + year_fe + cumtau + error) %>%
+    mutate(dep_var_x = unit_fe + year_fe + x_i + x_it + cumtau + error) %>%
+    mutate(rel_year = year - as.numeric(group)) %>%
+    mutate(rel_year = ifelse(rel_year == -Inf, NA, rel_year))%>%
+    dummy_cols(select_columns = "rel_year") %>%
+    mutate(across(starts_with("rel_year_"), ~replace_na(., 0))) %>%
+    # generate pre and post dummies
+    mutate(Pre = ifelse((rel_year < bin[1]) * (!is.na(rel_year)), 1, 0),
+           Post = ifelse((rel_year > bin[2]) * (!is.na(rel_year)), 1, 0)) %>%
+    mutate(bin1 = bin[1],
+           bin2 = bin[2])
+
+  out <- list(
+    df = df,
+    truth =   df_truth,
+    truth_g = df_truth_,
+    params = params
+  )
+}
+plot_data <- function(df) {
+
+  year_range <- range(df$df$year)
+  
+  staggered <- ifelse(length(unique(na.omit(df$df$group)))>1,"Staggered","Single Treatment Time")
+
+  control <- ifelse("C" %in% unique(df$df$evertreated),TRUE,FALSE)
+
+  if (control) {
+    df_ <- df$df %>%
+      mutate(group = ifelse(evertreated=="C","Never Treated",paste0(group)))
+  } else {
+    df_ <- df$df
+  }
+  unique_groups <- unique(df_$group)
+  colors <- c("#A7473A","#4B5F6C","#51806a")[1:length(unique_groups)]
+  names(colors) = unique(df_$group)
+
+  df_vline <- suppressWarnings({
+    data.frame(group = unique(df_$group),xintercept = unique(as.numeric(df_$group)) - 0.5) %>%
+      mutate(color = colors[factor(group)])
+  })
+
+  suppressWarnings({
+    df_ %>%
+      ggplot(aes(x = year, y = dep_var)) +
+      # unit specific lines
+      geom_line(alpha = 1/10, color = "grey",aes(group = unit)) +
+      # group specific averages
+      geom_line(
+        data = . %>%
+          group_by(group, year) %>%
+          summarize(dep_var = mean(dep_var)) ,
+        aes(x = year, y = dep_var, group = factor(group),
+            color = factor(group)), size = 1) +
+      labs(x = "", y = "", color = "Group") +
+      geom_vline(data = df_vline, aes(xintercept = xintercept, color = factor(group)),linetype="dashed",size=1) +
+      ggsci::scale_color_aaas()+
+      geom_dl(data =
+                . %>%
+                group_by(group, year) %>%
+                summarize(dep_var = mean(dep_var)), method = "last.bumpup",aes(label = group)) +
+      scale_y_continuous(limits = c(-3, 20)) +
+      scale_x_continuous(limits = year_range) + 
+      scale_x_continuous(expand = c(0.25,0))  + theme(legend.position = "none")
+  })
+}
+
+params1 <- list(
+  descrip = "Common Treatment Time, Constant Treatment Effects",
+  mu = list("1998" = 2),
+  mu_t = list("1998" = 0),
+  tx = list("1998" = 1:25,
+            "NA" = 26:50),
+  bin = c(-5,5)
+)
+
+params2=  list(
+  descrip = "Common Treatment Time, Dynamic Treatment Effects",
+  mu = list("1998" = 0),
+  mu_t = list("1998" = 0.3),
+  tx = list("1998" = 1:25,
+            "NA" = 26:50),
+  bin = c(-5,5))
+
+
+params3=  list(
+  desc = "Multiple Treatment Periods and Constant Equal Treatment Effects",
+  mu = list("1989" = 3,
+            "1998" = 3,
+            "2007" = 3),
+  mu_t = list("1989" = 0,
+              "1998" = 0,
+              "2007" = 0),
+  tx = list("1989" = 1:17,
+            "1998" = 18:35,
+            "2007" = 36:50),
+  bin = c(-5,5))
+
+params4a =  list(
+  desc = "Multiple Treatment Periods and Constant Different Treatment Effects, All Groups Eventually Treated",
+  mu = list("1989" = 5,
+            "1998" = 3,
+            "2007" = 1),
+  mu_t = list("1989" = 0,
+              "1998" = 0,
+              "2007" = 0),
+  tx = list("1989" = 1:17,
+            "1998" = 18:35,
+            "2007" = 36:50),
+  bin = c(-5,5))
+
+params4b =  list(
+  desc = "Multiple Treatment Periods and Constant Different Treatment Effects, Never Treated Group", 
+  mu = list("1989" = 5,
+            "1998" = 3),
+  mu_t = list("1989" = 0,
+              "1998" = 0),
+  tx = list("1989" = 1:17,
+            "1998" = 18:35,
+            "NA" = 36:50),
+  bin = c(-5,5))
+
+params5=  list(
+  desc = "Multiple Treatment Periods and Constant Dynamic Treatment Effects",
+  mu = list("1989" = 0,
+            "1998" = 0,
+            "2007" = 0),
+  mu_t = list("1989" = 0.3,
+              "1998" = 0.3,
+              "2007" = 0.3),
+  tx = list("1989" = 1:17,
+            "1998" = 18:35,
+            "2007" = 36:50),
+  bin = c(-5,5))
+
+params6=  list(
+  desc = "Multiple Treatment Periods and Heterogeneous Dynamic Treatment Effects",
+  mu = list("1989" = 0,
+            "1998" = 0,
+            "2007" = 0),
+  mu_t = list("1989" = 0.5,
+              "1998" = 0.3,
+              "2007" = 0.8),
+  tx = list("1989" = 1:17,
+            "1998" = 18:35,
+            "2007" = 36:50),
+  bin = c(-5,5))
+
+
+params6b=  list(
+    desc = "Multiple Treatment Periods and Heterogeneous Dynamic Treatment Effects, Never Treated Group",
+  mu = list("1989" = 0,
+            "1998" = 0),
+  mu_t = list("1989" = 0.5,
+              "1998" = 0.3),
+  tx = list("1989" = 1:17,
+            "1998" = 18:35,
+            "NA" = 35:50),
+  bin = c(-5,5))
+
+tx_groups <- c("Single","Multiple")
+timing <- c("Single","Staggered")
+het <- c("Yes","No")
+tx_effect <- c("Constant","Dynamic")
+
+est_table <- 
+  crossing(tx_groups,timing, het,tx_effect)  %>% 
+  mutate(drop = case_when( 
+    tx_groups == "Single" & het == "Yes" ~ 1, 
+    tx_groups == "Single" & timing == "Staggered" ~ 1, 
+    TRUE ~ 0
+    )) %>% 
+  mutate(approach = 
+           case_when(
+             drop !=1 & tx_groups=="Single" & timing == "Single"  & tx_effect=="Constant" ~ "TWFE",
+             drop !=1 & tx_groups=="Single" & timing == "Single"  & tx_effect=="Dynamic" ~ "TWFE-ES",
+             drop !=1 & tx_groups=="Multiple" & timing == "Staggered" & het=="Yes"  ~ "E-TWFE+",
+             drop !=1 & tx_groups=="Multiple" & timing == "Staggered" & het=="No" & tx_effect == "Dynamic" ~ "TWFE-ES",
+             drop !=1 & tx_groups=="Multiple" & timing == "Staggered" & het=="No" & tx_effect == "Constant" ~ "TWFE-ES",
+             drop !=1 & tx_groups=="Multiple" & timing == "Single" & het=="No" & tx_effect=="Constant" ~ "TWFE",
+             drop !=1 & tx_groups=="Multiple" & timing == "Single" & het=="No" & tx_effect=="Dynamic" ~ "TWFE-ES",
+             drop !=1 & tx_groups=="Multiple" & timing == "Single" & het=="Yes" & tx_effect=="Dynamic" ~ "E-TWFE",
+             drop !=1 & tx_groups=="Multiple" & timing == "Single" & het=="Yes" & tx_effect=="Constant" ~ "E-TWFE"
+           )) %>% 
+  filter(drop!=1) %>% select(-drop) %>% 
+  arrange(desc(tx_groups),tx_effect) 
+
+```
+
+## DID Estimators
+
+`r params1$desc`
+
+```{r}
+est_table %>% 
+  filter(tx_groups == "Single" & tx_effect=="Constant") %>% select(-approach) %>% 
+  kable()
+```
+
+```{r, cache=TRUE}
+#| fig-align: center
+set.seed(2381)
+params1 %>% make_data(N=500,rho_t=0) %>% plot_data() + theme_bw() + theme(legend.position ="none")
+```
+
+## DID Estimators
+
+`r params2$desc`
+
+```{r}
+est_table %>% 
+  filter(tx_groups == "Single" & tx_effect=="Dynamic") %>% select(-approach) %>% 
+  kable()
+```
+
+```{r, cache=TRUE}
+#| fig-align: center
+set.seed(2381)
+params2 %>% make_data(N=500) %>% plot_data() + theme_bw() + theme(legend.position ="none")
+```
+
+## DID Estimators
+
+`r params3$desc`
+
+```{r}
+est_table %>% 
+  filter(tx_groups == "Multiple" & tx_effect=="Constant" & het=="No" & timing=="Staggered") %>% select(-approach) %>% 
+  kable()
+```
+
+```{r, cache=TRUE}
+#| fig-align: center
+set.seed(123)
+params3 %>% make_data(N=500) %>% plot_data()+ theme_bw() + theme(legend.position ="none")
+```
+
+## DID Estimators
+
+`r params4a$desc`
+
+```{r}
+est_table %>% 
+  filter(tx_groups == "Multiple" & tx_effect=="Constant" & timing == "Staggered" & het=="Yes") %>% select(-approach) %>% 
+  kable()
+```
+
+```{r, cache=TRUE}
+#| fig-align: center
+set.seed(123)
+params4a %>% make_data(N=500) %>% plot_data()+ theme_bw() + theme(legend.position ="none")
+```
+
+## DID Estimators
+
+`r params4b$desc`
+
+```{r}
+est_table %>% 
+  filter(tx_groups == "Multiple" & tx_effect=="Constant" & timing == "Staggered" & het=="Yes") %>% select(-approach) %>% 
+  kable()
+```
+
+```{r, cache=TRUE}
+#| fig-align: center
+set.seed(123)
+params4b %>% make_data(N=500) %>% plot_data()+ theme_bw() + theme(legend.position ="none")
+```
+
+## DID Estimators
+
+`r params5$desc`
+
+```{r}
+est_table %>% 
+  filter(tx_groups == "Multiple" & tx_effect=="Dynamic" & timing == "Staggered" & het=="No") %>% select(-approach) %>% 
+  kable()
+```
+
+```{r, cache=TRUE}
+#| fig-align: center
+set.seed(123)
+params5 %>% make_data(N=500) %>% plot_data()+ theme_bw() + theme(legend.position ="none")
+```
+
+## DID Estimators
+
+`r params6$desc`
+
+```{r}
+est_table %>% 
+  filter(tx_groups == "Multiple" & tx_effect=="Dynamic" & timing == "Staggered" & het=="Yes") %>% select(-approach) %>% 
+  kable()
+```
+
+```{r, cache=TRUE}
+#| fig-align: center
+set.seed(123)
+params6 %>% make_data(N=500) %>% plot_data()+ theme_bw() + theme(legend.position ="none")
+```
+
+## DID Estimators
+
+`r params6b$desc`
+
+```{r}
+est_table %>% 
+  filter(tx_groups == "Multiple" & tx_effect=="Dynamic" & timing == "Staggered" & het=="Yes") %>% select(-approach) %>% 
+  kable()
+```
+
+```{r, cache=TRUE}
+#| fig-align: center
+set.seed(123)
+params6b %>% make_data(N=500) %>% plot_data()+ theme_bw() + theme(legend.position ="none")
+```
+
+<!-- ## Things Get Tricky -->
+
+<!-- ```{r} -->
+
+<!-- est_table %>%  -->
+
+<!--   kable() %>%  -->
+
+<!--   kable_styling(font_size = 25) -->
+
+<!-- ``` -->
+
+# DID Estimators
+
+## DID Estimators
+
+::: incremental
+-   Two-Way Fixed Effects DID ("TWFE")
+-   Two-Way Fixed Effects Event Study DID ("TWFE-ES")
+-   Extended Differences-in-Differences ("E-DID")
+    -   Extended Two-Way Fixed Effect DID ("E-TWFE")
+    -   Extended Pooled OLS ("E-POLS")
+    -   Extended Random Effect ("Extended Two Way Mundlak" or "E-TWM")
+:::
+
+## Two-Way Fixed Effects DID Estimator
+
+-   A common approach is a so-called "two-way fixed effects" difference-in-differences estimator:
+
+$$
+y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
+$$
+
+## Two-Way Fixed Effects DID Estimator
+
+$$
+y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
+$$
+
+-   $D_{it}$ is a binary treatment indicator set to 1 if the individual is in the treated group and the the observation is in the post-treatment period.
+
+-   $\delta_i$ and $\gamma_t$ are unit and time fixed effects, respectively.
+
+-   Inclusion of unit and time fixed effects flexibly accounts for both unit-specific (but time-invariant) and time-specific (but unit-invariant) unobserved confounders.
+
+## Two-Way Fixed Effects DID Estimator
+
+$$
+y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
+$$
+
+-   Can think of $\delta_i = h(\mathbf{U_i})$ and $\gamma_t = f(\mathbf{V_t})$, where $\mathbf{U_i}$ are unit specific confounders and $\mathbf{V_t}$ are time-specific confounders that are common causes of the treatment and the outcome.
+
+-   $h(.)$ and $f(.)$ are arbitrary functions that we do not necessarily know the structure of.
+
+## Two-Way Fixed Effects DID Estimator
+
+$$
+y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
+$$
+
+-   While the model is assuming there are no *interactions* between confounders $\mathbf{U_i}$ and $\mathbf{V_t}$, there are no functional form restrictions placed on $h(.)$ and $f(.)$.
+
+-   So the model is only making assumptions on the *additivity* and *separability* of unobserved confounders.
+
+-   Source: [Imai and Kim](http://web.mit.edu/insong/www/pdf/FEmatch-twoway.pdf)
+
+## Two-Way Fixed Effects DID Estimator {.smaller}
+
+::: {style="font-size: 0.9em"}
+| Treatment Group | Timing    | Heterogx | Tx Effect | TWFE                                           |
+|---------------|---------------|---------------|---------------|---------------|
+| Single          | Single    | No       | Constant  | Yes                                            |
+| Single          | Single    | No       | Dynamic   | Yes[^1]                                        |
+| Multiple        | Single    | No       | Constant  | Yes                                            |
+| Multiple        | Single    | Yes      | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+| Multiple        | Staggered | No       | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+| Multiple        | Staggered | Yes      | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+| Multiple        | Single    | No       | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+| Multiple        | Single    | Yes      | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+| Multiple        | Staggered | No       | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+| Multiple        | Staggered | Yes      | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+:::
+
+[^1]: Average effect
+
+## TWFE Event Study DID Estimator
+
+-   Another option is to fit a **two-way fixed effects event study** DID model.
+
+## TWFE Event Study DID Estimator
+
+$Y_{it} = \delta_i + \gamma_t + \gamma_k^{-K}D_{it}^{<-K} + \sum_{k=-K}^{-2}\gamma_k^{lead}D_{it}^k+\sum_{k=0}^{L}\gamma_k^{lag}D_{it}^k + \gamma_k^{L+}D_{it}^{>L} + \epsilon_{it}$
+
+-   $\delta_i$ and $\gamma_t$ are unit and time fixed effects, respectively.
+
+-   We use $K$ lags and $L$ leads, and $D_{i,t}^k$ are *event study dummy variables* that take a value of one if unit $i$ is $k$ periods away from initial treatment time at time $t$ and zero otherwise.
+
+## TWFE Event Study DID Estimator
+
+-   We may not want to specify *every* lead and lag available in our data. As such, $D_{it}^{<-K}$ and $D_{it}^{>L}$ are `Pre` and `Post` variables if the observation is more than $K$ time periods away in the pre period, and more than $L$ periods away in the post period.
+
+-   Also note that the indicator for the time period *just before* policy adoption, i.e., $D_{it}^{-1}$ is the **excluded category**.
+
+## TWFE Event Study DID Estimator {.smaller}
+
+::: {style="font-size: 0.9em"}
+| Treatment Group | Timing    | Heterogx | Tx Effect | TWFE                                           | TWFE-ES                                        |
+|------------|------------|------------|------------|------------|------------|
+| Single          | Single    | No       | Constant  | Yes                                            | Yes                                            |
+| Single          | Single    | No       | Dynamic   | Yes[^2]                                        | Yes                                            |
+| Multiple        | Single    | No       | Constant  | Yes                                            | Yes                                            |
+| Multiple        | Single    | Yes      | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+| Multiple        | Staggered | No       | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | Yes                                            |
+| Multiple        | Staggered | Yes      | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+| Multiple        | Single    | No       | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+| Multiple        | Single    | Yes      | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+| Multiple        | Staggered | No       | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+| Multiple        | Staggered | Yes      | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} |
+:::
+
+[^2]: Average effect
+
+## Extended Difference-in-Differences
+
+Wooldridge,["Two-Way Fixed Effects, the Two-Way Mundlak Regression, and Difference-in-Differences Estimators"](https://www.dropbox.com/sh/zj91darudf2fica/AADj_jaf5ZuS1muobgsnxS6Za?dl=0&preview=two_way_mundlak_20210928.pdf) (2021 *Working Paper*)
+
+-   Establishes the equivalence between two estimators:
+    1.  Two-way fixed effects (TWFE) DID estimator.
+    2.  A DID estimator that includes unit-specific time averages and time-period specific cross-sectional averages.
+-   #2 covers both pooled OLS (POLS) or correlated random effects (called "two-way Mundlak" or TWM).
+
+## Extended Difference-in-Differences
+
+::: incremental
+-   Establishes a clear line of sight through DID with heterogeneous treatment effects and staggered entry.
+-   Bottom line: specify a flexible regression to  allow for heterogeneity across time and treatment cohorts.
+-   For a balanced panel, POLS, TWFE and TWM yield identical DID estimates.
+-   Allows for extensions into nonlinear DID models.
+:::
+
+## Roadmap {background-image="media/ext-twfe-process.png" data-background-size="contain"}
+
+## Data Generation Process
+
+`r params6b$desc`
+
+::: column-screen
+```{r, cache=TRUE}
+set.seed(12345)
+df_sim <- params6b %>% make_data(N = 500,rho_t=0.8)
+plot_data(df_sim) + theme_bw() + theme(legend.position="none")
+```
+:::
+
+## Please Note
+
+DGP code adapted from Baker, Andrew C., David F. Larcker, and Charles CY Wang. "How much should we trust staggered difference-in-differences estimates?." Journal of Financial Economics 144.2 (2022): 370-395.
+
+## Raw Data
+
+```{r}
+ df_sim$df %>%
+  select(unit,year, y_it = dep_var, d_it = treat,x_i, x_it) %>% 
+  head(n=10)  %>% 
+  kable(digits = 3) %>% 
+  kable_styling()
+```
+
+## Step 1
+
+![](images/paste-74861895.png)
+
+## Step 1
+
+-   Identify all treatment cohorts based on the first year of treatment.
+-   Define cohort dummies
+    -   `d_1989` is a dummy set to one if the unit belongs to the 1989 treatment cohort.
+    -   `d_1998` is a dummy set to one if the unit belongs to the 1998 treatment cohort.
+
+## Step 2
+
+![](images/paste-ACBEC71E.png)
+
+## Step 2
+
+::: incremental
+-   Identify whether there is a never treated comparison group.
+-   If there is, move to next step.
+-   If all groups eventually treated:
+    -   We no longer have viable untreated comparisons after the last cohort is treated.
+    -   Identify the treatment year for the last treated cohort.
+    -   Drop all observations with year $>=$ the last treatment year.
+:::
+
+## Step 2
+
+-   In our example, there is a never treated group.
+-   This means every treated group has a viable comparator across the entire analytic window.
+-   Therefore, we don't need to drop any observations.
+
+## Step 3
+
+![](images/paste-197B4225.png)
+
+## Step 3
+
+-   Analytic window is `r range(df_sim$df$year)[1]` to `r range(df_sim$df$year)[2]`
+-   First treated year is 1989.
+-   `f_*` covers year dummy variables from 1989 to `r range(df_sim$df$year)[2]`
+
+## Step 4
+
+![](images/paste-48625FFC.png)
+
+## Step 4
+
+-   Basic idea is to create interactions between treatment cohort dummies and post-treatment time period dummies.
+-   For the 1989 cohort, we'd create dummy interactions for
+    -   `d_1989 * f_1989`
+    -   `d_1989 * f_1990`
+    -   `d_1989 * f_1991`
+    -   ... and so on.
+
+## Step 4
+
+-   Basic idea is to create interactions between treatment cohort dummies and post-treatment time period dummies.
+-   For the 1998 cohort, we'd create dummy interactions for
+    -   `d_1998 * f_1998`
+    -   `d_1998 * f_1999`
+    -   `d_1998 * f_2000`
+    -   ... and so on.
+
+## Step 4
+
+![](images/paste-6D629FF2.png){fig-align="center" height="700px"}
+
+## Step 4
+
+-   In R, you can specify these dummies in the regresison equation using `I(d_1989 * f_1989)`.
+
+## Step 5
+
+![](images/paste-BF235140.png)
+
+## Step 5
+
+::: {style="font-size: 0.6em"}
+| Method                | Estimation Formula                               | Fixed or Random Effect |
+|-------------------|------------------------------------|-------------------|
+| Two-Way Fixed Effects | `feols(I(d* : f*) + factor(time)  | unit)`       | Unit Fixed Effect      |
+| Pooled OLS            | `lm(I(d* : f*) + factor(time) + d*)`             |                        |
+| Two-Way Mundlak       | `lmer(I(d* : f*) + factor(time) + d* + (1|unit)` | Unit Random Effect     |
+:::
+
+## Step 5 (with covariates)
+
+See the course blog for how to demean the covariates so they can be included.
+
+::: {style="font-size: 0.6em"}
+| Method                | Estimation Formula                                                                                                                | Fixed or Random Effect |
+|-------------------|------------------------------------|-------------------|
+| Two-Way Fixed Effects | `feols(I(w : d* : f*) + I(w : d* : f* : x_dm_d*) + factor(time) + I(factor(time) * x_dm_d*) | unit)`                              | Unit Fixed Effect      |
+| Pooled OLS            | `lm(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* + x + I(d* : x_dm_d*))`              |                        |
+| Two-Way Mundlak       | `lmer(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* +  x + I(d* : x_dm_d*) + (1|unit)` | Unit Random Effect     |
+:::
+
+## Regression Call: TWFE 
+
+`feols(I(d* : f*) + factor(time)  | unit)` 
+
+![](images/paste-217BAC9B.png)
+
+## Results: Coefficient Estimates
+
+![](images/paste-4B6297C0.png)
+
+## Results: Relative Time
+
+![](images/paste-304AD987.png)
+
+## Extended Difference-in-Differences {.smaller}
+
+::: {style="font-size: 0.9em"}
+| Treatment Group | Timing    | Heterogx | Tx Effect | TWFE                                           | TWFE-ES                                        | Ext-DID |
+|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+| Single          | Single    | No       | Constant  | Yes                                            | Yes                                           |  [Yes]{.rn rn-type=highlight}      |
+| Single          | Single    | No       | Dynamic   | Yes[^3]                                        | Yes                                            | [Yes]{.rn rn-type=highlight}      |
+| Multiple        | Single    | No       | Constant  | Yes                                            | Yes                                            | [Yes]{.rn rn-type=highlight}      |
+| Multiple        | Single    | Yes      | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
+| Multiple        | Staggered | No       | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | Yes                                            | [Yes]{.rn rn-type=highlight}      |
+| Multiple        | Staggered | Yes      | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
+| Multiple        | Single    | No       | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
+| Multiple        | Single    | Yes      | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
+| Multiple        | Staggered | No       | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
+| Multiple        | Staggered | Yes      | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
+:::
+
+[^3]: Average effect
+
+## 
+
+```{r}
+
+p1 <- params3 %>% make_data(N=500) %>% plot_data() + theme_bw() + ggtitle(params3$desc) + theme(legend.position = "none")
+
+res3 <- read_rds(here("blog/posts/results/extended-did-params3.rds")) %>% 
+  bind_rows() %>% 
+  group_by(rel_time) %>% 
+  summarise_at(vars(pols,twfe,re,mu_truth),mean) %>% 
+  select(rel_time,pols,twfe,re,truth = mu_truth)
+
+p2 <- res3 %>% 
+  gather(method,value,-rel_time) %>% 
+  ggplot(aes(x = rel_time, y = value, colour = method)) +
+  geom_point() +
+  geom_line() + 
+  theme_bw() +
+  scale_y_continuous(limits = c(0,5)) +
+  scale_x_continuous(breaks = seq(0,36,2),expand = c(0.25,0)) +
+  geom_dl(method = list("last.bumpup"),aes(label = glue("  {method}"))) +
+  theme(legend.position = "none") + 
+  ggsci::scale_color_aaas() +
+  ggtitle(glue("Average Treatment Effect Across 2,000 DGP Realizations\n{params3$desc}")) + 
+  labs(x = "Time Relative to Treatment",
+       y = "Treatment Effect")
+
+p1 + p2
+```
+
+## 
+
+```{r}
+
+p1 <- params4a %>% make_data() %>% plot_data() + theme_bw() + ggtitle(params4a$desc) + theme(legend.position = "none")
+
+res4a <- read_rds(here("blog/posts/results/extended-did-params4a.rds")) %>% 
+  bind_rows() %>% 
+  group_by(rel_time) %>% 
+  summarise_at(vars(pols,twfe,re,mu_truth),mean) %>% 
+  select(rel_time,pols,twfe,re,truth = mu_truth)
+
+p2 <- res4a %>% 
+  gather(method,value,-rel_time) %>% 
+  ggplot(aes(x = rel_time, y = value, colour = method)) +
+  geom_point() +
+  geom_line() + 
+  theme_bw() +
+  scale_y_continuous(limits = c(0,6)) +
+  scale_x_continuous(breaks = seq(0,36,2),expand = c(0.25,0)) +
+  geom_dl(method = list("last.bumpup"),aes(label = glue("  {method}"))) +
+  theme(legend.position = "none") + 
+  ggsci::scale_color_aaas() +
+  ggtitle(glue("Average Treatment Effect Across 2,000 DGP Realizations\n{params4a$desc}")) + 
+  labs(x = "Time Relative to Treatment",
+       y = "Treatment Effect")
+p1 + p2 
+```
+
+## 
+
+```{r}
+
+p1 <- params4b %>% make_data() %>% plot_data() + theme_bw() + ggtitle(params4b$desc) + theme(legend.position = "none")
+
+res4b <- read_rds(here("blog/posts/results/extended-did-params4b.rds")) %>% 
+  bind_rows() %>% 
+  group_by(rel_time) %>% 
+  summarise_at(vars(pols,twfe,re,mu_truth),mean) %>% 
+  select(rel_time,pols,twfe,re,truth = mu_truth)
+
+p2 <- res4b %>% 
+  gather(method,value,-rel_time) %>% 
+  ggplot(aes(x = rel_time, y = value, colour = method)) +
+  geom_point() +
+  geom_line() + 
+  theme_bw() +
+  scale_y_continuous(limits = c(0,6)) +
+  scale_x_continuous(breaks = seq(0,36,2),expand = c(0.25,0)) +
+  geom_dl(method = list("last.bumpup"),aes(label = glue("  {method}"))) +
+  theme(legend.position = "none") + 
+  ggsci::scale_color_aaas() +
+  ggtitle(glue("Average Treatment Effect Across 2,000 DGP Realizations\n{params4b$desc}")) + 
+  labs(x = "Time Relative to Treatment",
+       y = "Treatment Effect")
+p1 + p2 
+```
+
+## 
+
+```{r}
+
+p1 <- params5 %>% make_data() %>% plot_data() + theme_bw() + ggtitle(params5$desc) + theme(legend.position = "none")
+
+res5 <- read_rds(here("blog/posts/results/extended-did-params5.rds")) %>% 
+  bind_rows() %>% 
+  group_by(rel_time) %>% 
+  summarise_at(vars(pols,twfe,re,mu_truth),mean) %>% 
+  select(rel_time,pols,twfe,re,truth = mu_truth)
+
+p2 <- res5 %>% 
+  gather(method,value,-rel_time) %>% 
+  ggplot(aes(x = rel_time, y = value, colour = method)) +
+  geom_point() +
+  geom_line() + 
+  theme_bw() +
+  scale_y_continuous(limits = c(0,10)) +
+  scale_x_continuous(breaks = seq(0,36,2),expand = c(0.25,0)) +
+  geom_dl(method = list("last.bumpup"),aes(label = glue("  {method}"))) +
+  theme(legend.position = "none") + 
+  ggsci::scale_color_aaas() +
+  ggtitle(glue("Average Treatment Effect Across 2,000 DGP Realizations\n{params5$desc}")) + 
+  labs(x = "Time Relative to Treatment",
+       y = "Treatment Effect")
+p1 + p2 
+```
+
+## 
+
+```{r}
+
+p1 <- params6 %>% make_data() %>% plot_data() + theme_bw() + ggtitle(params6$desc) + theme(legend.position = "none")
+
+res6 <- read_rds(here("blog/posts/results/extended-did-params6.rds")) %>% 
+  bind_rows() %>% 
+  group_by(rel_time) %>% 
+  summarise_at(vars(pols,twfe,re,mu_truth),mean) %>% 
+  select(rel_time,pols,twfe,re,truth = mu_truth)
+
+p2 <- res6 %>% 
+  gather(method,value,-rel_time) %>% 
+  ggplot(aes(x = rel_time, y = value, colour = method)) +
+  geom_point() +
+  geom_line() + 
+  theme_bw() +
+  scale_y_continuous(limits = c(0,15)) +
+  scale_x_continuous(breaks = seq(0,36,2),expand = c(0.25,0)) +
+  geom_dl(method = list("last.bumpup"),aes(label = glue("  {method}"))) +
+  theme(legend.position = "none") + 
+  ggsci::scale_color_aaas() +
+  ggtitle(glue("Average Treatment Effect Across 2,000 DGP Realizations\n{params6$desc}")) + 
+  labs(x = "Time Relative to Treatment",
+       y = "Treatment Effect")
+p1 + p2 
+```
+
+##
+
+```{r}
+
+p1 <- params6b %>% make_data() %>% plot_data() + theme_bw() + ggtitle(params6b$desc) + theme(legend.position = "none")
+
+res6b <- read_rds(here("blog/posts/results/extended-did-params6b.rds")) %>% 
+  bind_rows() %>% 
+  group_by(rel_time) %>% 
+  summarise_at(vars(pols,twfe,re,mu_truth),mean) %>% 
+  select(rel_time,pols,twfe,re,truth = mu_truth)
+
+p2 <- res6b %>% 
+  gather(method,value,-rel_time) %>% 
+  ggplot(aes(x = rel_time, y = value, colour = method)) +
+  geom_point() +
+  geom_line() + 
+  theme_bw() +
+  scale_y_continuous(limits = c(0,15)) +
+  scale_x_continuous(breaks = seq(0,36,2),expand = c(0.25,0)) +
+  geom_dl(method = list("last.bumpup"),aes(label = glue("  {method}"))) +
+  theme(legend.position = "none") + 
+  ggsci::scale_color_aaas() +
+  ggtitle(glue("Average Treatment Effect Across 2,000 DGP Realizations\n{params6b$desc}")) + 
+  labs(x = "Time Relative to Treatment",
+       y = "Treatment Effect")
+p1 + p2 
+```
+
+<!-- # https://sketchviz.com/new -->
+
+<!-- # Code used to create sketch diagram -->
+
+<!-- digraph G { -->
+
+<!--   graph [fontname = "Handlee"]; -->
+
+<!--   node [fontname = "Handlee"]; -->
+
+<!--   edge [fontname = "Handlee"]; -->
+
+<!--   rankdir=""; -->
+
+<!--   bgcolor=transparent; -->
+
+<!--   start -> tc; -->
+
+<!--   tc -> nt -->
+
+<!--   nt -> nt_y -->
+
+<!--   nt -> nt_n -->
+
+<!--   nt_y -> drop -->
+
+<!--   drop -> post -->
+
+<!--   nt_n -> post -->
+
+<!--   post -> int -->
+
+<!--   int -> twfe -->
+
+<!--   int -> pols -->
+
+<!--   int -> twm  -->
+
+<!--   start [shape=Mdiamond]; -->
+
+<!--   tc[label="Identify treatment\ncohorts\nd_*" shape=rectangle] -->
+
+<!--   nt [shape=diamond label="Never\nTreated\nGroup?"] -->
+
+<!--   nt_y [shape=diamond label="yes"] -->
+
+<!--   nt_n [shape=diamond label="no"] -->
+
+<!--   drop [shape=rectangle label="Drop observations\n where t>=t(d_MAX)"] -->
+
+<!--   post [shape=rectangle label="Define post-\ntreatment dummies\nf_*"] -->
+
+<!--   int [shape=rectangle label="Define cohort*post-treatment\nyear interactions.\nI( d_* :  f_*)\nwhere t(f_*) >= t(d_*)"] -->
+
+<!--   twfe [shape=rectangle label="*Extended TWFE*\nfeols(y ~ I(d_* : f_*) + factor(t) | unit"] -->
+
+<!--   pols [shape=rectangle label="*Pooled OLS*\nlm(y ~ I(d_* : f_*) + factor(t) + d*_)"] -->
+
+<!--   twm [shape=rectangle label="*Two-Way Mundlak (Random Effects)*\nlmer(y ~ I(d_* : f_*) + factor(t) + d*_ + (1|unit))"] -->
+
+<!-- } -->

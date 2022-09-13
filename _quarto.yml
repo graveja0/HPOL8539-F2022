@@ -18,10 +18,10 @@ website:
           - slides/lec_introduction.qmd
       - section: "Case Studies"
         contents:
-          - text: Simulation as a Guide for Study Design and Inference
+          - text: 1. Simulation as a Guide for Study Design and Inference
             href: https://graves-vanderbilt.shinyapps.io/HPOL8539-Simulation/
-          - text: Panel Data Methods I - Fixed, Random and Correlated Random Effects
-            href: https://graves-vanderbilt.shinyapps.io/panel-data-methods1/
+          - text: 2. Panel Data Methods I - Fixed, Random and Correlated Random Effects
+            href: https://graves-vanderbilt.shinyapps.io/HPOL8539-panel-data-1/
       - text: "Blog"
         href: blog/index.qmd
       - section: "Useful Links"
@@ -38,8 +38,10 @@ website:
             href: https://asjadnaqvi.github.io/DiD/
           - text: Resources on multiple nextGen DID estimators
             href: https://kylebutts.com/did2s/articles/event_study.html
-          - text: Mixtape Seesiosn
+          - text: Mixtape Sessions
             href: https://github.com/Mixtape-Sessions
+          - text: Stata2R Translator
+            href: https://stata2r.github.io/
 
 format:
   html:

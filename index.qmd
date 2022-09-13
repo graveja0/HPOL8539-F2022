@@ -54,7 +54,7 @@ schedule <- list(
     "8:45 - 10:45" = "CS] Panel Data Methods I: Fixed, Random, and Correlated Random Effects Estimation"
   ), 
   day4 = list(
-    "8:45 - 10:45" = "CS] Panel Data II: Difference-in-Differences Revisited"
+    "8:45 - 10:45" = "CS] Panel Data II: Extended Difference-in-Differences"
   ), 
   day5 = list(
      "8:45 - 10:45" = "CS] Next Generation Difference-in-Differences Estimators"
