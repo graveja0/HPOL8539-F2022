@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.0.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Advanced Program and Policy Evaluation (HPOL8539) - did-staggered.do</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">did-staggered.do</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../../">Advanced Program and Policy Evaluation (HPOL8539)</a> 
+    </div>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">Advanced Program and Policy Evaluation</a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">Slides</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/lec_introduction.html" class="sidebar-item-text sidebar-link">Course Introduction</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/difference-in-differences.html" class="sidebar-item-text sidebar-link">Extending Difference-in-Differences</a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">Case Studies</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://graves-vanderbilt.shinyapps.io/HPOL8539-Simulation/" class="sidebar-item-text sidebar-link">1. Simulation as a Guide for Study Design and Inference</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://graves-vanderbilt.shinyapps.io/HPOL8539-panel-data-1/" class="sidebar-item-text sidebar-link">2. Panel Data Methods I - Fixed, Random and Correlated Random Effects</a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../blog/index.html" class="sidebar-item-text sidebar-link">Blog</a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">Useful Links</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://github.com/graveja0/HPOL8539-F2022/raw/main/current-syllabus.pdf" class="sidebar-item-text sidebar-link">Current Syllabus</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://mixtape.scunning.com/" class="sidebar-item-text sidebar-link">Causal Inference - The Mixtape (Cunningham)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://theeffectbook.net/" class="sidebar-item-text sidebar-link">The Effect (Huntington-Klein)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://diff.healthpolicydatascience.org/" class="sidebar-item-text sidebar-link">Comprehensive Discussion of Difference-in-Differences</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://asjadnaqvi.github.io/DiD/" class="sidebar-item-text sidebar-link">Difference-in-Differences Respository (code, packages, etc.)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://kylebutts.com/did2s/articles/event_study.html" class="sidebar-item-text sidebar-link">Resources on multiple nextGen DID estimators</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://github.com/Mixtape-Sessions" class="sidebar-item-text sidebar-link">Mixtape Sessions</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://stata2r.github.io/" class="sidebar-item-text sidebar-link">Stata2R Translator</a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#data-setup" id="toc-data-setup" class="nav-link active" data-scroll-target="#data-setup">Data Setup</a>
+  <ul class="collapse">
+  <li><a href="#constant-te-with-equivalence-between-pols-and-twfe" id="toc-constant-te-with-equivalence-between-pols-and-twfe" class="nav-link" data-scroll-target="#constant-te-with-equivalence-between-pols-and-twfe">Constant TE, with equivalence between POLS and TWFE</a></li>
+  <li><a href="#tes-vary-by-entry-cohort-and-time-period-wooldridge-2021-wp-fe-and-pols-are-the-same" id="toc-tes-vary-by-entry-cohort-and-time-period-wooldridge-2021-wp-fe-and-pols-are-the-same" class="nav-link" data-scroll-target="#tes-vary-by-entry-cohort-and-time-period-wooldridge-2021-wp-fe-and-pols-are-the-same">TEs vary by entry cohort and time period [Wooldridge (2021, WP)], FE and POLS are the same</a></li>
+  <li><a href="#dropping-early-time-dummies-gives-same-estimates." id="toc-dropping-early-time-dummies-gives-same-estimates." class="nav-link" data-scroll-target="#dropping-early-time-dummies-gives-same-estimates.">Dropping early time dummies gives same estimates.</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    <div class="quarto-margin-footer"><div class="margin-footer-item">
+<p><img src="vu-logo.png" class="img-fluid"></p>
+</div></div></div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">did-staggered.do</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    
+  </div>
+  
+
+</header>
+
+<p>This file replicates the analysis in <code>did_staggered_6_20220817</code></p>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>                                              
+1 function (x, df1, df2, ncp, log = FALSE)    
+2 {                                           
+3     if (missing(ncp))                       
+4         .Call(C_df, x, df1, df2, log)       
+5     else .Call(C_dnf, x, df1, df2, ncp, log)
+6 }                                           </code></pre>
+</div>
+</div>
+<section id="data-setup" class="level1">
+<h1>Data Setup</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>d_star <span class="ot">&lt;-</span> </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  df_ <span class="sc">%&gt;%</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(id,year,w) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(w<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(id) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year<span class="sc">==</span><span class="fu">min</span>(year)) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>w) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">d =</span> year) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dummy_cols</span>(<span class="st">"d"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(id,<span class="fu">starts_with</span>(<span class="st">"d_"</span>))</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>f_star <span class="ot">&lt;-</span> </span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>   <span class="fu">with</span>(df_,<span class="fu">table</span>(year,w)) <span class="sc">%&gt;%</span> <span class="fu">data.frame</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(w<span class="sc">==</span><span class="dv">1</span> <span class="sc">&amp;</span> Freq<span class="sc">&gt;</span><span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>   <span class="fu">select</span>(<span class="at">f_star =</span> year) </span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>cohort_year_interactions <span class="ot">&lt;-</span> </span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="at">d =</span> <span class="fu">as.numeric</span>(<span class="fu">gsub</span>(<span class="st">"d_"</span>,<span class="st">""</span>,<span class="fu">grep</span>(<span class="st">"d_"</span>,<span class="fu">colnames</span>(d_star),<span class="at">value=</span><span class="cn">TRUE</span>))),<span class="at">f =</span> <span class="fu">as.numeric</span>(<span class="fu">paste0</span>(f_star<span class="sc">$</span>f_star))) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">value =</span> <span class="fu">as.numeric</span>(f<span class="sc">&gt;=</span>d)) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">f =</span> <span class="fu">paste0</span>(<span class="st">"f_"</span>,f)) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">d =</span> <span class="fu">paste0</span>(<span class="st">"d_"</span>,d)) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">spread</span>(f,value) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(f,value,<span class="sc">-</span>d) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(value<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(d,f) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>value) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">i =</span> <span class="fu">paste0</span>(<span class="st">"I("</span>,d,<span class="st">"*"</span>,f,<span class="st">")"</span>))</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> </span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  df_ <span class="sc">%&gt;%</span> </span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(id,year,y,x,w) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(d_star,<span class="st">"id"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="fu">starts_with</span>(<span class="st">"d_"</span>)),<span class="sc">~</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(.),<span class="dv">0</span>,.)) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">f =</span> <span class="fu">ifelse</span>(year <span class="sc">%in%</span> f_star<span class="sc">$</span>f_star,year,<span class="cn">NA</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dummy_cols</span>(<span class="st">"f"</span>,<span class="at">ignore_na=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="fu">starts_with</span>(<span class="st">"f_"</span>)),<span class="sc">~</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(.),<span class="dv">0</span>,.))  <span class="sc">%&gt;%</span> </span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dummy_cols</span>(<span class="st">"year"</span>,<span class="at">ignore_na=</span><span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="constant-te-with-equivalence-between-pols-and-twfe" class="level2">
+<h2 class="anchored" data-anchor-id="constant-te-with-equivalence-between-pols-and-twfe">Constant TE, with equivalence between POLS and TWFE</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>ff <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="st">"y ~ w"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ff_pols <span class="ot">&lt;-</span> <span class="fu">reformulate</span>(<span class="fu">c</span>(<span class="st">"w"</span>,<span class="fu">grep</span>(<span class="st">"^d_"</span>,<span class="fu">colnames</span>(df), <span class="at">value=</span><span class="cn">TRUE</span>),<span class="fu">grep</span>(<span class="st">"^year_"</span>,<span class="fu">colnames</span>(df), <span class="at">value =</span> <span class="cn">TRUE</span>)),ff[[<span class="dv">2</span>]])</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>fit_pols <span class="ot">&lt;-</span> <span class="fu">lm</span>(ff_pols, <span class="at">data =</span> df); fit_pols</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = ff_pols, data = df)
+
+Coefficients:
+(Intercept)            w       d_2004       d_2005       d_2006    year_2001  
+    21.1214       3.5123      -0.8230      -1.1596      -1.2550      -0.8308  
+  year_2002    year_2003    year_2004    year_2005    year_2006  
+    -0.6235      -0.6625      -0.2149      -0.4554           NA  </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ff_twfe <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="st">"y ~ w + factor(year) | id"</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>fit_twfe <span class="ot">&lt;-</span> <span class="fu">feols</span>(ff_twfe, <span class="at">data =</span> df); fit_twfe</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>OLS estimation, Dep. Var.: y
+Observations: 3,000 
+Fixed-effects: id: 500
+Standard-errors: Clustered (id) 
+                 Estimate Std. Error  t value   Pr(&gt;|t|)    
+w                3.512326   0.172184 20.39862  &lt; 2.2e-16 ***
+factor(year)2002 0.207371   0.126646  1.63741 1.0218e-01    
+factor(year)2003 0.168322   0.122300  1.37631 1.6934e-01    
+factor(year)2004 0.615990   0.135606  4.54251 6.9790e-06 ***
+factor(year)2005 0.375432   0.146311  2.56600 1.0579e-02 *  
+factor(year)2006 0.830845   0.157906  5.26166 2.1233e-07 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 2.00954     Adj. R2: 0.547048
+                Within R2: 0.299271</code></pre>
+</div>
+</div>
+</section>
+<section id="tes-vary-by-entry-cohort-and-time-period-wooldridge-2021-wp-fe-and-pols-are-the-same" class="level2">
+<h2 class="anchored" data-anchor-id="tes-vary-by-entry-cohort-and-time-period-wooldridge-2021-wp-fe-and-pols-are-the-same">TEs vary by entry cohort and time period [Wooldridge (2021, WP)], FE and POLS are the same</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ff_twfe <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">"y ~"</span>,<span class="fu">paste0</span>(cohort_year_interactions<span class="sc">$</span>i,<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+ factor(year) | id"</span>))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>fit_twfe <span class="ot">&lt;-</span> <span class="fu">feols</span>(ff_twfe, <span class="at">data =</span> df); fit_twfe</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>OLS estimation, Dep. Var.: y
+Observations: 3,000 
+Fixed-effects: id: 500
+Standard-errors: Clustered (id) 
+                   Estimate Std. Error  t value   Pr(&gt;|t|)    
+I(d_2004 * f_2004) 3.522951   0.301484 11.68538  &lt; 2.2e-16 ***
+I(d_2004 * f_2005) 4.258536   0.325970 13.06419  &lt; 2.2e-16 ***
+I(d_2004 * f_2006) 4.216866   0.338442 12.45965  &lt; 2.2e-16 ***
+I(d_2005 * f_2005) 2.989588   0.341643  8.75063  &lt; 2.2e-16 ***
+I(d_2005 * f_2006) 3.693816   0.364633 10.13024  &lt; 2.2e-16 ***
+I(d_2006 * f_2006) 2.006591   0.558389  3.59354 0.00035859 ***
+factor(year)2002   0.207371   0.126752  1.63604 0.10246224    
+factor(year)2003   0.168322   0.122402  1.37516 0.16969964    
+... 3 coefficients remaining (display them with summary() or use argument n)
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+RMSE: 1.99544     Adj. R2: 0.552487
+                Within R2: 0.309074</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>ff_pols <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">"y ~"</span>,<span class="fu">paste0</span>(cohort_year_interactions<span class="sc">$</span>i,<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+"</span>,<span class="fu">paste0</span>(<span class="fu">grep</span>(<span class="st">"^d_"</span>,<span class="fu">colnames</span>(df), <span class="at">value=</span><span class="cn">TRUE</span>),<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+ factor(year)"</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>fit_pols <span class="ot">&lt;-</span> <span class="fu">lm</span>(ff_pols,<span class="at">data =</span> df); fit_pols</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = ff_pols, data = df)
+
+Coefficients:
+       (Intercept)  I(d_2004 * f_2004)  I(d_2004 * f_2005)  I(d_2004 * f_2006)  
+           20.3210              3.5230              4.2585              4.2169  
+I(d_2005 * f_2005)  I(d_2005 * f_2006)  I(d_2006 * f_2006)              d_2004  
+            2.9896              3.6938              2.0066             -1.0665  
+            d_2005              d_2006    factor(year)2002    factor(year)2003  
+           -1.1027             -1.0041              0.2074              0.1683  
+  factor(year)2004    factor(year)2005    factor(year)2006  
+            0.6135              0.2846              0.7415  </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>ff_re <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">"y ~"</span>,<span class="fu">paste0</span>(cohort_year_interactions<span class="sc">$</span>i,<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+"</span>,<span class="fu">paste0</span>(<span class="fu">grep</span>(<span class="st">"^d_"</span>,<span class="fu">colnames</span>(df), <span class="at">value=</span><span class="cn">TRUE</span>),<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+ factor(year) + (1| id)"</span>))</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>fit_re <span class="ot">&lt;-</span> <span class="fu">lmer</span>(ff_re, <span class="at">data =</span> df); <span class="fu">summary</span>(fit_re)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Linear mixed model fit by REML ['lmerMod']
+Formula: y ~ I(d_2004 * f_2004) + I(d_2004 * f_2005) + I(d_2004 * f_2006) +  
+    I(d_2005 * f_2005) + I(d_2005 * f_2006) + I(d_2006 * f_2006) +  
+    d_2004 + d_2005 + d_2006 + factor(year) + (1 | id)
+   Data: df
+
+REML criterion at convergence: 14119.2
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.8329 -0.6080  0.0064  0.6071  3.6490 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ id       (Intercept) 3.987    1.997   
+ Residual             4.799    2.191   
+Number of obs: 3000, groups:  id, 500
+
+Fixed effects:
+                   Estimate Std. Error t value
+(Intercept)         20.3210     0.1647 123.358
+I(d_2004 * f_2004)   3.5230     0.2656  13.262
+I(d_2004 * f_2005)   4.2585     0.2738  15.555
+I(d_2004 * f_2006)   4.2169     0.2786  15.137
+I(d_2005 * f_2005)   2.9896     0.3040   9.835
+I(d_2005 * f_2006)   3.6938     0.3083  11.980
+I(d_2006 * f_2006)   2.0066     0.4266   4.704
+d_2004              -1.0665     0.2602  -4.099
+d_2005              -1.1027     0.2867  -3.846
+d_2006              -1.0041     0.3954  -2.540
+factor(year)2002     0.2074     0.1386   1.497
+factor(year)2003     0.1683     0.1386   1.215
+factor(year)2004     0.6135     0.1523   4.028
+factor(year)2005     0.2846     0.1661   1.714
+factor(year)2006     0.7415     0.1739   4.264</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Correlation matrix not shown by default, as p = 15 &gt; 12.
+Use print(x, correlation=TRUE)  or
+    vcov(x)        if you need it</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute average effect by cohort:</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">coef</span>(fit_twfe)[<span class="fu">c</span>(<span class="st">"I(d_2004 * f_2004)"</span>,<span class="st">"I(d_2004 * f_2005)"</span>,<span class="st">"I(d_2004 * f_2006)"</span>)])<span class="sc">/</span><span class="dv">3</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3.999451</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">coef</span>(fit_twfe)[<span class="fu">c</span>(<span class="st">"I(d_2005 * f_2005)"</span>,<span class="st">"I(d_2005 * f_2006)"</span>)])<span class="sc">/</span><span class="dv">2</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3.341702</code></pre>
+</div>
+</div>
+</section>
+<section id="dropping-early-time-dummies-gives-same-estimates." class="level2">
+<h2 class="anchored" data-anchor-id="dropping-early-time-dummies-gives-same-estimates.">Dropping early time dummies gives same estimates.</h2>
+<p>(In general, avoid this because it should not be done in nonlinear models.)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>ff_twfe <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">"y ~"</span>,<span class="fu">paste0</span>(cohort_year_interactions<span class="sc">$</span>i,<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+"</span>,<span class="fu">paste0</span>(<span class="fu">grep</span>(<span class="st">"^f_"</span>,<span class="fu">colnames</span>(df), <span class="at">value=</span><span class="cn">TRUE</span>),<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"| id"</span>))</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>fit_twfe <span class="ot">&lt;-</span> <span class="fu">feols</span>(ff_twfe, <span class="at">data =</span> df); fit_twfe</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># </span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># xtreg y c.d4#c.f04 c.d4#c.f05 c.d4#c.f06 ///</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co">#   c.d5#c.f05 c.d5#c.f06 ///</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co">#   c.d6#c.f06 f04 f05 f06, fe vce(cluster id)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

@@ -1,0 +1,2070 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.0.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Advanced Program and Policy Evaluation (HPOL8539) - A Practical Guide to Extended Difference-in-Differences</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+<script src="../../site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="../../site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">A Practical Guide to Extended Difference-in-Differences</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../../">Advanced Program and Policy Evaluation (HPOL8539)</a> 
+    </div>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">Advanced Program and Policy Evaluation</a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">Slides</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/lec_introduction.html" class="sidebar-item-text sidebar-link">Course Introduction</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/difference-in-differences.html" class="sidebar-item-text sidebar-link">Extending Difference-in-Differences</a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">Case Studies</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://graves-vanderbilt.shinyapps.io/HPOL8539-Simulation/" class="sidebar-item-text sidebar-link">1. Simulation as a Guide for Study Design and Inference</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://graves-vanderbilt.shinyapps.io/HPOL8539-panel-data-1/" class="sidebar-item-text sidebar-link">2. Panel Data Methods I - Fixed, Random and Correlated Random Effects</a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../blog/index.html" class="sidebar-item-text sidebar-link">Blog</a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">Useful Links</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://github.com/graveja0/HPOL8539-F2022/raw/main/current-syllabus.pdf" class="sidebar-item-text sidebar-link">Current Syllabus</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://mixtape.scunning.com/" class="sidebar-item-text sidebar-link">Causal Inference - The Mixtape (Cunningham)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://theeffectbook.net/" class="sidebar-item-text sidebar-link">The Effect (Huntington-Klein)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://diff.healthpolicydatascience.org/" class="sidebar-item-text sidebar-link">Comprehensive Discussion of Difference-in-Differences</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://asjadnaqvi.github.io/DiD/" class="sidebar-item-text sidebar-link">Difference-in-Differences Respository (code, packages, etc.)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://kylebutts.com/did2s/articles/event_study.html" class="sidebar-item-text sidebar-link">Resources on multiple nextGen DID estimators</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://github.com/Mixtape-Sessions" class="sidebar-item-text sidebar-link">Mixtape Sessions</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://stata2r.github.io/" class="sidebar-item-text sidebar-link">Stata2R Translator</a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#data-setup" id="toc-data-setup" class="nav-link active" data-scroll-target="#data-setup">Data Setup</a>
+  <ul class="collapse">
+  <li><a href="#determine-if-there-is-a-never-treated-cohort" id="toc-determine-if-there-is-a-never-treated-cohort" class="nav-link" data-scroll-target="#determine-if-there-is-a-never-treated-cohort">1. Determine if there is a never treated cohort</a></li>
+  <li><a href="#identify-treatment-cohorts-d" id="toc-identify-treatment-cohorts-d" class="nav-link" data-scroll-target="#identify-treatment-cohorts-d">2. Identify treatment cohorts (d*)</a></li>
+  <li><a href="#identify-all-post-treatment-years" id="toc-identify-all-post-treatment-years" class="nav-link" data-scroll-target="#identify-all-post-treatment-years">3. Identify All Post-Treatment Years</a></li>
+  <li><a href="#define-all-cohort-post-treatment-interactions" id="toc-define-all-cohort-post-treatment-interactions" class="nav-link" data-scroll-target="#define-all-cohort-post-treatment-interactions">4. Define all cohort * post-treatment interactions</a></li>
+  </ul></li>
+  <li><a href="#estimation" id="toc-estimation" class="nav-link" data-scroll-target="#estimation">Estimation</a>
+  <ul class="collapse">
+  <li><a href="#common-treatment-timing" id="toc-common-treatment-timing" class="nav-link" data-scroll-target="#common-treatment-timing">Common Treatment Timing</a></li>
+  <li><a href="#staggered-treatment-timing" id="toc-staggered-treatment-timing" class="nav-link" data-scroll-target="#staggered-treatment-timing">Staggered Treatment Timing</a></li>
+  <li><a href="#staggered-treatment-timing-with-covariates" id="toc-staggered-treatment-timing-with-covariates" class="nav-link" data-scroll-target="#staggered-treatment-timing-with-covariates">Staggered Treatment Timing with Covariate(s)</a></li>
+  </ul></li>
+  <li><a href="#results" id="toc-results" class="nav-link" data-scroll-target="#results">Results</a></li>
+  </ul>
+</nav>
+    <div class="quarto-margin-footer"><div class="margin-footer-item">
+<p><img src="vu-logo.png" class="img-fluid"></p>
+</div></div></div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">A Practical Guide to Extended Difference-in-Differences</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+    
+  </div>
+  
+
+</header>
+
+<div class="cell">
+
+</div>
+<div class="cell">
+
+</div>
+<div class="cell">
+
+</div>
+<section id="data-setup" class="level1 page-columns page-full">
+<h1>Data Setup</h1>
+<div class="column-screen">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<section id="determine-if-there-is-a-never-treated-cohort" class="level3">
+<h3 class="anchored" data-anchor-id="determine-if-there-is-a-never-treated-cohort">1. Determine if there is a never treated cohort</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>n_years <span class="ot">&lt;-</span> <span class="fu">max</span>(df_<span class="sc">$</span>year) <span class="sc">-</span> <span class="fu">min</span>(df_<span class="sc">$</span>year) <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>never_treated <span class="ot">&lt;-</span> </span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  df_ <span class="sc">%&gt;%</span> </span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(w_it<span class="sc">==</span><span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(unit) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(year) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n)) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()  <span class="sc">%&gt;%</span> </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">never_treated =</span> <span class="fu">as.integer</span>(n<span class="sc">==</span>n_years)) </span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>any_never_treated <span class="ot">=</span> <span class="fu">max</span>(never_treated<span class="sc">$</span>never_treated)<span class="sc">==</span><span class="dv">1</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>any_never_treated</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+</section>
+<section id="identify-treatment-cohorts-d" class="level3">
+<h3 class="anchored" data-anchor-id="identify-treatment-cohorts-d">2. Identify treatment cohorts (d*)</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>d_star <span class="ot">&lt;-</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  df_ <span class="sc">%&gt;%</span> </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(unit,year,w_it) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unique</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(w_it<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(unit) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year<span class="sc">==</span><span class="fu">min</span>(year)) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>w_it) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">d =</span> year) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">dummy_cols</span>(<span class="st">"d"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(unit,<span class="fu">starts_with</span>(<span class="st">"d_"</span>))</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>last_treatment_year <span class="ot">&lt;-</span> <span class="fu">colnames</span>(d_star)[<span class="fu">length</span>(<span class="fu">colnames</span>(d_star))] <span class="sc">%&gt;%</span> <span class="fu">gsub</span>(<span class="st">"d_"</span>,<span class="st">""</span>,.) <span class="sc">%&gt;%</span> <span class="fu">as.numeric</span>(<span class="fu">paste0</span>(.))</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(d_star)[<span class="sc">-</span><span class="dv">1</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "d_1989" "d_1998"</code></pre>
+</div>
+</div>
+</section>
+<section id="identify-all-post-treatment-years" class="level3">
+<h3 class="anchored" data-anchor-id="identify-all-post-treatment-years">3. Identify All Post-Treatment Years</h3>
+<p>If all groups are eventually treated, drop observations that occur on or after the last treatment date. This group has no untreated comparison group. Moreover, after this group is treated, it should not be utilized as a comparison group for the earlier treated cohorts.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>f_star <span class="ot">&lt;-</span> </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">with</span>(df_,<span class="fu">table</span>(year,w_it)) <span class="sc">%&gt;%</span> <span class="fu">data.frame</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">filter</span>(w_it<span class="sc">==</span><span class="dv">1</span> <span class="sc">&amp;</span> Freq<span class="sc">&gt;</span><span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">select</span>(<span class="at">f_star =</span> year)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span>any_never_treated) {</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  f_star <span class="ot">&lt;-</span> </span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    f_star <span class="sc">%&gt;%</span> </span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="fu">as.numeric</span>(<span class="fu">paste0</span>(f_star)) <span class="sc">&lt;</span> last_treatment_year) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">f_star =</span> <span class="fu">as.numeric</span>(<span class="fu">paste0</span>(f_star))) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">f_star =</span> <span class="fu">factor</span>(f_star))</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;">  </th>
+   <th style="text-align:left;">  </th>
+   <th style="text-align:left;">  </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> f_star_1980 </td>
+   <td style="text-align:left;"> f_star_1992 </td>
+   <td style="text-align:left;"> f_star_2004 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_star_1981 </td>
+   <td style="text-align:left;"> f_star_1993 </td>
+   <td style="text-align:left;"> f_star_2005 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_star_1982 </td>
+   <td style="text-align:left;"> f_star_1994 </td>
+   <td style="text-align:left;"> f_star_2006 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_star_1983 </td>
+   <td style="text-align:left;"> f_star_1995 </td>
+   <td style="text-align:left;"> f_star_2007 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_star_1984 </td>
+   <td style="text-align:left;"> f_star_1996 </td>
+   <td style="text-align:left;"> f_star_2008 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_star_1985 </td>
+   <td style="text-align:left;"> f_star_1997 </td>
+   <td style="text-align:left;"> f_star_2009 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_star_1986 </td>
+   <td style="text-align:left;"> f_star_1998 </td>
+   <td style="text-align:left;"> f_star_2010 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_star_1987 </td>
+   <td style="text-align:left;"> f_star_1999 </td>
+   <td style="text-align:left;"> f_star_2011 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_star_1988 </td>
+   <td style="text-align:left;"> f_star_2000 </td>
+   <td style="text-align:left;"> f_star_2012 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_star_1989 </td>
+   <td style="text-align:left;"> f_star_2001 </td>
+   <td style="text-align:left;"> f_star_2013 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_star_1990 </td>
+   <td style="text-align:left;"> f_star_2002 </td>
+   <td style="text-align:left;"> f_star_2014 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_star_1991 </td>
+   <td style="text-align:left;"> f_star_2003 </td>
+   <td style="text-align:left;"> f_star_2015 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</section>
+<section id="define-all-cohort-post-treatment-interactions" class="level3">
+<h3 class="anchored" data-anchor-id="define-all-cohort-post-treatment-interactions">4. Define all cohort * post-treatment interactions</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>cohort_year_interactions <span class="ot">&lt;-</span> </span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">crossing</span>(<span class="at">d =</span> <span class="fu">as.numeric</span>(<span class="fu">gsub</span>(<span class="st">"d_"</span>,<span class="st">""</span>,<span class="fu">grep</span>(<span class="st">"d_"</span>,<span class="fu">colnames</span>(d_star),<span class="at">value=</span><span class="cn">TRUE</span>))),<span class="at">f =</span> <span class="fu">as.numeric</span>(<span class="fu">paste0</span>(f_star<span class="sc">$</span>f_star))) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">value =</span> <span class="fu">as.numeric</span>(f<span class="sc">&gt;=</span>d)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">f =</span> <span class="fu">paste0</span>(<span class="st">"f_"</span>,f)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">d =</span> <span class="fu">paste0</span>(<span class="st">"d_"</span>,d)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">spread</span>(f,value) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(f,value,<span class="sc">-</span>d) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(value<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(d,f) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>value) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">i =</span> <span class="fu">paste0</span>(<span class="st">"I("</span>,d,<span class="st">"*"</span>,f,<span class="st">")"</span>))</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (any_never_treated) {</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  df_ <span class="ot">&lt;-</span> </span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    df_ <span class="sc">%&gt;%</span> </span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(unit,year,y_it,<span class="fu">starts_with</span>(<span class="st">"x_i"</span>),w_it) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(d_star,<span class="st">"unit"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="fu">starts_with</span>(<span class="st">"d_"</span>)),<span class="sc">~</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(.),<span class="dv">0</span>,.)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">f =</span> <span class="fu">ifelse</span>(year <span class="sc">%in%</span> f_star<span class="sc">$</span>f_star,year,<span class="cn">NA</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dummy_cols</span>(<span class="st">"f"</span>,<span class="at">ignore_na=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="fu">starts_with</span>(<span class="st">"f_"</span>)),<span class="sc">~</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(.),<span class="dv">0</span>,.))  <span class="sc">%&gt;%</span> </span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dummy_cols</span>(<span class="st">"year"</span>,<span class="at">ignore_na=</span><span class="cn">TRUE</span>)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>   df_ <span class="ot">&lt;-</span> </span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    df_ <span class="sc">%&gt;%</span> </span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(year <span class="sc">&lt;</span> last_treatment_year) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(unit,year,y_it,<span class="fu">starts_with</span>(<span class="st">"x_i"</span>),w_it) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(d_star,<span class="st">"unit"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="fu">starts_with</span>(<span class="st">"d_"</span>)),<span class="sc">~</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(.),<span class="dv">0</span>,.)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">f =</span> <span class="fu">ifelse</span>(year <span class="sc">%in%</span> f_star<span class="sc">$</span>f_star,year,<span class="cn">NA</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dummy_cols</span>(<span class="st">"f"</span>,<span class="at">ignore_na=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="fu">starts_with</span>(<span class="st">"f_"</span>)),<span class="sc">~</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(.),<span class="dv">0</span>,.))  <span class="sc">%&gt;%</span> </span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dummy_cols</span>(<span class="st">"year"</span>,<span class="at">ignore_na=</span><span class="cn">TRUE</span>)</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> f </th>
+   <th style="text-align:left;"> d_1989 </th>
+   <th style="text-align:left;"> d_1998 </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> f_1989 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> - </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_1990 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> - </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_1991 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> - </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_1992 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> - </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_1993 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> - </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_1994 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> - </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_1995 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> - </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_1996 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> - </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_1997 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> - </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_1998 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_1999 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2000 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2001 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2002 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2003 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2004 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2005 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2006 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2007 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2008 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2009 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2010 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2011 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2012 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2013 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2014 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> f_2015 </td>
+   <td style="text-align:left;"> Y </td>
+   <td style="text-align:left;"> Y </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</section>
+</section>
+<section id="estimation" class="level1">
+<h1>Estimation</h1>
+<section id="common-treatment-timing" class="level2">
+<h2 class="anchored" data-anchor-id="common-treatment-timing">Common Treatment Timing</h2>
+<table class="table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 50%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Estimation Formula</th>
+<th>Fixed or Random Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Two-Way Fixed Effects</td>
+<td><code>feols(I(w : f*) + factor(time)  | unit)</code></td>
+<td>Unit Fixed Effect</td>
+</tr>
+<tr class="even">
+<td>Pooled OLS</td>
+<td><code>lm(I(w : f*) + factor(time) + d*)</code></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Two-Way Mundlak</td>
+<td><code>lmer(I(w : f*) + factor(time) + d* + (1|unit)</code></td>
+<td>Unit Random Effect</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="staggered-treatment-timing" class="level2">
+<h2 class="anchored" data-anchor-id="staggered-treatment-timing">Staggered Treatment Timing</h2>
+<table class="table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 50%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Estimation Formula</th>
+<th>Fixed or Random Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Two-Way Fixed Effects</td>
+<td><code>feols(I(d* : f*) + factor(time)  | unit)</code></td>
+<td>Unit Fixed Effect</td>
+</tr>
+<tr class="even">
+<td>Pooled OLS</td>
+<td><code>lm(I(d* : f*) + factor(time) + d*)</code></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Two-Way Mundlak</td>
+<td><code>lmer(I(d* : f*) + factor(time) + d* + (1|unit)</code></td>
+<td>Unit Random Effect</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="staggered-treatment-timing-with-covariates" class="level2">
+<h2 class="anchored" data-anchor-id="staggered-treatment-timing-with-covariates">Staggered Treatment Timing with Covariate(s)</h2>
+<table class="table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 50%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Estimation Formula</th>
+<th>Fixed or Random Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Two-Way Fixed Effects</td>
+<td><code>feols(I(w : d* : f*) + I(w : d* : f* : x_dm_d*) + factor(time) + I(factor(time) * x_dm_d*) | unit)</code></td>
+<td>Unit Fixed Effect</td>
+</tr>
+<tr class="even">
+<td>Pooled OLS</td>
+<td><code>lm(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* + x + I(d* : x_dm_d*))</code></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Two-Way Mundlak</td>
+<td><code>lmer(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* +  x + I(d* : x_dm_d*) + (1|unit)</code></td>
+<td>Unit Random Effect</td>
+</tr>
+</tbody>
+</table>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ff_twfe <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">"y_it ~"</span>,<span class="fu">paste0</span>(cohort_year_interactions<span class="sc">$</span>i,<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+ factor(year) | unit"</span>))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>fit_twfe <span class="ot">&lt;-</span> <span class="fu">feols</span>(ff_twfe, <span class="at">data =</span> df_)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>ff_pols <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">"y_it ~"</span>,<span class="fu">paste0</span>(cohort_year_interactions<span class="sc">$</span>i,<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+"</span>,<span class="fu">paste0</span>(<span class="fu">grep</span>(<span class="st">"^d_"</span>,<span class="fu">colnames</span>(df_), <span class="at">value=</span><span class="cn">TRUE</span>),<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+ factor(year)"</span>))</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>fit_pols <span class="ot">&lt;-</span> <span class="fu">lm</span>(ff_pols,<span class="at">data =</span> df_)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>ff_re <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">"y_it ~"</span>,<span class="fu">paste0</span>(cohort_year_interactions<span class="sc">$</span>i,<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+"</span>,<span class="fu">paste0</span>(<span class="fu">grep</span>(<span class="st">"^d_"</span>,<span class="fu">colnames</span>(df_), <span class="at">value=</span><span class="cn">TRUE</span>),<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+ factor(year) + (1| unit)"</span>))</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>fit_re <span class="ot">&lt;-</span> <span class="fu">lmer</span>(ff_re, <span class="at">data =</span> df_)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+
+<div id="jtineofiii" style="overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>html {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+}
+
+#jtineofiii .gt_table {
+  display: table;
+  border-collapse: collapse;
+  margin-left: auto;
+  margin-right: auto;
+  color: #333333;
+  font-size: 16px;
+  font-weight: normal;
+  font-style: normal;
+  background-color: #FFFFFF;
+  width: auto;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #A8A8A8;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #A8A8A8;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+}
+
+#jtineofiii .gt_heading {
+  background-color: #FFFFFF;
+  text-align: center;
+  border-bottom-color: #FFFFFF;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#jtineofiii .gt_title {
+  color: #333333;
+  font-size: 125%;
+  font-weight: initial;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-color: #FFFFFF;
+  border-bottom-width: 0;
+}
+
+#jtineofiii .gt_subtitle {
+  color: #333333;
+  font-size: 85%;
+  font-weight: initial;
+  padding-top: 0;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-color: #FFFFFF;
+  border-top-width: 0;
+}
+
+#jtineofiii .gt_bottom_border {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#jtineofiii .gt_col_headings {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+}
+
+#jtineofiii .gt_col_heading {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 6px;
+  padding-left: 5px;
+  padding-right: 5px;
+  overflow-x: hidden;
+}
+
+#jtineofiii .gt_column_spanner_outer {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: normal;
+  text-transform: inherit;
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+#jtineofiii .gt_column_spanner_outer:first-child {
+  padding-left: 0;
+}
+
+#jtineofiii .gt_column_spanner_outer:last-child {
+  padding-right: 0;
+}
+
+#jtineofiii .gt_column_spanner {
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: bottom;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  overflow-x: hidden;
+  display: inline-block;
+  width: 100%;
+}
+
+#jtineofiii .gt_group_heading {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#jtineofiii .gt_empty_group_heading {
+  padding: 0.5px;
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  vertical-align: middle;
+}
+
+#jtineofiii .gt_from_md > :first-child {
+  margin-top: 0;
+}
+
+#jtineofiii .gt_from_md > :last-child {
+  margin-bottom: 0;
+}
+
+#jtineofiii .gt_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  margin: 10px;
+  border-top-style: solid;
+  border-top-width: 1px;
+  border-top-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 1px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 1px;
+  border-right-color: #D3D3D3;
+  vertical-align: middle;
+  overflow-x: hidden;
+}
+
+#jtineofiii .gt_stub {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#jtineofiii .gt_stub_row_group {
+  color: #333333;
+  background-color: #FFFFFF;
+  font-size: 100%;
+  font-weight: initial;
+  text-transform: inherit;
+  border-right-style: solid;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+  padding-left: 5px;
+  padding-right: 5px;
+  vertical-align: top;
+}
+
+#jtineofiii .gt_row_group_first td {
+  border-top-width: 2px;
+}
+
+#jtineofiii .gt_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#jtineofiii .gt_first_summary_row {
+  border-top-style: solid;
+  border-top-color: #D3D3D3;
+}
+
+#jtineofiii .gt_first_summary_row.thick {
+  border-top-width: 2px;
+}
+
+#jtineofiii .gt_last_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#jtineofiii .gt_grand_summary_row {
+  color: #333333;
+  background-color: #FFFFFF;
+  text-transform: inherit;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#jtineofiii .gt_first_grand_summary_row {
+  padding-top: 8px;
+  padding-bottom: 8px;
+  padding-left: 5px;
+  padding-right: 5px;
+  border-top-style: double;
+  border-top-width: 6px;
+  border-top-color: #D3D3D3;
+}
+
+#jtineofiii .gt_striped {
+  background-color: rgba(128, 128, 128, 0.05);
+}
+
+#jtineofiii .gt_table_body {
+  border-top-style: solid;
+  border-top-width: 2px;
+  border-top-color: #D3D3D3;
+  border-bottom-style: solid;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+}
+
+#jtineofiii .gt_footnotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#jtineofiii .gt_footnote {
+  margin: 0px;
+  font-size: 90%;
+  padding-left: 4px;
+  padding-right: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#jtineofiii .gt_sourcenotes {
+  color: #333333;
+  background-color: #FFFFFF;
+  border-bottom-style: none;
+  border-bottom-width: 2px;
+  border-bottom-color: #D3D3D3;
+  border-left-style: none;
+  border-left-width: 2px;
+  border-left-color: #D3D3D3;
+  border-right-style: none;
+  border-right-width: 2px;
+  border-right-color: #D3D3D3;
+}
+
+#jtineofiii .gt_sourcenote {
+  font-size: 90%;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+#jtineofiii .gt_left {
+  text-align: left;
+}
+
+#jtineofiii .gt_center {
+  text-align: center;
+}
+
+#jtineofiii .gt_right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#jtineofiii .gt_font_normal {
+  font-weight: normal;
+}
+
+#jtineofiii .gt_font_bold {
+  font-weight: bold;
+}
+
+#jtineofiii .gt_font_italic {
+  font-style: italic;
+}
+
+#jtineofiii .gt_super {
+  font-size: 65%;
+}
+
+#jtineofiii .gt_footnote_marks {
+  font-style: italic;
+  font-weight: normal;
+  font-size: 75%;
+  vertical-align: 0.4em;
+}
+
+#jtineofiii .gt_asterisk {
+  font-size: 100%;
+  vertical-align: 0;
+}
+
+#jtineofiii .gt_indent_1 {
+  text-indent: 5px;
+}
+
+#jtineofiii .gt_indent_2 {
+  text-indent: 10px;
+}
+
+#jtineofiii .gt_indent_3 {
+  text-indent: 15px;
+}
+
+#jtineofiii .gt_indent_4 {
+  text-indent: 20px;
+}
+
+#jtineofiii .gt_indent_5 {
+  text-indent: 25px;
+}
+</style>
+<table class="gt_table">
+  
+  <thead class="gt_col_headings">
+    <tr>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col">Estimator</th>
+      <th class="gt_col_heading gt_columns_bottom_border gt_left" rowspan="1" colspan="1" scope="col">Regression Call</th>
+    </tr>
+  </thead>
+  <tbody class="gt_table_body">
+    <tr><td class="gt_row gt_left">TWFE</td>
+<td class="gt_row gt_left">feols(y_it ~ I(d_1989 * f_1989) + I(d_1989 * f_1990) + I(d_1989 * f_1991) +      I(d_1989 * f_1992) + I(d_1989 * f_1993) + I(d_1989 * f_1994) +      I(d_1989 * f_1995) + I(d_1989 * f_1996) + I(d_1989 * f_1997) +      I(d_1989 * f_1998) + I(d_1989 * f_1999) + I(d_1989 * f_2000) +      I(d_1989 * f_2001) + I(d_1989 * f_2002) + I(d_1989 * f_2003) +      I(d_1989 * f_2004) + I(d_1989 * f_2005) + I(d_1989 * f_2006) +      I(d_1989 * f_2007) + I(d_1989 * f_2008) + I(d_1989 * f_2009) +      I(d_1989 * f_2010) + I(d_1989 * f_2011) + I(d_1989 * f_2012) +      I(d_1989 * f_2013) + I(d_1989 * f_2014) + I(d_1989 * f_2015) +      I(d_1998 * f_1998) + I(d_1998 * f_1999) + I(d_1998 * f_2000) +      I(d_1998 * f_2001) + I(d_1998 * f_2002) + I(d_1998 * f_2003) +      I(d_1998 * f_2004) + I(d_1998 * f_2005) + I(d_1998 * f_2006) +      I(d_1998 * f_2007) + I(d_1998 * f_2008) + I(d_1998 * f_2009) +      I(d_1998 * f_2010) + I(d_1998 * f_2011) + I(d_1998 * f_2012) +      I(d_1998 * f_2013) + I(d_1998 * f_2014) + I(d_1998 * f_2015) +      factor(year) | unit, data = df_)</td></tr>
+    <tr><td class="gt_row gt_left">POLS</td>
+<td class="gt_row gt_left">lm(y_it ~ I(d_1989 * f_1989) + I(d_1989 * f_1990) + I(d_1989 * f_1991) +      I(d_1989 * f_1992) + I(d_1989 * f_1993) + I(d_1989 * f_1994) +      I(d_1989 * f_1995) + I(d_1989 * f_1996) + I(d_1989 * f_1997) +      I(d_1989 * f_1998) + I(d_1989 * f_1999) + I(d_1989 * f_2000) +      I(d_1989 * f_2001) + I(d_1989 * f_2002) + I(d_1989 * f_2003) +      I(d_1989 * f_2004) + I(d_1989 * f_2005) + I(d_1989 * f_2006) +      I(d_1989 * f_2007) + I(d_1989 * f_2008) + I(d_1989 * f_2009) +      I(d_1989 * f_2010) + I(d_1989 * f_2011) + I(d_1989 * f_2012) +      I(d_1989 * f_2013) + I(d_1989 * f_2014) + I(d_1989 * f_2015) +      I(d_1998 * f_1998) + I(d_1998 * f_1999) + I(d_1998 * f_2000) +      I(d_1998 * f_2001) + I(d_1998 * f_2002) + I(d_1998 * f_2003) +      I(d_1998 * f_2004) + I(d_1998 * f_2005) + I(d_1998 * f_2006) +      I(d_1998 * f_2007) + I(d_1998 * f_2008) + I(d_1998 * f_2009) +      I(d_1998 * f_2010) + I(d_1998 * f_2011) + I(d_1998 * f_2012) +      I(d_1998 * f_2013) + I(d_1998 * f_2014) + I(d_1998 * f_2015) +      d_1989 + d_1998 + factor(year), data = df_)</td></tr>
+    <tr><td class="gt_row gt_left">TWM</td>
+<td class="gt_row gt_left">lmer(y_it ~ I(d_1989 * f_1989) + I(d_1989 * f_1990) + I(d_1989 * f_1991) +      I(d_1989 * f_1992) + I(d_1989 * f_1993) + I(d_1989 * f_1994) +      I(d_1989 * f_1995) + I(d_1989 * f_1996) + I(d_1989 * f_1997) +      I(d_1989 * f_1998) + I(d_1989 * f_1999) + I(d_1989 * f_2000) +      I(d_1989 * f_2001) + I(d_1989 * f_2002) + I(d_1989 * f_2003) +      I(d_1989 * f_2004) + I(d_1989 * f_2005) + I(d_1989 * f_2006) +      I(d_1989 * f_2007) + I(d_1989 * f_2008) + I(d_1989 * f_2009) +      I(d_1989 * f_2010) + I(d_1989 * f_2011) + I(d_1989 * f_2012) +      I(d_1989 * f_2013) + I(d_1989 * f_2014) + I(d_1989 * f_2015) +      I(d_1998 * f_1998) + I(d_1998 * f_1999) + I(d_1998 * f_2000) +      I(d_1998 * f_2001) + I(d_1998 * f_2002) + I(d_1998 * f_2003) +      I(d_1998 * f_2004) + I(d_1998 * f_2005) + I(d_1998 * f_2006) +      I(d_1998 * f_2007) + I(d_1998 * f_2008) + I(d_1998 * f_2009) +      I(d_1998 * f_2010) + I(d_1998 * f_2011) + I(d_1998 * f_2012) +      I(d_1998 * f_2013) + I(d_1998 * f_2014) + I(d_1998 * f_2015) +      d_1989 + d_1998 + factor(year) + (1 | unit), data = df_)</td></tr>
+  </tbody>
+  
+  
+</table>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="results" class="level1 page-columns page-full">
+<h1>Results</h1>
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:right;"> Treatment Cohort </th>
+   <th style="text-align:right;"> Year </th>
+   <th style="text-align:right;"> POLS </th>
+   <th style="text-align:right;"> E-TWFE </th>
+   <th style="text-align:right;"> E-TWM </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 0.470 </td>
+   <td style="text-align:right;"> 0.470 </td>
+   <td style="text-align:right;"> 0.470 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 1990 </td>
+   <td style="text-align:right;"> 0.981 </td>
+   <td style="text-align:right;"> 0.981 </td>
+   <td style="text-align:right;"> 0.981 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 1991 </td>
+   <td style="text-align:right;"> 1.456 </td>
+   <td style="text-align:right;"> 1.456 </td>
+   <td style="text-align:right;"> 1.456 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 1992 </td>
+   <td style="text-align:right;"> 1.925 </td>
+   <td style="text-align:right;"> 1.925 </td>
+   <td style="text-align:right;"> 1.925 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 1993 </td>
+   <td style="text-align:right;"> 2.316 </td>
+   <td style="text-align:right;"> 2.316 </td>
+   <td style="text-align:right;"> 2.316 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 1994 </td>
+   <td style="text-align:right;"> 2.992 </td>
+   <td style="text-align:right;"> 2.992 </td>
+   <td style="text-align:right;"> 2.992 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 1995 </td>
+   <td style="text-align:right;"> 3.511 </td>
+   <td style="text-align:right;"> 3.511 </td>
+   <td style="text-align:right;"> 3.511 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 1996 </td>
+   <td style="text-align:right;"> 3.906 </td>
+   <td style="text-align:right;"> 3.906 </td>
+   <td style="text-align:right;"> 3.906 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 1997 </td>
+   <td style="text-align:right;"> 4.343 </td>
+   <td style="text-align:right;"> 4.343 </td>
+   <td style="text-align:right;"> 4.343 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 4.899 </td>
+   <td style="text-align:right;"> 4.899 </td>
+   <td style="text-align:right;"> 4.899 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 1999 </td>
+   <td style="text-align:right;"> 5.446 </td>
+   <td style="text-align:right;"> 5.446 </td>
+   <td style="text-align:right;"> 5.446 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2000 </td>
+   <td style="text-align:right;"> 5.858 </td>
+   <td style="text-align:right;"> 5.858 </td>
+   <td style="text-align:right;"> 5.858 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2001 </td>
+   <td style="text-align:right;"> 6.355 </td>
+   <td style="text-align:right;"> 6.355 </td>
+   <td style="text-align:right;"> 6.355 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2002 </td>
+   <td style="text-align:right;"> 6.872 </td>
+   <td style="text-align:right;"> 6.872 </td>
+   <td style="text-align:right;"> 6.872 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2003 </td>
+   <td style="text-align:right;"> 7.352 </td>
+   <td style="text-align:right;"> 7.352 </td>
+   <td style="text-align:right;"> 7.352 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2004 </td>
+   <td style="text-align:right;"> 7.915 </td>
+   <td style="text-align:right;"> 7.915 </td>
+   <td style="text-align:right;"> 7.915 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2005 </td>
+   <td style="text-align:right;"> 8.309 </td>
+   <td style="text-align:right;"> 8.309 </td>
+   <td style="text-align:right;"> 8.309 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2006 </td>
+   <td style="text-align:right;"> 8.958 </td>
+   <td style="text-align:right;"> 8.958 </td>
+   <td style="text-align:right;"> 8.958 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2007 </td>
+   <td style="text-align:right;"> 9.281 </td>
+   <td style="text-align:right;"> 9.281 </td>
+   <td style="text-align:right;"> 9.281 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2008 </td>
+   <td style="text-align:right;"> 9.728 </td>
+   <td style="text-align:right;"> 9.728 </td>
+   <td style="text-align:right;"> 9.728 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2009 </td>
+   <td style="text-align:right;"> 10.373 </td>
+   <td style="text-align:right;"> 10.373 </td>
+   <td style="text-align:right;"> 10.373 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2010 </td>
+   <td style="text-align:right;"> 10.830 </td>
+   <td style="text-align:right;"> 10.830 </td>
+   <td style="text-align:right;"> 10.830 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2011 </td>
+   <td style="text-align:right;"> 11.315 </td>
+   <td style="text-align:right;"> 11.315 </td>
+   <td style="text-align:right;"> 11.315 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2012 </td>
+   <td style="text-align:right;"> 11.788 </td>
+   <td style="text-align:right;"> 11.788 </td>
+   <td style="text-align:right;"> 11.788 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2013 </td>
+   <td style="text-align:right;"> 12.223 </td>
+   <td style="text-align:right;"> 12.223 </td>
+   <td style="text-align:right;"> 12.223 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2014 </td>
+   <td style="text-align:right;"> 12.713 </td>
+   <td style="text-align:right;"> 12.713 </td>
+   <td style="text-align:right;"> 12.713 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1989 </td>
+   <td style="text-align:right;"> 2015 </td>
+   <td style="text-align:right;"> 13.318 </td>
+   <td style="text-align:right;"> 13.318 </td>
+   <td style="text-align:right;"> 13.318 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 0.308 </td>
+   <td style="text-align:right;"> 0.308 </td>
+   <td style="text-align:right;"> 0.308 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 1999 </td>
+   <td style="text-align:right;"> 0.491 </td>
+   <td style="text-align:right;"> 0.491 </td>
+   <td style="text-align:right;"> 0.491 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2000 </td>
+   <td style="text-align:right;"> 0.856 </td>
+   <td style="text-align:right;"> 0.856 </td>
+   <td style="text-align:right;"> 0.856 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2001 </td>
+   <td style="text-align:right;"> 1.190 </td>
+   <td style="text-align:right;"> 1.190 </td>
+   <td style="text-align:right;"> 1.190 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2002 </td>
+   <td style="text-align:right;"> 1.470 </td>
+   <td style="text-align:right;"> 1.470 </td>
+   <td style="text-align:right;"> 1.470 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2003 </td>
+   <td style="text-align:right;"> 1.819 </td>
+   <td style="text-align:right;"> 1.819 </td>
+   <td style="text-align:right;"> 1.819 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2004 </td>
+   <td style="text-align:right;"> 2.170 </td>
+   <td style="text-align:right;"> 2.170 </td>
+   <td style="text-align:right;"> 2.170 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2005 </td>
+   <td style="text-align:right;"> 2.346 </td>
+   <td style="text-align:right;"> 2.346 </td>
+   <td style="text-align:right;"> 2.346 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2006 </td>
+   <td style="text-align:right;"> 2.781 </td>
+   <td style="text-align:right;"> 2.781 </td>
+   <td style="text-align:right;"> 2.781 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2007 </td>
+   <td style="text-align:right;"> 3.008 </td>
+   <td style="text-align:right;"> 3.008 </td>
+   <td style="text-align:right;"> 3.008 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2008 </td>
+   <td style="text-align:right;"> 3.259 </td>
+   <td style="text-align:right;"> 3.259 </td>
+   <td style="text-align:right;"> 3.259 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2009 </td>
+   <td style="text-align:right;"> 3.637 </td>
+   <td style="text-align:right;"> 3.637 </td>
+   <td style="text-align:right;"> 3.637 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2010 </td>
+   <td style="text-align:right;"> 4.024 </td>
+   <td style="text-align:right;"> 4.024 </td>
+   <td style="text-align:right;"> 4.024 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2011 </td>
+   <td style="text-align:right;"> 4.307 </td>
+   <td style="text-align:right;"> 4.307 </td>
+   <td style="text-align:right;"> 4.307 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2012 </td>
+   <td style="text-align:right;"> 4.673 </td>
+   <td style="text-align:right;"> 4.673 </td>
+   <td style="text-align:right;"> 4.673 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2013 </td>
+   <td style="text-align:right;"> 4.785 </td>
+   <td style="text-align:right;"> 4.785 </td>
+   <td style="text-align:right;"> 4.785 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2014 </td>
+   <td style="text-align:right;"> 5.134 </td>
+   <td style="text-align:right;"> 5.134 </td>
+   <td style="text-align:right;"> 5.134 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1998 </td>
+   <td style="text-align:right;"> 2015 </td>
+   <td style="text-align:right;"> 5.580 </td>
+   <td style="text-align:right;"> 5.580 </td>
+   <td style="text-align:right;"> 5.580 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:right;"> Relative Time </th>
+   <th style="text-align:right;"> Truth </th>
+   <th style="text-align:right;"> POLS </th>
+   <th style="text-align:right;"> E-TWFE </th>
+   <th style="text-align:right;"> E-TWM </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0.397 </td>
+   <td style="text-align:right;"> 0.389 </td>
+   <td style="text-align:right;"> 0.389 </td>
+   <td style="text-align:right;"> 0.389 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.794 </td>
+   <td style="text-align:right;"> 0.736 </td>
+   <td style="text-align:right;"> 0.736 </td>
+   <td style="text-align:right;"> 0.736 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 2 </td>
+   <td style="text-align:right;"> 1.191 </td>
+   <td style="text-align:right;"> 1.156 </td>
+   <td style="text-align:right;"> 1.156 </td>
+   <td style="text-align:right;"> 1.156 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 1.589 </td>
+   <td style="text-align:right;"> 1.557 </td>
+   <td style="text-align:right;"> 1.557 </td>
+   <td style="text-align:right;"> 1.557 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 4 </td>
+   <td style="text-align:right;"> 1.986 </td>
+   <td style="text-align:right;"> 1.893 </td>
+   <td style="text-align:right;"> 1.893 </td>
+   <td style="text-align:right;"> 1.893 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 5 </td>
+   <td style="text-align:right;"> 2.383 </td>
+   <td style="text-align:right;"> 2.406 </td>
+   <td style="text-align:right;"> 2.406 </td>
+   <td style="text-align:right;"> 2.406 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 2.780 </td>
+   <td style="text-align:right;"> 2.840 </td>
+   <td style="text-align:right;"> 2.840 </td>
+   <td style="text-align:right;"> 2.840 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 7 </td>
+   <td style="text-align:right;"> 3.177 </td>
+   <td style="text-align:right;"> 3.126 </td>
+   <td style="text-align:right;"> 3.126 </td>
+   <td style="text-align:right;"> 3.126 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 8 </td>
+   <td style="text-align:right;"> 3.574 </td>
+   <td style="text-align:right;"> 3.562 </td>
+   <td style="text-align:right;"> 3.562 </td>
+   <td style="text-align:right;"> 3.562 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 9 </td>
+   <td style="text-align:right;"> 3.971 </td>
+   <td style="text-align:right;"> 3.953 </td>
+   <td style="text-align:right;"> 3.953 </td>
+   <td style="text-align:right;"> 3.953 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 10 </td>
+   <td style="text-align:right;"> 4.369 </td>
+   <td style="text-align:right;"> 4.352 </td>
+   <td style="text-align:right;"> 4.352 </td>
+   <td style="text-align:right;"> 4.352 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 4.766 </td>
+   <td style="text-align:right;"> 4.747 </td>
+   <td style="text-align:right;"> 4.747 </td>
+   <td style="text-align:right;"> 4.747 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 12 </td>
+   <td style="text-align:right;"> 5.163 </td>
+   <td style="text-align:right;"> 5.189 </td>
+   <td style="text-align:right;"> 5.189 </td>
+   <td style="text-align:right;"> 5.189 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 13 </td>
+   <td style="text-align:right;"> 5.560 </td>
+   <td style="text-align:right;"> 5.589 </td>
+   <td style="text-align:right;"> 5.589 </td>
+   <td style="text-align:right;"> 5.589 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 14 </td>
+   <td style="text-align:right;"> 5.957 </td>
+   <td style="text-align:right;"> 6.012 </td>
+   <td style="text-align:right;"> 6.012 </td>
+   <td style="text-align:right;"> 6.012 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 15 </td>
+   <td style="text-align:right;"> 6.354 </td>
+   <td style="text-align:right;"> 6.350 </td>
+   <td style="text-align:right;"> 6.350 </td>
+   <td style="text-align:right;"> 6.350 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 16 </td>
+   <td style="text-align:right;"> 6.751 </td>
+   <td style="text-align:right;"> 6.722 </td>
+   <td style="text-align:right;"> 6.722 </td>
+   <td style="text-align:right;"> 6.722 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 17 </td>
+   <td style="text-align:right;"> 7.149 </td>
+   <td style="text-align:right;"> 7.269 </td>
+   <td style="text-align:right;"> 7.269 </td>
+   <td style="text-align:right;"> 7.269 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 18 </td>
+   <td style="text-align:right;"> 9.500 </td>
+   <td style="text-align:right;"> 9.281 </td>
+   <td style="text-align:right;"> 9.281 </td>
+   <td style="text-align:right;"> 9.281 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 19 </td>
+   <td style="text-align:right;"> 10.000 </td>
+   <td style="text-align:right;"> 9.728 </td>
+   <td style="text-align:right;"> 9.728 </td>
+   <td style="text-align:right;"> 9.728 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 20 </td>
+   <td style="text-align:right;"> 10.500 </td>
+   <td style="text-align:right;"> 10.373 </td>
+   <td style="text-align:right;"> 10.373 </td>
+   <td style="text-align:right;"> 10.373 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 21 </td>
+   <td style="text-align:right;"> 11.000 </td>
+   <td style="text-align:right;"> 10.830 </td>
+   <td style="text-align:right;"> 10.830 </td>
+   <td style="text-align:right;"> 10.830 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 22 </td>
+   <td style="text-align:right;"> 11.500 </td>
+   <td style="text-align:right;"> 11.315 </td>
+   <td style="text-align:right;"> 11.315 </td>
+   <td style="text-align:right;"> 11.315 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 23 </td>
+   <td style="text-align:right;"> 12.000 </td>
+   <td style="text-align:right;"> 11.788 </td>
+   <td style="text-align:right;"> 11.788 </td>
+   <td style="text-align:right;"> 11.788 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 24 </td>
+   <td style="text-align:right;"> 12.500 </td>
+   <td style="text-align:right;"> 12.223 </td>
+   <td style="text-align:right;"> 12.223 </td>
+   <td style="text-align:right;"> 12.223 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 25 </td>
+   <td style="text-align:right;"> 13.000 </td>
+   <td style="text-align:right;"> 12.713 </td>
+   <td style="text-align:right;"> 12.713 </td>
+   <td style="text-align:right;"> 12.713 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 26 </td>
+   <td style="text-align:right;"> 13.500 </td>
+   <td style="text-align:right;"> 13.318 </td>
+   <td style="text-align:right;"> 13.318 </td>
+   <td style="text-align:right;"> 13.318 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+<div class="cell">
+
+</div>
+<div class="column-screen">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-15-2.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="column-screen">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-16-2.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="column-screen">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-17-2.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="column-screen">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-18-2.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="column-screen">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-19-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-19-2.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="column-screen">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="extended-difference-in-differences_files/figure-html/unnamed-chunk-20-2.png" class="img-fluid figure-img" width="960"></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>prepare_extended_did_data <span class="ot">&lt;-</span> <span class="cf">function</span>(df,<span class="at">covariates =</span> <span class="cn">NULL</span>) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  any_never_treated <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    n_years <span class="ot">&lt;-</span> <span class="fu">max</span>(df<span class="sc">$</span>year) <span class="sc">-</span> <span class="fu">min</span>(df<span class="sc">$</span>year) <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    never_treated <span class="ot">&lt;-</span> </span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>      df <span class="sc">%&gt;%</span> </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(w_it<span class="sc">==</span><span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">group_by</span>(unit) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">count</span>(year) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">summarise</span>(<span class="at">n =</span> <span class="fu">sum</span>(n)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">ungroup</span>()  <span class="sc">%&gt;%</span> </span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">never_treated =</span> <span class="fu">as.integer</span>(n<span class="sc">==</span>n_years)) </span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    any_never_treated <span class="ot">=</span> <span class="fu">max</span>(never_treated<span class="sc">$</span>never_treated)<span class="sc">==</span><span class="dv">1</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    any_never_treated</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  get_d_star <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>    df <span class="sc">%&gt;%</span> </span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(unit,year,w_it) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>      <span class="fu">unique</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(w_it<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>      <span class="fu">group_by</span>(unit) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(year<span class="sc">==</span><span class="fu">min</span>(year)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(<span class="sc">-</span>w_it) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>      <span class="fu">rename</span>(<span class="at">d =</span> year) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>      <span class="fu">dummy_cols</span>(<span class="st">"d"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(unit,<span class="fu">starts_with</span>(<span class="st">"d_"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>      <span class="fu">right_join</span>(df <span class="sc">%&gt;%</span> <span class="fu">select</span>(unit) <span class="sc">%&gt;%</span> <span class="fu">unique</span>(),<span class="st">"unit"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="fu">starts_with</span>(<span class="st">"d_"</span>)),<span class="sc">~</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(.),<span class="dv">0</span>,.)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">never_treated =</span> <span class="fu">as.integer</span>(<span class="fu">rowSums</span>(.[,<span class="sc">-</span><span class="dv">1</span>])<span class="sc">==</span><span class="dv">0</span>))  </span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a>  get_f_star <span class="ot">&lt;-</span> <span class="cf">function</span>(df) {</span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">with</span>(df,<span class="fu">table</span>(year,w_it)) <span class="sc">%&gt;%</span> <span class="fu">data.frame</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(w_it<span class="sc">==</span><span class="dv">1</span> <span class="sc">&amp;</span> Freq<span class="sc">&gt;</span><span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(<span class="at">f_star =</span> year)</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>  get_cohort_year_interactions <span class="ot">&lt;-</span> <span class="cf">function</span>(df,d_star, f_star) {</span>
+<span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>    <span class="fu">crossing</span>(<span class="at">d =</span> <span class="fu">as.numeric</span>(<span class="fu">gsub</span>(<span class="st">"d_"</span>,<span class="st">""</span>,<span class="fu">grep</span>(<span class="st">"d_"</span>,<span class="fu">colnames</span>(d_star),<span class="at">value=</span><span class="cn">TRUE</span>))),<span class="at">f =</span> <span class="fu">as.numeric</span>(<span class="fu">paste0</span>(f_star<span class="sc">$</span>f_star))) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-45"><a href="#cb8-45" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">value =</span> <span class="fu">as.numeric</span>(f<span class="sc">&gt;=</span>d)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-46"><a href="#cb8-46" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">f =</span> <span class="fu">paste0</span>(<span class="st">"f_"</span>,f)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">d =</span> <span class="fu">paste0</span>(<span class="st">"d_"</span>,d)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a>      <span class="fu">spread</span>(f,value) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a>      <span class="fu">gather</span>(f,value,<span class="sc">-</span>d) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(value<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a>      <span class="fu">arrange</span>(d,f) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(<span class="sc">-</span>value) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a>      <span class="fu">mutate</span>(<span class="at">i =</span> <span class="fu">paste0</span>(<span class="st">"I("</span>,d,<span class="st">"*"</span>,f,<span class="st">")"</span>))</span>
+<span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a>  is_there_any_never_treated <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> <span class="fu">any_never_treated</span>()</span>
+<span id="cb8-57"><a href="#cb8-57" aria-hidden="true" tabindex="-1"></a>  d_star <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> <span class="fu">get_d_star</span>()</span>
+<span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>  d_star_names <span class="ot">&lt;-</span> <span class="fu">colnames</span>(d_star)[<span class="sc">-</span><span class="fu">grep</span>(<span class="st">"unit|never_treated"</span>,<span class="fu">colnames</span>(d_star))]</span>
+<span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a>  f_star <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> <span class="fu">get_f_star</span>()</span>
+<span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>  cohort_year_interactions <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> <span class="fu">get_cohort_year_interactions</span>(., <span class="at">d_star =</span> d_star, <span class="at">f_star =</span> f_star)</span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>  df_final_ <span class="ot">&lt;-</span> </span>
+<span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a>    df <span class="sc">%&gt;%</span> </span>
+<span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(unit,year,y_it,<span class="fu">starts_with</span>(<span class="st">"x_i"</span>),w_it,covariates) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>    <span class="fu">left_join</span>(d_star,<span class="st">"unit"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="fu">starts_with</span>(<span class="st">"d_"</span>)),<span class="sc">~</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(.),<span class="dv">0</span>,.)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">f =</span> <span class="fu">ifelse</span>(year <span class="sc">%in%</span> f_star<span class="sc">$</span>f_star,year,<span class="cn">NA</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dummy_cols</span>(<span class="st">"f"</span>,<span class="at">ignore_na=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-69"><a href="#cb8-69" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="fu">starts_with</span>(<span class="st">"f_"</span>)),<span class="sc">~</span><span class="fu">ifelse</span>(<span class="fu">is.na</span>(.),<span class="dv">0</span>,.))  <span class="sc">%&gt;%</span> </span>
+<span id="cb8-70"><a href="#cb8-70" aria-hidden="true" tabindex="-1"></a>    <span class="fu">dummy_cols</span>(<span class="st">"year"</span>,<span class="at">ignore_na=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-71"><a href="#cb8-71" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(<span class="sc">-</span>f)</span>
+<span id="cb8-72"><a href="#cb8-72" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-73"><a href="#cb8-73" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(covariates)) {</span>
+<span id="cb8-74"><a href="#cb8-74" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (.x <span class="cf">in</span> covariates) {</span>
+<span id="cb8-75"><a href="#cb8-75" aria-hidden="true" tabindex="-1"></a>      covariate_means <span class="ot">&lt;-</span> </span>
+<span id="cb8-76"><a href="#cb8-76" aria-hidden="true" tabindex="-1"></a>        df_final_ <span class="sc">%&gt;%</span> </span>
+<span id="cb8-77"><a href="#cb8-77" aria-hidden="true" tabindex="-1"></a>        <span class="fu">select_at</span>(<span class="fu">vars</span>(unit,.x,<span class="fu">starts_with</span>(<span class="st">"d_"</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-78"><a href="#cb8-78" aria-hidden="true" tabindex="-1"></a>        <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="fu">starts_with</span>(<span class="st">"d_"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-79"><a href="#cb8-79" aria-hidden="true" tabindex="-1"></a>        <span class="fu">filter</span>(value<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-80"><a href="#cb8-80" aria-hidden="true" tabindex="-1"></a>        <span class="fu">rename</span>(<span class="at">cohort =</span> name) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-81"><a href="#cb8-81" aria-hidden="true" tabindex="-1"></a>        <span class="fu">select</span>(<span class="sc">-</span>value) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a>        <span class="fu">group_by</span>(cohort) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a>        <span class="fu">summarise_at</span>(<span class="fu">vars</span>(.x),mean,<span class="at">na.rm=</span><span class="cn">TRUE</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-84"><a href="#cb8-84" aria-hidden="true" tabindex="-1"></a>        <span class="fu">mutate</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb8-85"><a href="#cb8-85" aria-hidden="true" tabindex="-1"></a>        <span class="fu">gather</span>(covar,mean,<span class="sc">-</span>cohort) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-86"><a href="#cb8-86" aria-hidden="true" tabindex="-1"></a>        <span class="fu">mutate</span>(<span class="at">covar =</span> <span class="fu">paste0</span>(covar,<span class="st">"_dm"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-87"><a href="#cb8-87" aria-hidden="true" tabindex="-1"></a>        <span class="fu">unite</span>(covar,covar,cohort) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-88"><a href="#cb8-88" aria-hidden="true" tabindex="-1"></a>        <span class="fu">spread</span>(covar,mean)</span>
+<span id="cb8-89"><a href="#cb8-89" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb8-90"><a href="#cb8-90" aria-hidden="true" tabindex="-1"></a>      tmp <span class="ot">&lt;-</span> </span>
+<span id="cb8-91"><a href="#cb8-91" aria-hidden="true" tabindex="-1"></a>        df_final_ <span class="sc">%&gt;%</span> </span>
+<span id="cb8-92"><a href="#cb8-92" aria-hidden="true" tabindex="-1"></a>        <span class="fu">select</span>(unit,year,<span class="at">tmp =</span> .x) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-93"><a href="#cb8-93" aria-hidden="true" tabindex="-1"></a>        <span class="fu">left_join</span>(covariate_means, <span class="at">by =</span> <span class="fu">character</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-94"><a href="#cb8-94" aria-hidden="true" tabindex="-1"></a>        <span class="fu">mutate_at</span>(<span class="fu">vars</span>(<span class="fu">colnames</span>(covariate_means)),<span class="sc">~</span>(.data<span class="sc">$</span>tmp <span class="sc">-</span> .)) <span class="sc">%&gt;%</span> </span>
+<span id="cb8-95"><a href="#cb8-95" aria-hidden="true" tabindex="-1"></a>        <span class="fu">select</span>(unit,year,<span class="fu">contains</span>(<span class="st">"_dm_"</span>))</span>
+<span id="cb8-96"><a href="#cb8-96" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb8-97"><a href="#cb8-97" aria-hidden="true" tabindex="-1"></a>      df_final_ <span class="ot">&lt;-</span> </span>
+<span id="cb8-98"><a href="#cb8-98" aria-hidden="true" tabindex="-1"></a>        df_final_ <span class="sc">%&gt;%</span> </span>
+<span id="cb8-99"><a href="#cb8-99" aria-hidden="true" tabindex="-1"></a>        <span class="fu">left_join</span>(tmp,<span class="fu">c</span>(<span class="st">"unit"</span>,<span class="st">"year"</span>))</span>
+<span id="cb8-100"><a href="#cb8-100" aria-hidden="true" tabindex="-1"></a>      </span>
+<span id="cb8-101"><a href="#cb8-101" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-102"><a href="#cb8-102" aria-hidden="true" tabindex="-1"></a>    df_final <span class="ot">&lt;-</span> df_final_</span>
+<span id="cb8-103"><a href="#cb8-103" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb8-104"><a href="#cb8-104" aria-hidden="true" tabindex="-1"></a>    df_final <span class="ot">&lt;-</span> df_final_</span>
+<span id="cb8-105"><a href="#cb8-105" aria-hidden="true" tabindex="-1"></a>    ff_twfe <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">"y_it ~"</span>,<span class="fu">paste0</span>(cohort_year_interactions<span class="sc">$</span>i,<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+ factor(year) | unit"</span>))</span>
+<span id="cb8-106"><a href="#cb8-106" aria-hidden="true" tabindex="-1"></a>    ff_pols <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">"y_it ~"</span>,<span class="fu">paste0</span>(cohort_year_interactions<span class="sc">$</span>i,<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+"</span>,<span class="fu">paste0</span>(<span class="fu">grep</span>(<span class="st">"^d_"</span>,<span class="fu">colnames</span>(df_final), <span class="at">value=</span><span class="cn">TRUE</span>),<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+ factor(year)"</span>))</span>
+<span id="cb8-107"><a href="#cb8-107" aria-hidden="true" tabindex="-1"></a>    ff_re <span class="ot">&lt;-</span> <span class="fu">as.formula</span>(<span class="fu">paste0</span>(<span class="st">"y_it ~"</span>,<span class="fu">paste0</span>(cohort_year_interactions<span class="sc">$</span>i,<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+"</span>,<span class="fu">paste0</span>(<span class="fu">grep</span>(<span class="st">"^d_"</span>,<span class="fu">colnames</span>(df_final), <span class="at">value=</span><span class="cn">TRUE</span>),<span class="at">collapse=</span><span class="st">"+"</span>),<span class="st">"+ factor(year) + (1| unit)"</span>))</span>
+<span id="cb8-108"><a href="#cb8-108" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-109"><a href="#cb8-109" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-110"><a href="#cb8-110" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">list</span>(<span class="at">df =</span> df_final, <span class="at">ff_pols =</span> ff_pols, <span class="at">ff_twfe =</span> ff_twfe, <span class="at">ff_re =</span> ff_re))</span>
+<span id="cb8-111"><a href="#cb8-111" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

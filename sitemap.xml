@@ -2,70 +2,82 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/ignore/scratch.html</loc>
-    <lastmod>2022-09-07T02:24:06.726Z</lastmod>
+    <lastmod>2022-09-13T21:33:57.771Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/ignore/meta-structure-equations.html</loc>
-    <lastmod>2022-09-07T02:24:07.279Z</lastmod>
+    <lastmod>2022-09-13T21:33:58.289Z</lastmod>
+  </url>
+  <url>
+    <loc>https://graveja0.github.io/HPOL8539-F2022/ignore/did_stata_files/did_staggered_6_20220817.html</loc>
+    <lastmod>2022-09-13T21:34:02.936Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/ignore/panel-data-full-animation.html</loc>
-    <lastmod>2022-09-07T02:24:07.838Z</lastmod>
+    <lastmod>2022-09-13T21:34:03.322Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/ignore/wooldridge-extended-twfe-did.html</loc>
-    <lastmod>2022-09-07T02:24:11.844Z</lastmod>
+    <lastmod>2022-09-13T21:34:07.261Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/index.html</loc>
-    <lastmod>2022-09-07T02:24:14.805Z</lastmod>
+    <lastmod>2022-09-13T21:34:10.118Z</lastmod>
   </url>
   <url>
-    <loc>https://graveja0.github.io/HPOL8539-F2022/blog/posts/gee.html</loc>
-    <lastmod>2022-09-07T02:24:20.599Z</lastmod>
-  </url>
-  <url>
-    <loc>https://graveja0.github.io/HPOL8539-F2022/blog/posts/post1.html</loc>
-    <lastmod>2022-09-07T02:24:38.126Z</lastmod>
-  </url>
-  <url>
-    <loc>https://graveja0.github.io/HPOL8539-F2022/blog/posts/twfe-twm-and-did.html</loc>
-    <lastmod>2022-09-07T02:25:12.257Z</lastmod>
+    <loc>https://graveja0.github.io/HPOL8539-F2022/blog/posts/extended-difference-in-differences.html</loc>
+    <lastmod>2022-09-13T21:34:35.625Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/blog/posts/quasi-demeaning.html</loc>
-    <lastmod>2022-09-07T02:25:16.937Z</lastmod>
+    <lastmod>2022-09-13T21:34:40.011Z</lastmod>
+  </url>
+  <url>
+    <loc>https://graveja0.github.io/HPOL8539-F2022/blog/drafts/gee.html</loc>
+    <lastmod>2022-09-13T21:34:45.051Z</lastmod>
+  </url>
+  <url>
+    <loc>https://graveja0.github.io/HPOL8539-F2022/blog/drafts/post1.html</loc>
+    <lastmod>2022-09-13T21:34:59.855Z</lastmod>
+  </url>
+  <url>
+    <loc>https://graveja0.github.io/HPOL8539-F2022/blog/drafts/twfe-twm-and-did.html</loc>
+    <lastmod>2022-09-13T21:35:32.914Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/blog/index.html</loc>
-    <lastmod>2022-09-07T02:25:17.363Z</lastmod>
+    <lastmod>2022-09-13T21:35:33.333Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/blog/storage/post2.html</loc>
-    <lastmod>2022-09-07T02:25:17.772Z</lastmod>
+    <lastmod>2022-09-13T21:35:33.707Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/blog/storage/did-revisited.html</loc>
-    <lastmod>2022-09-07T02:25:18.171Z</lastmod>
+    <lastmod>2022-09-13T21:35:34.254Z</lastmod>
+  </url>
+  <url>
+    <loc>https://graveja0.github.io/HPOL8539-F2022/slides/difference-in-differences.html</loc>
+    <lastmod>2022-09-13T21:35:55.515Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/slides/fixed-vs-random-effect-definitions.html</loc>
-    <lastmod>2022-09-07T02:25:19.545Z</lastmod>
+    <lastmod>2022-09-13T21:35:57.038Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/slides/lec_introduction.html</loc>
-    <lastmod>2022-09-07T02:25:19.955Z</lastmod>
+    <lastmod>2022-09-13T21:35:57.515Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/about.html</loc>
-    <lastmod>2022-09-07T02:25:21.209Z</lastmod>
+    <lastmod>2022-09-13T21:35:58.894Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/modules/d2-panel.html</loc>
-    <lastmod>2022-09-07T02:25:21.530Z</lastmod>
+    <lastmod>2022-09-13T21:35:59.393Z</lastmod>
   </url>
   <url>
     <loc>https://graveja0.github.io/HPOL8539-F2022/modules/d1-introduction.html</loc>
-    <lastmod>2022-09-07T02:25:21.848Z</lastmod>
+    <lastmod>2022-09-13T21:35:59.834Z</lastmod>
   </url>
 </urlset>

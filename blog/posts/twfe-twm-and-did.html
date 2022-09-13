@@ -1252,10 +1252,10 @@ d1998
 <p>We next estimate the models</p>
 <table class="table">
 <colgroup>
-<col style="width: 29%">
-<col style="width: 14%">
-<col style="width: 24%">
-<col style="width: 31%">
+<col style="width: 26%">
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 26%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -2345,20 +2345,22 @@ d1998
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fmla_twfe2 <span class="ot">&lt;-</span> <span class="fu">glue</span>(<span class="st">"y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + {paste0('f',treatment_years2,collapse=' + ')} | id"</span>) <span class="sc">%&gt;%</span> <span class="fu">as.formula</span>()</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>fit_twfe2 <span class="ot">&lt;-</span> <span class="fu">feols</span>(fmla_twfe2, <span class="at">data =</span> df_)</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>fmla_lm2 <span class="ot">&lt;-</span> <span class="fu">glue</span>(<span class="st">"y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + {paste0('f',treatment_years2,collapse=' + ')} + {paste0('d',treatment_groups2,collapse= '+')}"</span>) <span class="sc">%&gt;%</span> <span class="fu">as.formula</span>()</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>fit_lm2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(fmla_lm2, <span class="at">data =</span> df_) </span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>fmla_twm2 <span class="ot">&lt;-</span> <span class="fu">glue</span>(<span class="st">"y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + {paste0('f',treatment_years2,collapse=' + ')} + {paste0('d',treatment_groups2,collapse= '+')} + (1|id)"</span>) <span class="sc">%&gt;%</span> <span class="fu">as.formula</span>()</span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>fit_twm2 <span class="ot">&lt;-</span> <span class="fu">lmer</span>( fmla_twm2 , <span class="at">data =</span> df_) </span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co"># CS</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>data2_cs <span class="ot">&lt;-</span> </span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>  data2 <span class="sc">%&gt;%</span> </span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">as.numeric</span>(<span class="fu">paste0</span>(year)),</span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">treatment_time =</span> <span class="fu">as.numeric</span>(<span class="fu">paste0</span>(treatment_time)))  <span class="sc">%&gt;%</span> </span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">treatment_time =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(treatment_time),<span class="dv">0</span>,treatment_time))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>fmla_twfe2 <span class="ot">&lt;-</span> <span class="fu">glue</span>(<span class="st">"y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + factor(year) | id"</span>) <span class="sc">%&gt;%</span> <span class="fu">as.formula</span>()</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>fit_twfe2 <span class="ot">&lt;-</span> <span class="fu">feols</span>(fmla_twfe2, <span class="at">data =</span> df_)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>fmla_lm2 <span class="ot">&lt;-</span> <span class="fu">glue</span>(<span class="st">"y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + {paste0('f',treatment_years2,collapse=' + ')} + {paste0('d',treatment_groups2,collapse= '+')}"</span>) <span class="sc">%&gt;%</span> <span class="fu">as.formula</span>()</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>fmla_lm2 <span class="ot">&lt;-</span> <span class="fu">glue</span>(<span class="st">"y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + factor(year) + {paste0('d',treatment_groups2,collapse= '+')}"</span>) <span class="sc">%&gt;%</span> <span class="fu">as.formula</span>()</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>fit_lm2 <span class="ot">&lt;-</span> <span class="fu">lm</span>(fmla_lm2, <span class="at">data =</span> df_) </span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>fmla_twm2 <span class="ot">&lt;-</span> <span class="fu">glue</span>(<span class="st">"y ~ {paste0('w : ',paste0('f',treatment_years2), collapse = ' + ')} + factor(year) + {paste0('d',treatment_groups2,collapse= '+')} + (1|id)"</span>) <span class="sc">%&gt;%</span> <span class="fu">as.formula</span>()</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>fit_twm2 <span class="ot">&lt;-</span> <span class="fu">lmer</span>( fmla_twm2 , <span class="at">data =</span> df_) </span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="co"># CS</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>data2_cs <span class="ot">&lt;-</span> </span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>  data2 <span class="sc">%&gt;%</span> </span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">as.numeric</span>(<span class="fu">paste0</span>(year)),</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>         <span class="at">treatment_time =</span> <span class="fu">as.numeric</span>(<span class="fu">paste0</span>(treatment_time)))  <span class="sc">%&gt;%</span> </span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">treatment_time =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(treatment_time),<span class="dv">0</span>,treatment_time))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning in mask$eval_all_mutate(quo): NAs introduced by coercion</code></pre>
@@ -2801,11 +2803,11 @@ d1998
   </thead>
   <tbody class="gt_table_body">
     <tr><td class="gt_row gt_left">TWFE</td>
-<td class="gt_row gt_left">feols(y ~ w:f1998 + w:f1999 + w:f2000 + w:f2001 + w:f2002 + w:f2003 +      w:f2004 + w:f2005 + w:f2006 + w:f2007 + w:f2008 + w:f2009 +      w:f2010 + w:f2011 + w:f2012 + w:f2013 + w:f2014 + w:f2015 +      f1998 + f1999 + f2000 + f2001 + f2002 + f2003 + f2004 + f2005 +      f2006 + f2007 + f2008 + f2009 + f2010 + f2011 + f2012 + f2013 +      f2014 + f2015 | id, data = df_)</td></tr>
+<td class="gt_row gt_left">feols(y ~ w:f1998 + w:f1999 + w:f2000 + w:f2001 + w:f2002 + w:f2003 +      w:f2004 + w:f2005 + w:f2006 + w:f2007 + w:f2008 + w:f2009 +      w:f2010 + w:f2011 + w:f2012 + w:f2013 + w:f2014 + w:f2015 +      factor(year) | id, data = df_)</td></tr>
     <tr><td class="gt_row gt_left">POLS</td>
-<td class="gt_row gt_left">lm(y ~ w:f1998 + w:f1999 + w:f2000 + w:f2001 + w:f2002 + w:f2003 +      w:f2004 + w:f2005 + w:f2006 + w:f2007 + w:f2008 + w:f2009 +      w:f2010 + w:f2011 + w:f2012 + w:f2013 + w:f2014 + w:f2015 +      f1998 + f1999 + f2000 + f2001 + f2002 + f2003 + f2004 + f2005 +      f2006 + f2007 + f2008 + f2009 + f2010 + f2011 + f2012 + f2013 +      f2014 + f2015 + d1998, data = df_)</td></tr>
+<td class="gt_row gt_left">lm(y ~ w:f1998 + w:f1999 + w:f2000 + w:f2001 + w:f2002 + w:f2003 +      w:f2004 + w:f2005 + w:f2006 + w:f2007 + w:f2008 + w:f2009 +      w:f2010 + w:f2011 + w:f2012 + w:f2013 + w:f2014 + w:f2015 +      factor(year) + d1998, data = df_)</td></tr>
     <tr><td class="gt_row gt_left">TWM</td>
-<td class="gt_row gt_left">lmer(y ~ w:f1998 + w:f1999 + w:f2000 + w:f2001 + w:f2002 + w:f2003 +      w:f2004 + w:f2005 + w:f2006 + w:f2007 + w:f2008 + w:f2009 +      w:f2010 + w:f2011 + w:f2012 + w:f2013 + w:f2014 + w:f2015 +      f1998 + f1999 + f2000 + f2001 + f2002 + f2003 + f2004 + f2005 +      f2006 + f2007 + f2008 + f2009 + f2010 + f2011 + f2012 + f2013 +      f2014 + f2015 + d1998 + (1 | id), data = df_)</td></tr>
+<td class="gt_row gt_left">lmer(y ~ w:f1998 + w:f1999 + w:f2000 + w:f2001 + w:f2002 + w:f2003 +      w:f2004 + w:f2005 + w:f2006 + w:f2007 + w:f2008 + w:f2009 +      w:f2010 + w:f2011 + w:f2012 + w:f2013 + w:f2014 + w:f2015 +      factor(year) + d1998 + (1 | id), data = df_)</td></tr>
   </tbody>
   
   
@@ -3459,10 +3461,10 @@ d1998
 <p>We next estimate the models</p>
 <table class="table">
 <colgroup>
-<col style="width: 29%">
-<col style="width: 14%">
-<col style="width: 24%">
-<col style="width: 31%">
+<col style="width: 26%">
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 26%">
 </colgroup>
 <thead>
 <tr class="header">
