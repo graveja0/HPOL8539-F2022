@@ -10,3 +10,8 @@
 /env/
 ignore/
 reference/
+*_files/
+_extensions/
+_freeze/
+blog/posts/results/
+_publish.yml
