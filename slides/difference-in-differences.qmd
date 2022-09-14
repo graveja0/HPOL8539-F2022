@@ -2,19 +2,15 @@
 title: "Extending Difference-in-Differences"
 format: 
   revealjs:
-    incremental: true   
+    incremental: true  
+    footer: |
+      [Back to Website](../index.html) 
 editor: visual
 editor_options: 
   chunk_output_type: console
 filters:
   - roughnotation  
 ---
-
-## Peer Review
-
-[Good source](https://www.scisnack.com/wp-content/uploads/2018/10/A-Peer-Review-Process-Guide.pdf)
-
-[Nature Masterclass on Peer Review](https://masterclasses.nature.com/online-course-on-peer-review/16507836)
 
 ## Outline
 
@@ -600,7 +596,7 @@ $$
 ## Two-Way Fixed Effects DID Estimator
 
 $$
-y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
+Y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 $$
 
 -   $D_{it}$ is a binary treatment indicator set to 1 if the individual is in the treated group and the the observation is in the post-treatment period.
@@ -612,7 +608,7 @@ $$
 ## Two-Way Fixed Effects DID Estimator
 
 $$
-y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
+Y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 $$
 
 -   Can think of $\delta_i = h(\mathbf{U_i})$ and $\gamma_t = f(\mathbf{V_t})$, where $\mathbf{U_i}$ are unit specific confounders and $\mathbf{V_t}$ are time-specific confounders that are common causes of the treatment and the outcome.
@@ -622,7 +618,7 @@ $$
 ## Two-Way Fixed Effects DID Estimator
 
 $$
-y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
+Y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 $$
 
 -   While the model is assuming there are no *interactions* between confounders $\mathbf{U_i}$ and $\mathbf{V_t}$, there are no functional form restrictions placed on $h(.)$ and $f(.)$.
@@ -700,7 +696,7 @@ Wooldridge,["Two-Way Fixed Effects, the Two-Way Mundlak Regression, and Differen
 
 ::: incremental
 -   Establishes a clear line of sight through DID with heterogeneous treatment effects and staggered entry.
--   Bottom line: specify a flexible regression to  allow for heterogeneity across time and treatment cohorts.
+-   Bottom line: specify a flexible regression to allow for heterogeneity across time and treatment cohorts.
 -   For a balanced panel, POLS, TWFE and TWM yield identical DID estimates.
 -   Allows for extensions into nonlinear DID models.
 :::
@@ -813,7 +809,7 @@ DGP code adapted from Baker, Andrew C., David F. Larcker, and Charles CY Wang. "
 
 ::: {style="font-size: 0.6em"}
 | Method                | Estimation Formula                               | Fixed or Random Effect |
-|-------------------|------------------------------------|-------------------|
+|-------------------|-----------------------------------|-------------------|
 | Two-Way Fixed Effects | `feols(I(d* : f*) + factor(time)  | unit)`       | Unit Fixed Effect      |
 | Pooled OLS            | `lm(I(d* : f*) + factor(time) + d*)`             |                        |
 | Two-Way Mundlak       | `lmer(I(d* : f*) + factor(time) + d* + (1|unit)` | Unit Random Effect     |
@@ -825,15 +821,15 @@ See the course blog for how to demean the covariates so they can be included.
 
 ::: {style="font-size: 0.6em"}
 | Method                | Estimation Formula                                                                                                                | Fixed or Random Effect |
-|-------------------|------------------------------------|-------------------|
+|-------------------|-----------------------------------|-------------------|
 | Two-Way Fixed Effects | `feols(I(w : d* : f*) + I(w : d* : f* : x_dm_d*) + factor(time) + I(factor(time) * x_dm_d*) | unit)`                              | Unit Fixed Effect      |
 | Pooled OLS            | `lm(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* + x + I(d* : x_dm_d*))`              |                        |
 | Two-Way Mundlak       | `lmer(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* +  x + I(d* : x_dm_d*) + (1|unit)` | Unit Random Effect     |
 :::
 
-## Regression Call: TWFE 
+## Regression Call: TWFE
 
-`feols(I(d* : f*) + factor(time)  | unit)` 
+`feols(I(d* : f*) + factor(time)  | unit)`
 
 ![](images/paste-217BAC9B.png)
 
@@ -843,23 +839,34 @@ See the course blog for how to demean the covariates so they can be included.
 
 ## Results: Relative Time
 
+- You can also align each coefficient to its point in relative time.
+- For 1989 treated cohort, coefficient on `I(d_1989 * f_1989)` corresponds to `relative_time=0`.
+- For 1998 treated cohort, coefficient on `I(d_1998 * f_1998)` corresponds to `relative_time=0`.
+
+## Results: Relative Time
+
+- Once you get all treatment effect coefficients organized into relative time, you can take the average (across treated cohorts) at each time period. 
+- Can plot these effect estimates (analogous to the event study plot from earlier). 
+
+## Results: Relative Time
+
 ![](images/paste-304AD987.png)
 
 ## Extended Difference-in-Differences {.smaller}
 
 ::: {style="font-size: 0.9em"}
-| Treatment Group | Timing    | Heterogx | Tx Effect | TWFE                                           | TWFE-ES                                        | Ext-DID |
+| Treatment Group | Timing    | Heterogx | Tx Effect | TWFE                                           | TWFE-ES                                        | Ext-DID                        |
 |-----------|-----------|-----------|-----------|-----------|-----------|-----------|
-| Single          | Single    | No       | Constant  | Yes                                            | Yes                                           |  [Yes]{.rn rn-type=highlight}      |
-| Single          | Single    | No       | Dynamic   | Yes[^3]                                        | Yes                                            | [Yes]{.rn rn-type=highlight}      |
-| Multiple        | Single    | No       | Constant  | Yes                                            | Yes                                            | [Yes]{.rn rn-type=highlight}      |
-| Multiple        | Single    | Yes      | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
-| Multiple        | Staggered | No       | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | Yes                                            | [Yes]{.rn rn-type=highlight}      |
-| Multiple        | Staggered | Yes      | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
-| Multiple        | Single    | No       | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
-| Multiple        | Single    | Yes      | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
-| Multiple        | Staggered | No       | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
-| Multiple        | Staggered | Yes      | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type=highlight}      |
+| Single          | Single    | No       | Constant  | Yes                                            | Yes                                            | [Yes]{.rn rn-type="highlight"} |
+| Single          | Single    | No       | Dynamic   | Yes[^3]                                        | Yes                                            | [Yes]{.rn rn-type="highlight"} |
+| Multiple        | Single    | No       | Constant  | Yes                                            | Yes                                            | [Yes]{.rn rn-type="highlight"} |
+| Multiple        | Single    | Yes      | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type="highlight"} |
+| Multiple        | Staggered | No       | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | Yes                                            | [Yes]{.rn rn-type="highlight"} |
+| Multiple        | Staggered | Yes      | Constant  | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type="highlight"} |
+| Multiple        | Single    | No       | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type="highlight"} |
+| Multiple        | Single    | Yes      | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type="highlight"} |
+| Multiple        | Staggered | No       | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type="highlight"} |
+| Multiple        | Staggered | Yes      | Dynamic   | [No]{.rn rn-type="crossed-off" rn-color="red"} | [No]{.rn rn-type="crossed-off" rn-color="red"} | [Yes]{.rn rn-type="highlight"} |
 :::
 
 [^3]: Average effect
@@ -1010,7 +1017,7 @@ p2 <- res6 %>%
 p1 + p2 
 ```
 
-##
+## 
 
 ```{r}
 

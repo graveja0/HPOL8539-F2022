@@ -15,7 +15,12 @@ website:
       - index.qmd
       - section: "Slides"
         contents:
-          - slides/lec_introduction.qmd
+          - text: Course Introduction
+            href: slides/lec_introduction.qmd
+          - text: Peer Review Assignment
+            href: slides/peer-review-assignment.qmd
+          - text: Extending Difference-in-Differences
+            href: slides/difference-in-differences.qmd
       - section: "Case Studies"
         contents:
           - text: 1. Simulation as a Guide for Study Design and Inference

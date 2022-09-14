@@ -1,0 +1,107 @@
+---
+title: Peer Review Assignment
+format: 
+  revealjs:
+    incremental: false
+    footer: |
+      [Back to Website](../index.html) 
+editor: visual
+editor_options: 
+  chunk_output_type: console
+filters:
+  - roughnotation  
+---
+
+## Peer Review Assigment
+
+- Due in roughly one month!
+- Idea: Critique an unpublished working paper from NBER series, or from MedRxiv 
+- Next slides will provide an overview and structure of a "good" peer review. 
+- Source for material is [here](https://www.scisnack.com/wp-content/uploads/2018/10/A-Peer-Review-Process-Guide.pdf)
+
+
+## First Read: Overview
+
+- Does your expertise cover all aspects of the article? If not, describe which sections you can respond to and why?
+
+## First Read: Overview
+
+::: incremental
+
+- “Mirror” the article. Make a first draft describing the main aim of the article and why it’s innovative.
+  - Think of this as an opportunity to summarize what *you* think the thrust of the study is about. It provides the author & editor with an opportunity to see another "abstract"---are the reviewers primary takeways the same as the author? 
+
+::: 
+
+
+## Second Read: The Science
+
+- For the rest of the review, try and separate your points into “Major” or “Minor” issues and/or suggestions. Using bullet points can help the author(s) keep track when responding to your review.
+
+## Second Read: The Science
+
+- Do the Introduction and Abstract clearly identify the need and relevance for this research?
+
+
+
+## Second Read: The Science
+
+- Does the Methodology target the main question(s) appropriately?
+
+
+
+## Second Read: The Science
+
+- Are the Results clearly and logically presented, and are they justified by the data presented? 
+- Are the figures clear and fully described? 
+
+
+
+## Second Read: The Science
+
+- Do the Conclusions justifiably respond to main questions the author(s) posed? 
+- Do the Conclusions go too far or not far enough based on the results?
+
+
+
+## Second Read: The Science
+
+- Is the manuscript’s story cohesive and tightly reasoned throughout? 
+- If not, where does it deviate from the central argument?
+
+
+## Final Review Report
+
+Compile your responses to the points above into a single document. Here is a suggested order for your review. 
+
+## Final Review Report
+
+### 1. Introduction
+  - Mirror the article, your expertise and whether the paper is publishable or if there are fatal flaws
+  - Include a short list of the paper’s key strengths and weaknesses. 
+
+## Final Review Report
+
+### 2. Major issues
+  - If there is a major issue you believe *must* be addressed in revision, note that explicitly here. 
+  
+
+## Final Review Report
+
+### 3. Minor issues and other suggestions. 
+
+- This could include some specification checks or additions to supplementary material you think might be useful. 
+
+- It could include some exploratory comments ('you might try..') and/or suggestions 
+
+## Final Comments 
+
+- It is common to receive 1-2pp reviews. 
+- "Borderline" reviews (i.e., peer review of a study that would need a lot of work to accept) often run longer, as you want to lay out explicitly what the author(s) need to do. 
+- Common review turnaround times are 2-4weeks for clinical/health services journals, 1-2 months for longer form (e.g., economics).
+
+## More Resources
+
+- [A nice overview paper on peer review.](https://osf.io/fjue7/download) 
+- [Nature Masterclass on Peer Review](https://masterclasses.nature.com/online-course-on-peer-review/16507836)
+

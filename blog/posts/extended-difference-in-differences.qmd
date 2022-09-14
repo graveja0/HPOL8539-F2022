@@ -321,109 +321,10 @@ params6b=  list(
   bin = c(-5,5))
 ```
 
-```{r}
-#| echo: false
-#| eval: false
-
-###########################
-# PREPARE CASE STUDY DATA
-###########################
-
-
-params_es=  list(
-  descrip = "Common Treatment Time, Dynamic Treatment Effects",
-  mu = list("2014" = 0),
-  mu_t = list("2014" = 0.3),
-  tx = list("2014" = 1:25,
-            "NA" = 26:50),
-  bin = c(-5,5))
-
-set.seed(123456)
-df_es <- params_es %>% make_data(N = 2000,start = 2005,stop = 2022)
-df_es$truth %>% write_rds(here("ignore/eDID-case-study-data/ES-data_tr.rds"))
-# df <-  df_es$df %>% select(y_it = dep_var,  year, state, w_it = treat, x_i, x_it, unit, contains("rel_year")) 
-
-rel_names = grep("rel_year_",names(df_es$df),value=TRUE)
-rel_names <- rel_names[-grep("rel_year_NA",rel_names)]
-rel_order = as.numeric(gsub("rel_year_","",rel_names))
-rel_vars <-
-  cbind.data.frame(rel_names,rel_order) %>%
-  arrange(rel_order) %>%
-  mutate(rel_names = gsub("_-","_lag",rel_names)) %>% na.omit() %>%
-  mutate(bin1 = -5,
-         bin2 = 5) %>%
-  mutate(nrow_prebin = n()) %>%
-  filter(rel_order >= bin1  & rel_order<=bin2) %>%
-  filter(rel_order!=-1)
-
-df_es_final <- 
-  df_es$df %>%
-      mutate(group = ifelse(group=="NA",Inf,group)) %>%
-      select(-contains("rel_year")) %>% 
-      mutate(rel_year = year - group) %>% 
-      mutate(rel_year = ifelse(rel_year == -Inf, NA, rel_year)) %>% 
-      dummy_cols(select_columns = "rel_year") %>%
-      mutate(across(starts_with("rel_year_"), ~replace_na(., 0))) %>%
-      # generate pre and post dummies
-      mutate(pre = ifelse((rel_year < -5) * (!is.na(rel_year)), 1, 0),
-             post = ifelse((rel_year > 5) * (!is.na(rel_year)), 1, 0)) %>% 
-      mutate_at(vars(pre,post),~ifelse(is.na(rel_year),0,.)) %>% 
-      rename_at(vars(contains("rel_year_")),function(x) gsub("_-","_lag",x)) %>%
-      select(-contains("rel_year_NA")) %>% 
-  select(y_it = dep_var,  year, state, w_it = treat, x_i, x_it, unit,rel_year,rel_vars$rel_names,pre,post)   %>% 
-  select(-rel_year)
-
-df_es_final %>% write_rds(here("ignore/eDID-case-study-data/ES-data.rds"))
-
-# feols(y_it ~ pre + rel_year_lag5 + rel_year_lag4 + rel_year_lag3 + rel_year_lag2 + rel_year_0 + rel_year_1  + rel_year_2 + rel_year_3 + rel_year_4 + rel_year_5 + post + factor(year) | unit, data = df_es_final) %>% summary()
-
-# plot_data(df_es)
-# Extended Two-Way Fixd Effects
-
-params_cs =  list(
-  desc = "Case Study Params",
-  mu = list("2014" = 1,
-            "2015" = 0.5,
-            "2016" = 0),
-  mu_t = list("2014" = -.05,
-              "2015" = .1,
-              "2016" = .2),
-  tx = list("2014" = 1:17,
-            "2015" = 18:35,
-            "2016" = 36:50),
-  bin = c(-5,5))
-
-set.seed(123456)
-df_cs <- params_cs %>% make_data(N = 10000,start = 2012,stop = 2018)
-df_cs$truth %>% write_rds(here("ignore/eDID-case-study-data/eDID-data_tr.rds"))
-df_cs <- df_cs$df %>% select(y_it = dep_var,  year, state, w_it = treat, x_i, x_it, unit)
-
-d_star_cs <- 
-  df_cs %>% 
-  select(unit,year,w_it) %>% 
-  unique() %>% 
-  filter(w_it==1) %>% 
-  group_by(unit) %>% 
-  filter(year==min(year)) %>% 
-  select(-w_it) %>% 
-  rename(d = year) %>% 
-  dummy_cols("d") %>% 
-  select(unit,starts_with("d_"))
-
-df_final <- 
-  df_cs %>% 
-  select(unit,year,y_it,starts_with("x_i"),w_it) %>% 
-  left_join(d_star_cs,"unit") %>% 
-  mutate_at(vars(starts_with("d_")),~ifelse(is.na(.),0,.)) %>% 
-  dummy_cols("year",ignore_na=TRUE)
-
-
-df_final %>% write_rds(here("ignore/eDID-case-study-data/eDID-data.rds"))
-```
 
 # Data Setup
 
-::: {.column-screen}
+::: column-screen
 ```{r}
 #| echo: false
 #| warning: false
@@ -463,7 +364,7 @@ any_never_treated = max(never_treated$never_treated)==1
 any_never_treated
 ```
 
-### 2. Identify treatment cohorts (d*)
+### 2. Identify treatment cohorts (d\*)
 
 ```{r}
 d_star <- 
@@ -517,8 +418,7 @@ f_star %>%
   kable_styling()
 ```
 
-### 4. Define all cohort * post-treatment interactions
-
+### 4. Define all cohort \* post-treatment interactions
 
 ```{r}
 
@@ -577,7 +477,7 @@ crossing(d = as.numeric(gsub("d_","",grep("d_",colnames(d_star),value=TRUE))),f 
 ## Common Treatment Timing
 
 | Method                | Estimation Formula                              | Fixed or Random Effect |
-|------------------|------------------------------------|------------------|
+|-------------------|------------------------------------|-------------------|
 | Two-Way Fixed Effects | `feols(I(w : f*) + factor(time)  | unit)`       | Unit Fixed Effect      |
 | Pooled OLS            | `lm(I(w : f*) + factor(time) + d*)`             |                        |
 | Two-Way Mundlak       | `lmer(I(w : f*) + factor(time) + d* + (1|unit)` | Unit Random Effect     |
@@ -585,21 +485,18 @@ crossing(d = as.numeric(gsub("d_","",grep("d_",colnames(d_star),value=TRUE))),f 
 ## Staggered Treatment Timing
 
 | Method                | Estimation Formula                               | Fixed or Random Effect |
-|------------------|------------------------------------|------------------|
+|-------------------|------------------------------------|-------------------|
 | Two-Way Fixed Effects | `feols(I(d* : f*) + factor(time)  | unit)`       | Unit Fixed Effect      |
 | Pooled OLS            | `lm(I(d* : f*) + factor(time) + d*)`             |                        |
 | Two-Way Mundlak       | `lmer(I(d* : f*) + factor(time) + d* + (1|unit)` | Unit Random Effect     |
 
 ## Staggered Treatment Timing with Covariate(s)
 
-| Method                | Estimation Formula                               | Fixed or Random Effect |
-|------------------|------------------------------------|------------------|
-| Two-Way Fixed Effects | `feols(I(w : d* : f*) + I(w : d* : f* : x_dm_d*) + factor(time) + I(factor(time) * x_dm_d*) | unit)`       | Unit Fixed Effect      |
-| Pooled OLS            | `lm(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* + x + I(d* : x_dm_d*))`             |                        |
+| Method                | Estimation Formula                                                                                                                | Fixed or Random Effect |
+|-------------------|------------------------------------|-------------------|
+| Two-Way Fixed Effects | `feols(I(w : d* : f*) + I(w : d* : f* : x_dm_d*) + factor(time) + I(factor(time) * x_dm_d*) | unit)`                              | Unit Fixed Effect      |
+| Pooled OLS            | `lm(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* + x + I(d* : x_dm_d*))`              |                        |
 | Two-Way Mundlak       | `lmer(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* +  x + I(d* : x_dm_d*) + (1|unit)` | Unit Random Effect     |
-
-
-
 
 ```{r}
 #| message: false
@@ -624,7 +521,6 @@ tibble(method = c("TWFE","POLS","TWM"),
   cols_label("method" = "Estimator",
              "formula" = "Regression Call")
 ```
-
 
 # Results
 
@@ -856,14 +752,6 @@ gen_est_disc <- function(M,params,start = 1980, stop = 2015, rho_t = 0.8, N = 50
   })
 }
 
-plan(multisession,workers=parallel::detectCores()-1)
-res_cs <- 
-  with_progress({
-  gen_est_disc(1:2000,params = params_cs, N = 2000,start = 2012,stop = 2018)
-})
-
-res_cs  %>% write_rds(here("blog/posts/results/extended-did-params-cs.rds"))
-
 
 
 plan(multisession,workers=parallel::detectCores()-1)
@@ -930,8 +818,7 @@ res6b %>% write_rds(here("blog/posts/results/extended-did-params6b.rds"))
 
 ```
 
-
-::: {.column-screen}
+::: column-screen
 ```{r}
 #| echo: false
 #| warning: false
@@ -964,7 +851,7 @@ res3 %>%
 ```
 :::
 
-::: {.column-screen}
+::: column-screen
 ```{r}
 #| echo: false
 #| warning: false
@@ -997,8 +884,7 @@ res4a %>%
 ```
 :::
 
-
-::: {.column-screen}
+::: column-screen
 ```{r}
 #| echo: false
 #| warning: false
@@ -1031,8 +917,7 @@ res4b %>%
 ```
 :::
 
-
-::: {.column-screen}
+::: column-screen
 ```{r}
 #| echo: false
 #| warning: false
@@ -1065,8 +950,7 @@ res5 %>%
 ```
 :::
 
-
-::: {.column-screen}
+::: column-screen
 ```{r}
 #| echo: false
 #| warning: false
@@ -1099,8 +983,7 @@ res6 %>%
 ```
 :::
 
-
-::: {.column-screen}
+::: column-screen
 ```{r}
 #| echo: false
 #| warning: false
@@ -1247,4 +1130,3 @@ prepare_extended_did_data <- function(df,covariates = NULL) {
 }
 
 ```
-
