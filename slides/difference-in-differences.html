@@ -326,11 +326,6 @@
   <h1 class="title">Extending Difference-in-Differences</h1>
 </section>
 
-<section id="peer-review" class="slide level2">
-<h2>Peer Review</h2>
-<p><a href="https://www.scisnack.com/wp-content/uploads/2018/10/A-Peer-Review-Process-Guide.pdf">Good source</a></p>
-<p><a href="https://masterclasses.nature.com/online-course-on-peer-review/16507836">Nature Masterclass on Peer Review</a></p>
-</section>
 <section id="outline" class="slide level2">
 <h2>Outline</h2>
 <ol type="1">
@@ -706,7 +701,7 @@ y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 <section id="two-way-fixed-effects-did-estimator-1" class="slide level2">
 <h2>Two-Way Fixed Effects DID Estimator</h2>
 <p><span class="math display">\[
-y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
+Y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 \]</span></p>
 <ul>
 <li class="fragment"><p><span class="math inline">\(D_{it}\)</span> is a binary treatment indicator set to 1 if the individual is in the treated group and the the observation is in the post-treatment period.</p></li>
@@ -717,7 +712,7 @@ y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 <section id="two-way-fixed-effects-did-estimator-2" class="slide level2">
 <h2>Two-Way Fixed Effects DID Estimator</h2>
 <p><span class="math display">\[
-y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
+Y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 \]</span></p>
 <ul>
 <li class="fragment"><p>Can think of <span class="math inline">\(\delta_i = h(\mathbf{U_i})\)</span> and <span class="math inline">\(\gamma_t = f(\mathbf{V_t})\)</span>, where <span class="math inline">\(\mathbf{U_i}\)</span> are unit specific confounders and <span class="math inline">\(\mathbf{V_t}\)</span> are time-specific confounders that are common causes of the treatment and the outcome.</p></li>
@@ -727,7 +722,7 @@ y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 <section id="two-way-fixed-effects-did-estimator-3" class="slide level2">
 <h2>Two-Way Fixed Effects DID Estimator</h2>
 <p><span class="math display">\[
-y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
+Y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 \]</span></p>
 <ul>
 <li class="fragment"><p>While the model is assuming there are no <em>interactions</em> between confounders <span class="math inline">\(\mathbf{U_i}\)</span> and <span class="math inline">\(\mathbf{V_t}\)</span>, there are no functional form restrictions placed on <span class="math inline">\(h(.)\)</span> and <span class="math inline">\(f(.)\)</span>.</p></li>
@@ -1209,9 +1204,9 @@ y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 <div style="font-size: 0.6em">
 <table>
 <colgroup>
-<col style="width: 25%">
-<col style="width: 48%">
-<col style="width: 25%">
+<col style="width: 26%">
+<col style="width: 47%">
+<col style="width: 26%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -1246,9 +1241,9 @@ y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 <div style="font-size: 0.6em">
 <table>
 <colgroup>
-<col style="width: 25%">
-<col style="width: 48%">
-<col style="width: 25%">
+<col style="width: 26%">
+<col style="width: 47%">
+<col style="width: 26%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -1287,6 +1282,21 @@ y_{it} = \tau D_{it} + \delta_i + \gamma_t + \epsilon_{it}
 
 <img data-src="images/paste-4B6297C0.png" class="r-stretch"></section>
 <section id="results-relative-time" class="slide level2">
+<h2>Results: Relative Time</h2>
+<ul>
+<li class="fragment">You can also align each coefficient to its point in relative time.</li>
+<li class="fragment">For 1989 treated cohort, coefficient on <code>I(d_1989 * f_1989)</code> corresponds to <code>relative_time=0</code>.</li>
+<li class="fragment">For 1998 treated cohort, coefficient on <code>I(d_1998 * f_1998)</code> corresponds to <code>relative_time=0</code>.</li>
+</ul>
+</section>
+<section id="results-relative-time-1" class="slide level2">
+<h2>Results: Relative Time</h2>
+<ul>
+<li class="fragment">Once you get all treatment effect coefficients organized into relative time, you can take the average (across treated cohorts) at each time period.</li>
+<li class="fragment">Can plot these effect estimates (analogous to the event study plot from earlier).</li>
+</ul>
+</section>
+<section id="results-relative-time-2" class="slide level2">
 <h2>Results: Relative Time</h2>
 
 <img data-src="images/paste-304AD987.png" class="r-stretch"></section>

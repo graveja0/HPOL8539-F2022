@@ -207,7 +207,7 @@
     "href": "blog/drafts/post1.html#power",
     "title": "Using Simulation to Calculate Power and Minimum Detectable Effects",
     "section": "Power",
-    "text": "Power\n\nB = 1000\npower =\n    seq(100,1000,100) %>%\n    map(~(mc_replicate(B,est_power(modifyList(params,list(beta = .1,n=.x))),mc.cores=10))) %>%\n    map_dbl(~(mean(.x)))  %>%\n    data.frame(row.names = seq(100,1000,100)) %>%\n    rownames_to_column(var = \"N\") %>%\n    set_names(c(\"N\",\"power\")) %>%\n    as_tibble() %>%\n    mutate(N = as.numeric(paste0(N)))\npower %>% knitr::kable()\n\n\n\n\nN\npower\n\n\n\n\n100\n0.173\n\n\n200\n0.294\n\n\n300\n0.393\n\n\n400\n0.515\n\n\n500\n0.613\n\n\n600\n0.693\n\n\n700\n0.754\n\n\n800\n0.819\n\n\n900\n0.846\n\n\n1000\n0.896\n\n\n\n\npower %>%\n    ggplot(aes(x = N , y = power)) + geom_line() +\n    ggthemes::theme_few()"
+    "text": "Power\n\nB = 1000\npower =\n    seq(100,1000,100) %>%\n    map(~(mc_replicate(B,est_power(modifyList(params,list(beta = .1,n=.x))),mc.cores=10))) %>%\n    map_dbl(~(mean(.x)))  %>%\n    data.frame(row.names = seq(100,1000,100)) %>%\n    rownames_to_column(var = \"N\") %>%\n    set_names(c(\"N\",\"power\")) %>%\n    as_tibble() %>%\n    mutate(N = as.numeric(paste0(N)))\npower %>% knitr::kable()\n\n\n\n\nN\npower\n\n\n\n\n100\n0.159\n\n\n200\n0.287\n\n\n300\n0.431\n\n\n400\n0.515\n\n\n500\n0.590\n\n\n600\n0.680\n\n\n700\n0.744\n\n\n800\n0.806\n\n\n900\n0.861\n\n\n1000\n0.891\n\n\n\n\npower %>%\n    ggplot(aes(x = N , y = power)) + geom_line() +\n    ggthemes::theme_few()"
   },
   {
     "objectID": "blog/drafts/twfe-twm-and-did.html",
@@ -357,11 +357,109 @@
     "text": "Plot Data\n\n\n\n\n\n\n\n\nSource\nReview paper\nWooldridge"
   },
   {
-    "objectID": "slides/difference-in-differences.html#peer-review",
-    "href": "slides/difference-in-differences.html#peer-review",
-    "title": "Extending Difference-in-Differences",
-    "section": "Peer Review",
-    "text": "Peer Review\nGood source\nNature Masterclass on Peer Review"
+    "objectID": "slides/peer-review-assignment.html#peer-review-assigment",
+    "href": "slides/peer-review-assignment.html#peer-review-assigment",
+    "title": "Peer Review Assignment",
+    "section": "Peer Review Assigment",
+    "text": "Peer Review Assigment\n\nDue in roughly one month!\nIdea: Critique an unpublished working paper from NBER series, or from MedRxiv\nNext slides will provide an overview and structure of a “good” peer review.\nSource for material is here"
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#first-read-overview",
+    "href": "slides/peer-review-assignment.html#first-read-overview",
+    "title": "Peer Review Assignment",
+    "section": "First Read: Overview",
+    "text": "First Read: Overview\n\nDoes your expertise cover all aspects of the article? If not, describe which sections you can respond to and why?"
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#first-read-overview-1",
+    "href": "slides/peer-review-assignment.html#first-read-overview-1",
+    "title": "Peer Review Assignment",
+    "section": "First Read: Overview",
+    "text": "First Read: Overview\n\n\n“Mirror” the article. Make a first draft describing the main aim of the article and why it’s innovative.\n\nThink of this as an opportunity to summarize what you think the thrust of the study is about. It provides the author & editor with an opportunity to see another “abstract”—are the reviewers primary takeways the same as the author?"
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#second-read-the-science",
+    "href": "slides/peer-review-assignment.html#second-read-the-science",
+    "title": "Peer Review Assignment",
+    "section": "Second Read: The Science",
+    "text": "Second Read: The Science\n\nFor the rest of the review, try and separate your points into “Major” or “Minor” issues and/or suggestions. Using bullet points can help the author(s) keep track when responding to your review."
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#second-read-the-science-1",
+    "href": "slides/peer-review-assignment.html#second-read-the-science-1",
+    "title": "Peer Review Assignment",
+    "section": "Second Read: The Science",
+    "text": "Second Read: The Science\n\nDo the Introduction and Abstract clearly identify the need and relevance for this research?"
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#second-read-the-science-2",
+    "href": "slides/peer-review-assignment.html#second-read-the-science-2",
+    "title": "Peer Review Assignment",
+    "section": "Second Read: The Science",
+    "text": "Second Read: The Science\n\nDoes the Methodology target the main question(s) appropriately?"
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#second-read-the-science-3",
+    "href": "slides/peer-review-assignment.html#second-read-the-science-3",
+    "title": "Peer Review Assignment",
+    "section": "Second Read: The Science",
+    "text": "Second Read: The Science\n\nAre the Results clearly and logically presented, and are they justified by the data presented?\nAre the figures clear and fully described?"
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#second-read-the-science-4",
+    "href": "slides/peer-review-assignment.html#second-read-the-science-4",
+    "title": "Peer Review Assignment",
+    "section": "Second Read: The Science",
+    "text": "Second Read: The Science\n\nDo the Conclusions justifiably respond to main questions the author(s) posed?\nDo the Conclusions go too far or not far enough based on the results?"
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#second-read-the-science-5",
+    "href": "slides/peer-review-assignment.html#second-read-the-science-5",
+    "title": "Peer Review Assignment",
+    "section": "Second Read: The Science",
+    "text": "Second Read: The Science\n\nIs the manuscript’s story cohesive and tightly reasoned throughout?\nIf not, where does it deviate from the central argument?"
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#final-review-report",
+    "href": "slides/peer-review-assignment.html#final-review-report",
+    "title": "Peer Review Assignment",
+    "section": "Final Review Report",
+    "text": "Final Review Report\nCompile your responses to the points above into a single document. Here is a suggested order for your review."
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#final-review-report-1",
+    "href": "slides/peer-review-assignment.html#final-review-report-1",
+    "title": "Peer Review Assignment",
+    "section": "Final Review Report",
+    "text": "Final Review Report\n1. Introduction\n\nMirror the article, your expertise and whether the paper is publishable or if there are fatal flaws\nInclude a short list of the paper’s key strengths and weaknesses."
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#final-review-report-2",
+    "href": "slides/peer-review-assignment.html#final-review-report-2",
+    "title": "Peer Review Assignment",
+    "section": "Final Review Report",
+    "text": "Final Review Report\n2. Major issues\n\nIf there is a major issue you believe must be addressed in revision, note that explicitly here."
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#final-review-report-3",
+    "href": "slides/peer-review-assignment.html#final-review-report-3",
+    "title": "Peer Review Assignment",
+    "section": "Final Review Report",
+    "text": "Final Review Report\n3. Minor issues and other suggestions.\n\nThis could include some specification checks or additions to supplementary material you think might be useful.\nIt could include some exploratory comments (‘you might try..’) and/or suggestions"
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#final-comments",
+    "href": "slides/peer-review-assignment.html#final-comments",
+    "title": "Peer Review Assignment",
+    "section": "Final Comments",
+    "text": "Final Comments\n\nIt is common to receive 1-2pp reviews.\n“Borderline” reviews (i.e., peer review of a study that would need a lot of work to accept) often run longer, as you want to lay out explicitly what the author(s) need to do.\nCommon review turnaround times are 2-4weeks for clinical/health services journals, 1-2 months for longer form (e.g., economics)."
+  },
+  {
+    "objectID": "slides/peer-review-assignment.html#more-resources",
+    "href": "slides/peer-review-assignment.html#more-resources",
+    "title": "Peer Review Assignment",
+    "section": "More Resources",
+    "text": "More Resources\n\nA nice overview paper on peer review.\nNature Masterclass on Peer Review\n\n\n\nBack to Website"
   },
   {
     "objectID": "slides/difference-in-differences.html#outline",
@@ -508,21 +606,21 @@
     "href": "slides/difference-in-differences.html#two-way-fixed-effects-did-estimator-1",
     "title": "Extending Difference-in-Differences",
     "section": "Two-Way Fixed Effects DID Estimator",
-    "text": "Two-Way Fixed Effects DID Estimator\n\\[\ny_{it} = \\tau D_{it} + \\delta_i + \\gamma_t + \\epsilon_{it}\n\\]\n\n\\(D_{it}\\) is a binary treatment indicator set to 1 if the individual is in the treated group and the the observation is in the post-treatment period.\n\\(\\delta_i\\) and \\(\\gamma_t\\) are unit and time fixed effects, respectively.\nInclusion of unit and time fixed effects flexibly accounts for both unit-specific (but time-invariant) and time-specific (but unit-invariant) unobserved confounders."
+    "text": "Two-Way Fixed Effects DID Estimator\n\\[\nY_{it} = \\tau D_{it} + \\delta_i + \\gamma_t + \\epsilon_{it}\n\\]\n\n\\(D_{it}\\) is a binary treatment indicator set to 1 if the individual is in the treated group and the the observation is in the post-treatment period.\n\\(\\delta_i\\) and \\(\\gamma_t\\) are unit and time fixed effects, respectively.\nInclusion of unit and time fixed effects flexibly accounts for both unit-specific (but time-invariant) and time-specific (but unit-invariant) unobserved confounders."
   },
   {
     "objectID": "slides/difference-in-differences.html#two-way-fixed-effects-did-estimator-2",
     "href": "slides/difference-in-differences.html#two-way-fixed-effects-did-estimator-2",
     "title": "Extending Difference-in-Differences",
     "section": "Two-Way Fixed Effects DID Estimator",
-    "text": "Two-Way Fixed Effects DID Estimator\n\\[\ny_{it} = \\tau D_{it} + \\delta_i + \\gamma_t + \\epsilon_{it}\n\\]\n\nCan think of \\(\\delta_i = h(\\mathbf{U_i})\\) and \\(\\gamma_t = f(\\mathbf{V_t})\\), where \\(\\mathbf{U_i}\\) are unit specific confounders and \\(\\mathbf{V_t}\\) are time-specific confounders that are common causes of the treatment and the outcome.\n\\(h(.)\\) and \\(f(.)\\) are arbitrary functions that we do not necessarily know the structure of."
+    "text": "Two-Way Fixed Effects DID Estimator\n\\[\nY_{it} = \\tau D_{it} + \\delta_i + \\gamma_t + \\epsilon_{it}\n\\]\n\nCan think of \\(\\delta_i = h(\\mathbf{U_i})\\) and \\(\\gamma_t = f(\\mathbf{V_t})\\), where \\(\\mathbf{U_i}\\) are unit specific confounders and \\(\\mathbf{V_t}\\) are time-specific confounders that are common causes of the treatment and the outcome.\n\\(h(.)\\) and \\(f(.)\\) are arbitrary functions that we do not necessarily know the structure of."
   },
   {
     "objectID": "slides/difference-in-differences.html#two-way-fixed-effects-did-estimator-3",
     "href": "slides/difference-in-differences.html#two-way-fixed-effects-did-estimator-3",
     "title": "Extending Difference-in-Differences",
     "section": "Two-Way Fixed Effects DID Estimator",
-    "text": "Two-Way Fixed Effects DID Estimator\n\\[\ny_{it} = \\tau D_{it} + \\delta_i + \\gamma_t + \\epsilon_{it}\n\\]\n\nWhile the model is assuming there are no interactions between confounders \\(\\mathbf{U_i}\\) and \\(\\mathbf{V_t}\\), there are no functional form restrictions placed on \\(h(.)\\) and \\(f(.)\\).\nSo the model is only making assumptions on the additivity and separability of unobserved confounders.\nSource: Imai and Kim"
+    "text": "Two-Way Fixed Effects DID Estimator\n\\[\nY_{it} = \\tau D_{it} + \\delta_i + \\gamma_t + \\epsilon_{it}\n\\]\n\nWhile the model is assuming there are no interactions between confounders \\(\\mathbf{U_i}\\) and \\(\\mathbf{V_t}\\), there are no functional form restrictions placed on \\(h(.)\\) and \\(f(.)\\).\nSo the model is only making assumptions on the additivity and separability of unobserved confounders.\nSource: Imai and Kim"
   },
   {
     "objectID": "slides/difference-in-differences.html#two-way-fixed-effects-did-estimator-4",
@@ -723,6 +821,20 @@
   {
     "objectID": "slides/difference-in-differences.html#results-relative-time",
     "href": "slides/difference-in-differences.html#results-relative-time",
+    "title": "Extending Difference-in-Differences",
+    "section": "Results: Relative Time",
+    "text": "Results: Relative Time\n\nYou can also align each coefficient to its point in relative time.\nFor 1989 treated cohort, coefficient on I(d_1989 * f_1989) corresponds to relative_time=0.\nFor 1998 treated cohort, coefficient on I(d_1998 * f_1998) corresponds to relative_time=0."
+  },
+  {
+    "objectID": "slides/difference-in-differences.html#results-relative-time-1",
+    "href": "slides/difference-in-differences.html#results-relative-time-1",
+    "title": "Extending Difference-in-Differences",
+    "section": "Results: Relative Time",
+    "text": "Results: Relative Time\n\nOnce you get all treatment effect coefficients organized into relative time, you can take the average (across treated cohorts) at each time period.\nCan plot these effect estimates (analogous to the event study plot from earlier)."
+  },
+  {
+    "objectID": "slides/difference-in-differences.html#results-relative-time-2",
+    "href": "slides/difference-in-differences.html#results-relative-time-2",
     "title": "Extending Difference-in-Differences",
     "section": "Results: Relative Time",
     "text": "Results: Relative Time"
