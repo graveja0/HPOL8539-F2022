@@ -7,6 +7,7 @@
     "listing": "/blog/index.html",
     "items": [
       "/blog/posts/extended-difference-in-differences.html",
+      "/blog/posts/a-comparison-of-difference-in-difference-estimators.html",
       "/blog/posts/quasi-demeaning.html"
     ]
   },

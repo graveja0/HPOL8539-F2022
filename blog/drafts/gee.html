@@ -173,6 +173,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <a href="../../slides/difference-in-differences.html" class="sidebar-item-text sidebar-link">Extending Difference-in-Differences</a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/next-gen-DID.html" class="sidebar-item-text sidebar-link">NextGen Difference-in-Differences Estimators</a>
+  </div>
+</li>
       </ul>
   </li>
         <li class="sidebar-item sidebar-item-section">
@@ -191,6 +196,11 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="https://graves-vanderbilt.shinyapps.io/HPOL8539-panel-data-1/" class="sidebar-item-text sidebar-link">2. Panel Data Methods I - Fixed, Random and Correlated Random Effects</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://graves-vanderbilt.shinyapps.io/NextGenDID/" class="sidebar-item-text sidebar-link">4. NextGen DID</a>
   </div>
 </li>
       </ul>
@@ -278,15 +288,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<p><a href="https://data.library.virginia.edu/getting-started-with-generalized-estimating-equations/">Source</a></p>
+<p><a href="https://data.library.virginia.edu/getting-started-with-generalized-estimating-equations/">Source</a> <a href="https://journals.lww.com/epidem/Fulltext/2010/07000/To_GEE_or_Not_to_GEE__Comparing_Population_Average.7.aspx">Nice comparison with RE</a> <a href="https://www.goldsteinepi.com/blog/multilevelandlongitudinalmodelingapproaches/index.html">Another nice resource</a> <a href="https://www4.stat.ncsu.edu/~davidian/st732/notes.html">A course on these topics</a> <a href="https://www.researchgate.net/post/When_do_you_apply_GLMM_vs_GEE">Nice discussion</a> <a href="https://www.researchgate.net/profile/Stefanie-Muff/post/When_do_you_apply_GLMM_vs_GEE/attachment/5ae029764cde260d15dac6e2/AS%3A619199688880152%401524640118960/download/MarginalConditional_2016_MEE.pdf">Another nice paper comparing RE and GEE</a></p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>── Attaching packages ─────────────────────────────────────── tidyverse 1.3.2 ──
-✔ ggplot2 3.3.6     ✔ purrr   0.3.4
-✔ tibble  3.1.8     ✔ dplyr   1.0.9
-✔ tidyr   1.2.0     ✔ stringr 1.4.1
-✔ readr   2.1.2     ✔ forcats 0.5.2
+✔ ggplot2 3.3.6      ✔ purrr   0.3.4 
+✔ tibble  3.1.8      ✔ dplyr   1.0.10
+✔ tidyr   1.2.1      ✔ stringr 1.4.1 
+✔ readr   2.1.2      ✔ forcats 0.5.2 
 ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ✖ dplyr::filter() masks stats::filter()
 ✖ dplyr::lag()    masks stats::lag()</code></pre>
