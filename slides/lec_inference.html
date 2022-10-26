@@ -348,7 +348,7 @@
 <div class="cell">
 
 </div>
-<div class="cell" data-hash="lec_inference_cache/revealjs/unnamed-chunk-2_db3779e97d3320327932091602d6b33b">
+<div class="cell" data-hash="lec_inference_cache/revealjs/unnamed-chunk-2_bfe0fa90956a8213b115ba0cf0f9cfdd">
 
 </div>
 </section>
@@ -410,13 +410,13 @@
 <div class="r-hstack">
 <div class="r-stack">
 <div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
-<p>Generate</p>
+
 </div>
 <div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
-<p>Estimate</p>
+
 </div>
 <div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
-<p>Discriminate</p>
+
 </div>
 </div>
 <div class="r-stack">
@@ -605,7 +605,7 @@
 </section>
 <section id="inference-framework-5" class="slide level2">
 <h2>Inference Framework</h2>
-<p>This leads to the following perennial questions:</p>
+<p>This leads to the following frequently-asked questions:</p>
 <div>
 <ol type="1">
 <li class="fragment">Should we use robust standard errors?</li>
@@ -614,8 +614,8 @@
 </ol>
 </div>
 </section>
-<section id="four-questions-you-should-always-ask" class="slide level2">
-<h2>Four Questions You Should Always Ask</h2>
+<section id="four-questions-you-should-ask" class="slide level2">
+<h2>Four Questions You Should Ask</h2>
 <div>
 <ul>
 <li class="fragment">How were the data sampled?</li>
@@ -627,8 +627,8 @@
 </ul>
 </div>
 </section>
-<section id="four-questions-you-should-always-ask-1" class="slide level2">
-<h2>Four Questions You Should Always Ask</h2>
+<section id="four-questions-you-should-ask-1" class="slide level2">
+<h2>Four Questions You Should Ask</h2>
 <div>
 <ul>
 <li class="fragment">If you can answer these questions there is a clear pathway to conducting inference—though note that multiple pathways may exist!</li>
@@ -654,12 +654,6 @@
 </div>
 </section>
 <section id="sampling-uncertainty-2" class="slide level2">
-<h2>Sampling Uncertainty</h2>
-<ul>
-<li>Ideally, each observation in a sample would contribute an equal amount of information about the parameters of interest.</li>
-</ul>
-</section>
-<section id="sampling-uncertainty-3" class="slide level2">
 <h2>Sampling Uncertainty</h2>
 <div>
 <ul>
@@ -733,6 +727,56 @@
 <section id="section-3" class="slide level2" data-background-image="media/clustering-framework-RR.png" data-background-size="contain">
 <h2></h2>
 </section>
+<section id="example" class="slide level2">
+<h2>Example</h2>
+<div>
+<ul>
+<li class="fragment">Basic 2x2 difference-in-difference design with null ATT <span class="math inline">\(\tau=0\)</span>.</li>
+<li class="fragment">Run a linear OLS DID specification for two time periods (pre vs.&nbsp;post)</li>
+<li class="fragment">Vary sampling design and assignment mechanisms.</li>
+</ul>
+</div>
+</section>
+<section id="did-example" class="slide level2">
+<h2>DID Example</h2>
+<div class="cell" data-hash="lec_inference_cache/revealjs/unnamed-chunk-3_f2eec791bb24f5642c2010713f0a7a57">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>Inference under random sampling and random assignment</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Method </th>
+   <th style="text-align:right;"> Coefficient </th>
+   <th style="text-align:right;"> SE </th>
+   <th style="text-align:right;"> p-value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Classic Inference </td>
+   <td style="text-align:right;"> -0.022 </td>
+   <td style="text-align:right;"> 0.019 </td>
+   <td style="text-align:right;"> 0.259 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Robust </td>
+   <td style="text-align:right;"> -0.022 </td>
+   <td style="text-align:right;"> 0.019 </td>
+   <td style="text-align:right;"> 0.259 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Clustered </td>
+   <td style="text-align:right;"> -0.022 </td>
+   <td style="text-align:right;"> 0.021 </td>
+   <td style="text-align:right;"> 0.308 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</section>
 <section id="section-4" class="slide level2" data-background-image="media/clustering-framework-RR-CR.png" data-background-size="contain">
 <h2></h2>
 </section>
@@ -752,8 +796,38 @@
 </ul>
 </div>
 </section>
-<section id="cluster-sampling-random-assignment-3" class="slide level2 smaller">
-<h2>Cluster Sampling, Random Assignment</h2>
+<section id="cluster-sampling-random-assignment-3" class="slide level2 smaller" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Cluster Sampling, Random Assignment</h2>
+<p><strong>Scenario</strong>: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.</p>
+<div>
+<ul>
+<li class="fragment"><span class="math inline">\(q_k\)</span> is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5).</li>
+<li class="fragment"><span class="math inline">\(p_k\)</span> is the fraction of the population sampled.</li>
+</ul>
+</div>
+<p>Source: <span class="citation" data-cites="abadieWhenShouldYou2022a">Abadie et al. (<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">2022</a>)</span></p>
+</section>
+<section id="cluster-sampling-random-assignment-4" class="slide level2 smaller" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Cluster Sampling, Random Assignment</h2>
+<p><strong>Scenario</strong>: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.</p>
+<div class="callout callout-tip callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>If <span class="math inline">\(q_k\)</span> small or if <span class="math inline">\(q_k\)</span> large but <span class="math inline">\(p_k\)</span> small, clustered standard errors are asymptotically correct (with large # of clusters).</p>
+</div>
+</div>
+</div>
+<ul>
+<li><span class="math inline">\(q_k\)</span> is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5).</li>
+<li><span class="math inline">\(p_k\)</span> is the fraction of the population sampled.</li>
+</ul>
+<p>Source: <span class="citation" data-cites="abadieWhenShouldYou2022a">Abadie et al. (<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">2022</a>)</span></p>
+</section>
+<section id="cluster-sampling-random-assignment-5" class="slide level2 smaller" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Cluster Sampling, Random Assignment</h2>
 <p><strong>Scenario</strong>: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.</p>
 <div class="callout callout-tip callout-style-simple">
 <div class="callout-body">
@@ -775,13 +849,99 @@
 </div>
 </div>
 </div>
-<div>
 <ul>
-<li class="fragment"><span class="math inline">\(q_k\)</span> is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5).</li>
-<li class="fragment"><span class="math inline">\(p_k\)</span> is the fraction of the population sampled.</li>
+<li><span class="math inline">\(q_k\)</span> is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5).</li>
+<li><span class="math inline">\(p_k\)</span> is the fraction of the population sampled.</li>
 </ul>
-</div>
 <p>Source: <span class="citation" data-cites="abadieWhenShouldYou2022a">Abadie et al. (<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">2022</a>)</span></p>
+</section>
+<section id="did-example-1" class="slide level2">
+<h2>DID Example</h2>
+<div class="callout callout-tip callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>If <span class="math inline">\(q_k\)</span> small or if <span class="math inline">\(q_k\)</span> large but <span class="math inline">\(p_k\)</span> small, clustered standard errors are asymptotically correct (with large # of clusters).</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>Inference under cluster (30/50) sampling and random assignment</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Method </th>
+   <th style="text-align:right;"> Coefficient </th>
+   <th style="text-align:right;"> SE </th>
+   <th style="text-align:right;"> p-value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Robust </td>
+   <td style="text-align:right;"> -0.021 </td>
+   <td style="text-align:right;"> 0.019 </td>
+   <td style="text-align:right;"> 0.259 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Clustered </td>
+   <td style="text-align:right;"> -0.021 </td>
+   <td style="text-align:right;"> 0.023 </td>
+   <td style="text-align:right;"> 0.355 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</section>
+<section id="did-example-2" class="slide level2">
+<h2>DID Example</h2>
+<div class="callout callout-important callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach. More later!</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>Inference under cluster (10/50) sampling and random assignment</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Method </th>
+   <th style="text-align:right;"> Coefficient </th>
+   <th style="text-align:right;"> SE </th>
+   <th style="text-align:right;"> p-value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Robust </td>
+   <td style="text-align:right;"> 0.01 </td>
+   <td style="text-align:right;"> 0.015 </td>
+   <td style="text-align:right;"> 0.518 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Clustered </td>
+   <td style="text-align:right;"> 0.01 </td>
+   <td style="text-align:right;"> 0.010 </td>
+   <td style="text-align:right;"> 0.349 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
 </section>
 <section id="section-5" class="slide level2" data-background-image="media/clustering-framework-RC.png" data-background-size="contain">
 <h2></h2>
@@ -818,43 +978,43 @@
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:right;"> 856060 </td>
-   <td style="text-align:right;"> 41 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 1.74 </td>
-   <td style="text-align:left;"> 1.74 </td>
-   <td style="text-align:left;"> ? </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 739098 </td>
-   <td style="text-align:right;"> 37 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 1.22 </td>
-   <td style="text-align:left;"> 1.22 </td>
-   <td style="text-align:left;"> ? </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 277455 </td>
-   <td style="text-align:right;"> 18 </td>
+   <td style="text-align:right;"> 843943 </td>
+   <td style="text-align:right;"> 44 </td>
    <td style="text-align:right;"> 0 </td>
-   <td style="text-align:right;"> 1.85 </td>
+   <td style="text-align:right;"> 0.66 </td>
    <td style="text-align:left;"> ? </td>
-   <td style="text-align:left;"> 1.85 </td>
+   <td style="text-align:left;"> 0.66 </td>
   </tr>
   <tr>
-   <td style="text-align:right;"> 114550 </td>
-   <td style="text-align:right;"> 3 </td>
-   <td style="text-align:right;"> 0 </td>
-   <td style="text-align:right;"> 1.31 </td>
-   <td style="text-align:left;"> ? </td>
-   <td style="text-align:left;"> 1.31 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 891143 </td>
-   <td style="text-align:right;"> 41 </td>
+   <td style="text-align:right;"> 726814 </td>
+   <td style="text-align:right;"> 32 </td>
    <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 1.49 </td>
-   <td style="text-align:left;"> 1.49 </td>
+   <td style="text-align:right;"> 0.93 </td>
+   <td style="text-align:left;"> 0.93 </td>
+   <td style="text-align:left;"> ? </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 265572 </td>
+   <td style="text-align:right;"> 10 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> -1.65 </td>
+   <td style="text-align:left;"> ? </td>
+   <td style="text-align:left;"> -1.65 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 105153 </td>
+   <td style="text-align:right;"> 6 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> -1.54 </td>
+   <td style="text-align:left;"> -1.54 </td>
+   <td style="text-align:left;"> ? </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 885526 </td>
+   <td style="text-align:right;"> 44 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 0.09 </td>
+   <td style="text-align:left;"> 0.09 </td>
    <td style="text-align:left;"> ? </td>
   </tr>
 </tbody>
@@ -907,6 +1067,44 @@
 </div>
 <p>Source: <span class="citation" data-cites="abadieWhenShouldYou2022a">Abadie et al. (<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">2022</a>)</span></p>
 </section>
+<section id="did-example-3" class="slide level2">
+<h2>DID Example</h2>
+<ul>
+<li>Random sampling of population</li>
+<li>All 50 state clusters observed</li>
+<li>Treatment perfectly correlated with cluster</li>
+</ul>
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Method </th>
+   <th style="text-align:right;"> Coefficient </th>
+   <th style="text-align:right;"> SE </th>
+   <th style="text-align:right;"> p-value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Robust </td>
+   <td style="text-align:right;"> -0.431 </td>
+   <td style="text-align:right;"> 0.019 </td>
+   <td style="text-align:right;"> 0.000 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Clustered </td>
+   <td style="text-align:right;"> -0.431 </td>
+   <td style="text-align:right;"> 0.339 </td>
+   <td style="text-align:right;"> 0.209 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</section>
 <section id="random-sampling-clustered-assignment-2" class="slide level2 smaller">
 <h2>Random Sampling, Clustered Assignment</h2>
 <p><strong>Scenario</strong>: Random sample of units from a large population with partially or fully clustered treatment assignment.</p>
@@ -938,30 +1136,6 @@
 <section id="bootstrap-inference-1" class="slide level2" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
 <h2 data-id="quarto-animate-title">Bootstrap Inference</h2>
 <p>Back to basics:</p>
-<div class="r-hstack">
-<div data-id="generate" data-auto-animate-delay="0" style="background: #2780e3; width: 200px; height: 150px; margin: 10px;">
-<p>Generate</p>
-</div>
-<div data-id="estimate" data-auto-animate-delay="0.1" style="background: #3fb618; width: 200px; height: 150px; margin: 10px;">
-<p>Estimate</p>
-</div>
-<div data-id="discriminate" data-auto-animate-delay="0.2" style="background: #e83e8c; width: 200px; height: 150px; margin: 10px;">
-<p>Discriminate</p>
-</div>
-</div>
-</section>
-<section id="bootstrap-inference-2" class="slide level2">
-<h2>Bootstrap Inference</h2>
-<div>
-<ul>
-<li class="fragment"><p>In practice, we don’t control the data generation process.</p></li>
-<li class="fragment"><p>Idea of bootstrap is to</p></li>
-</ul>
-</div>
-</section>
-<section id="bootstrap-inference-3" class="slide level2" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
-<h2 data-id="quarto-animate-title">Bootstrap Inference</h2>
-<p>Back to basics:</p>
 <div class="r-stack">
 <div data-id="generate" style="background: #2780e3; width: 350px; height: 350px; border-radius: 200px;">
 <p>Generate</p>
@@ -974,7 +1148,7 @@
 </div>
 </div>
 </section>
-<section id="bootstrap-inference-4" class="slide level2" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<section id="bootstrap-inference-2" class="slide level2" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
 <h2 data-id="quarto-animate-title">Bootstrap Inference</h2>
 <ul>
 <li>Basic idea is to generate a large number of bootstrap samples that mimic the distribution from which the actual sample was obtained <span class="citation" data-cites="roodmanFastWildBootstrap2019">(<a href="#/ref-roodmanFastWildBootstrap2019" role="doc-biblioref" onclick="return false;">Roodman et al. 2019</a>)</span>.</li>
@@ -991,18 +1165,18 @@
 </div>
 </div>
 </section>
-<section id="bootstrap-inference-5" class="slide level2">
+<section id="bootstrap-inference-3" class="slide level2">
 <h2>Bootstrap Inference</h2>
 <div class="r-hstack">
 <div class="r-stack">
 <div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
-<p>Bootstrap</p>
+
 </div>
 <div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
-<p>Estimate</p>
+
 </div>
 <div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
-<p>Discriminate</p>
+
 </div>
 </div>
 <div class="r-stack">
@@ -1132,7 +1306,7 @@
 </div>
 </div>
 </section>
-<section id="bootstrap-inference-6" class="slide level2">
+<section id="bootstrap-inference-4" class="slide level2">
 <h2>Bootstrap Inference</h2>
 <div>
 <ul>
@@ -1142,7 +1316,7 @@
 </ul>
 </div>
 </section>
-<section id="bootstrap-inference-7" class="slide level2">
+<section id="bootstrap-inference-5" class="slide level2">
 <h2>Bootstrap Inference</h2>
 <div>
 <ul>
@@ -1166,8 +1340,22 @@
 </ul>
 </div>
 </section>
-<section id="clustered-assignment" class="slide level2 smaller">
-<h2>Clustered Assignment</h2>
+<section id="clustered-assignment" class="slide level2 smaller" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Clustered Assignment</h2>
+<p><strong>Scenario</strong>: Random or clustered sample of units from a large population with <strong>fully</strong> clustered treatment assignment.</p>
+<div class="callout callout-tip callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>If assignment is perfectly clustered, <strong>and you observe a large number of clusters</strong>, use standard cluster adjustment.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="clustered-assignment-1" class="slide level2 smaller" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Clustered Assignment</h2>
 <p><strong>Scenario</strong>: Random or clustered sample of units from a large population with <strong>fully</strong> clustered treatment assignment.</p>
 <div class="callout callout-tip callout-style-simple">
 <div class="callout-body">
@@ -1191,7 +1379,7 @@
 </div>
 </div>
 </section>
-<section id="clustered-assignment-1" class="slide level2">
+<section id="clustered-assignment-2" class="slide level2">
 <h2>Clustered Assignment</h2>
 <div class="columns">
 <div class="column">
@@ -1212,46 +1400,117 @@
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:right;"> 301827 </td>
-   <td style="text-align:right;"> 20 </td>
-   <td style="text-align:right;"> 4.42 </td>
+   <td style="text-align:right;"> 309733 </td>
+   <td style="text-align:right;"> 13 </td>
+   <td style="text-align:right;"> -0.58 </td>
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:right;"> 516605 </td>
-   <td style="text-align:right;"> 27 </td>
-   <td style="text-align:right;"> 2.10 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 1 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 446703 </td>
-   <td style="text-align:right;"> 27 </td>
-   <td style="text-align:right;"> 2.42 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 1 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 311899 </td>
-   <td style="text-align:right;"> 21 </td>
-   <td style="text-align:right;"> 1.61 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 1 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 855473 </td>
-   <td style="text-align:right;"> 41 </td>
-   <td style="text-align:right;"> 0.69 </td>
-   <td style="text-align:right;"> 1 </td>
-   <td style="text-align:right;"> 1 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 937654 </td>
-   <td style="text-align:right;"> 46 </td>
-   <td style="text-align:right;"> 1.38 </td>
+   <td style="text-align:right;"> 498850 </td>
+   <td style="text-align:right;"> 26 </td>
+   <td style="text-align:right;"> -1.13 </td>
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 418742 </td>
+   <td style="text-align:right;"> 22 </td>
+   <td style="text-align:right;"> -1.64 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 385360 </td>
+   <td style="text-align:right;"> 19 </td>
+   <td style="text-align:right;"> -1.39 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 603293 </td>
+   <td style="text-align:right;"> 28 </td>
+   <td style="text-align:right;"> -0.94 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 998667 </td>
+   <td style="text-align:right;"> 50 </td>
+   <td style="text-align:right;"> -0.99 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section id="clustered-assignment-3" class="slide level2">
+<h2>Clustered Assignment</h2>
+<div class="columns">
+<div class="column">
+<p>Treatment perfectly correlated with cluster:</p>
+<div style="font-size: 0.5em">
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:right;"> unit_id </th>
+   <th style="text-align:right;"> cluster </th>
+   <th style="text-align:right;"> y_i </th>
+   <th style="text-align:right;"> pr_treated </th>
+   <th style="text-align:right;"> w_i </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:right;"> 309733 </td>
+   <td style="text-align:right;"> 13 </td>
+   <td style="text-align:right;"> -0.58 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 498850 </td>
+   <td style="text-align:right;"> 26 </td>
+   <td style="text-align:right;"> -1.13 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 418742 </td>
+   <td style="text-align:right;"> 22 </td>
+   <td style="text-align:right;"> -1.64 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 385360 </td>
+   <td style="text-align:right;"> 19 </td>
+   <td style="text-align:right;"> -1.39 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 603293 </td>
+   <td style="text-align:right;"> 28 </td>
+   <td style="text-align:right;"> -0.94 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 998667 </td>
+   <td style="text-align:right;"> 50 </td>
+   <td style="text-align:right;"> -0.99 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1 </td>
   </tr>
 </tbody>
 </table>
@@ -1277,46 +1536,46 @@
  </thead>
 <tbody>
   <tr>
-   <td style="text-align:right;"> 203240 </td>
-   <td style="text-align:right;"> 11 </td>
-   <td style="text-align:right;"> 4.96 </td>
-   <td style="text-align:right;"> 0.49 </td>
-   <td style="text-align:right;"> 0 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 311906 </td>
-   <td style="text-align:right;"> 21 </td>
-   <td style="text-align:right;"> 1.69 </td>
-   <td style="text-align:right;"> 0.55 </td>
+   <td style="text-align:right;"> 309733 </td>
+   <td style="text-align:right;"> 13 </td>
+   <td style="text-align:right;"> -0.58 </td>
+   <td style="text-align:right;"> 0.47 </td>
    <td style="text-align:right;"> 1 </td>
   </tr>
   <tr>
-   <td style="text-align:right;"> 308935 </td>
-   <td style="text-align:right;"> 21 </td>
-   <td style="text-align:right;"> 1.45 </td>
-   <td style="text-align:right;"> 0.55 </td>
-   <td style="text-align:right;"> 1 </td>
-  </tr>
-  <tr>
-   <td style="text-align:right;"> 248407 </td>
-   <td style="text-align:right;"> 14 </td>
-   <td style="text-align:right;"> -0.44 </td>
-   <td style="text-align:right;"> 0.54 </td>
+   <td style="text-align:right;"> 498850 </td>
+   <td style="text-align:right;"> 26 </td>
+   <td style="text-align:right;"> -1.13 </td>
+   <td style="text-align:right;"> 0.48 </td>
    <td style="text-align:right;"> 0 </td>
   </tr>
   <tr>
-   <td style="text-align:right;"> 717495 </td>
-   <td style="text-align:right;"> 36 </td>
-   <td style="text-align:right;"> 2.09 </td>
-   <td style="text-align:right;"> 0.37 </td>
-   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 418742 </td>
+   <td style="text-align:right;"> 22 </td>
+   <td style="text-align:right;"> -1.64 </td>
+   <td style="text-align:right;"> 0.44 </td>
+   <td style="text-align:right;"> 1 </td>
   </tr>
   <tr>
-   <td style="text-align:right;"> 992037 </td>
-   <td style="text-align:right;"> 49 </td>
-   <td style="text-align:right;"> 0.99 </td>
-   <td style="text-align:right;"> 0.68 </td>
+   <td style="text-align:right;"> 385360 </td>
+   <td style="text-align:right;"> 19 </td>
+   <td style="text-align:right;"> -1.39 </td>
+   <td style="text-align:right;"> 0.66 </td>
    <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 603293 </td>
+   <td style="text-align:right;"> 28 </td>
+   <td style="text-align:right;"> -0.94 </td>
+   <td style="text-align:right;"> 0.58 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 998667 </td>
+   <td style="text-align:right;"> 50 </td>
+   <td style="text-align:right;"> -0.99 </td>
+   <td style="text-align:right;"> 0.40 </td>
+   <td style="text-align:right;"> 0 </td>
   </tr>
 </tbody>
 </table>
@@ -1463,6 +1722,51 @@
 </ol>
 </div>
 </section>
+<section id="did-example-4" class="slide level2">
+<h2>DID Example</h2>
+<div class="cell" data-hash="lec_inference_cache/revealjs/unnamed-chunk-11_9f8b5dc11e43383163606f2792179d1b">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Method </th>
+   <th style="text-align:right;"> Coefficient </th>
+   <th style="text-align:right;"> SE </th>
+   <th style="text-align:right;"> p-value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Classic Inference </td>
+   <td style="text-align:right;"> 0.028 </td>
+   <td style="text-align:right;"> 0.019 </td>
+   <td style="text-align:right;"> 0.143 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Robust </td>
+   <td style="text-align:right;"> 0.028 </td>
+   <td style="text-align:right;"> 0.019 </td>
+   <td style="text-align:right;"> 0.140 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Clustered </td>
+   <td style="text-align:right;"> 0.028 </td>
+   <td style="text-align:right;"> 0.106 </td>
+   <td style="text-align:right;"> 0.797 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Two-Stage Cluster Bootstrap </td>
+   <td style="text-align:right;"> 0.028 </td>
+   <td style="text-align:right;"> 0.082 </td>
+   <td style="text-align:right;"> 0.810 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</section>
 <section id="small-cluster-bias" class="slide level2">
 <h2>Small Cluster Bias</h2>
 <div>
@@ -1485,6 +1789,50 @@
 <li class="fragment">You’re going to over-reject the null hypothesis because your standard errors are too small.</li>
 </ul></li>
 </ul>
+</div>
+</section>
+<section id="did-example-5" class="slide level2">
+<h2>DID Example</h2>
+<div class="callout callout-important callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach.</p>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>Inference under cluster (10/50) sampling and random assignment</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Method </th>
+   <th style="text-align:right;"> Coefficient </th>
+   <th style="text-align:right;"> SE </th>
+   <th style="text-align:right;"> p-value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Robust </td>
+   <td style="text-align:right;"> 0.01 </td>
+   <td style="text-align:right;"> 0.015 </td>
+   <td style="text-align:right;"> 0.518 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Clustered </td>
+   <td style="text-align:right;"> 0.01 </td>
+   <td style="text-align:right;"> 0.010 </td>
+   <td style="text-align:right;"> 0.349 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
 </div>
 </section>
 <section id="small-cluster-bias-2" class="slide level2">
@@ -1555,6 +1903,62 @@
 <li class="fragment">Wild cluster bootstrap is easily executed in both Stata and R.</li>
 <li class="fragment">New “fast” routines can complete this process in seconds (or less).</li>
 </ul>
+</div>
+</section>
+<section id="did-example-6" class="slide level2">
+<h2>DID Example</h2>
+<div class="callout callout-important callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach.</p>
+</div>
+</div>
+</div>
+<div class="cell" data-hash="lec_inference_cache/revealjs/unnamed-chunk-13_bf9cc5b68eb14c77ee47a0b791c2330a">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<caption>Inference under cluster (10/50) sampling and clustered assignment</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Method </th>
+   <th style="text-align:right;"> Coefficient </th>
+   <th style="text-align:right;"> SE </th>
+   <th style="text-align:right;"> p-value </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Robust </td>
+   <td style="text-align:right;"> 0.009 </td>
+   <td style="text-align:right;"> 0.015 </td>
+   <td style="text-align:right;"> 0.537 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Clustered </td>
+   <td style="text-align:right;"> 0.009 </td>
+   <td style="text-align:right;"> 0.057 </td>
+   <td style="text-align:right;"> 0.873 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Wild Cluster </td>
+   <td style="text-align:right;"> 0.009 </td>
+   <td style="text-align:right;"> NA </td>
+   <td style="text-align:right;"> 0.906 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Two-Stage Cluster Bootstrap </td>
+   <td style="text-align:right;"> 0.009 </td>
+   <td style="text-align:right;"> 0.096 </td>
+   <td style="text-align:right;"> 0.940 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
 </div>
 </section>
 <section id="section-10" class="slide level2" data-background-image="media/clustering-framework-small.png" data-background-size="contain">
