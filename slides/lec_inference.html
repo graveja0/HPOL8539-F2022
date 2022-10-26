@@ -22,6 +22,25 @@
     div.column{display: inline-block; vertical-align: top; width: 50%;}
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+    }
+    .hanging div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }
   </style>
   <link rel="stylesheet" href="../site_libs/revealjs/dist/theme/quarto.css" id="theme">
   <link href="../site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
@@ -312,6 +331,9 @@
       margin-right: 0; 
     }
   </style>
+  
+  <script src="../site_libs/kePrint-0.0.1/kePrint.js"></script>
+  <link href="../site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -321,13 +343,1284 @@
   <h1 class="title">Inference for Program and Policy Evaluation</h1>
 </section>
 
-<section id="test" class="slide level2">
-<h2>Test</h2>
+<section class="slide level2">
 
-<div class="footer footer-default">
+<div class="cell">
+
+</div>
+<div class="cell" data-hash="lec_inference_cache/revealjs/unnamed-chunk-2_db3779e97d3320327932091602d6b33b">
 
 </div>
 </section>
+<section id="why-do-inference" class="slide level2">
+<h2>Why do inference?</h2>
+<div>
+<ul>
+<li class="fragment">We often observe a sample of a population.</li>
+<li class="fragment">Estimation under repeated sampling will yield a different result each time.</li>
+<li class="fragment">The (hypothetical) collection of results obtained (for a fixed sample size) can be summarized in a sampling distribution.</li>
+</ul>
+</div>
+</section>
+<section id="why-do-inference-1" class="slide level2">
+<h2>Why do inference?</h2>
+<div>
+<ul>
+<li class="fragment">The standard deviation of the sampling distribution is the standard error of the estimator.</li>
+<li class="fragment">We can also construct 95% confidence intervals that will, in expectation, cover the “truth” 95% of the time.</li>
+</ul>
+</div>
+</section>
+<section id="why-do-inference-2" class="slide level2">
+<h2>Why do inference?</h2>
+<ul>
+<li>This repeated sampling framework fits squarely within the <strong>generate</strong>, <strong>estimate</strong>, <strong>discriminate</strong> process we have used to understand estimation, bias, consistency, etc.</li>
+</ul>
+</section>
+<section id="our-course-thus-far" class="slide level2" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Our course thus far</h2>
+<div class="r-hstack">
+<div data-id="generate" data-auto-animate-delay="0" style="background: #2780e3; width: 200px; height: 150px; margin: 10px;">
+<p>Generate</p>
+</div>
+<div data-id="estimate" data-auto-animate-delay="0.1" style="background: #3fb618; width: 200px; height: 150px; margin: 10px;">
+<p>Estimate</p>
+</div>
+<div data-id="discriminate" data-auto-animate-delay="0.2" style="background: #e83e8c; width: 200px; height: 150px; margin: 10px;">
+<p>Discriminate</p>
+</div>
+</div>
+</section>
+<section id="our-course-thus-far-1" class="slide level2" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Our course thus far</h2>
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 350px; height: 350px; border-radius: 200px;">
+<p>Generate</p>
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 250px; height: 250px; border-radius: 200px;">
+<p>Estimate</p>
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 150px; height: 150px; border-radius: 200px;">
+<p>Discriminate</p>
+</div>
+</div>
+</section>
+<section id="our-course-thus-far-2" class="slide level2" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Our course thus far</h2>
+<div class="r-hstack">
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+<p>Generate</p>
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+<p>Estimate</p>
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+<p>Discriminate</p>
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+</div>
+<div class="r-hstack">
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+</div>
+<div class="r-hstack">
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+</div>
+</section>
+<section id="inference-framework" class="slide level2" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Inference Framework</h2>
+<div>
+<ul>
+<li class="fragment">This conceptualization will become important later when we think about <strong>bootstrapping.</strong></li>
+<li class="fragment">But first, we need to understand different types of inference and when we might use each.</li>
+<li class="fragment">To do so, we’ll construct a <strong>decision framework</strong> for how we do inference.</li>
+</ul>
+</div>
+</section>
+<section id="inference-framework-1" class="slide level2">
+<h2>Inference Framework</h2>
+<p>We can think of two dimensions of uncertainty in a policy evaluation:</p>
+<div>
+<ol type="1">
+<li class="fragment"><strong>Sampling</strong>: we only observe a sample of the population of interest.</li>
+<li class="fragment"><strong>Treatment assignment</strong>: we (often) only observe one potential outcome.</li>
+</ol>
+</div>
+</section>
+<section id="inference-framework-2" class="slide level2">
+<h2>Inference Framework</h2>
+<p>We can think of two dimensions of uncertainty in a policy evaluation:</p>
+<ol type="1">
+<li><strong>Sampling</strong>: we only observe a sample of the population of interest.</li>
+<li><strong>Treatment assignment</strong>: we (often) only observe one potential outcome.</li>
+</ol>
+<p>Our objective here is to develop an inference decision framework around these dimensions.</p>
+</section>
+<section id="inference-framework-3" class="slide level2">
+<h2>Inference Framework</h2>
+<div class="columns">
+<div class="column">
+<ul>
+<li><strong>Analytic</strong> inference relies on equations that use sample analogues to estimate a population-level parameter, such as a standard error.</li>
+</ul>
+</div><div class="column">
+<p>Example:</p>
+<p><span class="math display">\[ SE = \frac{\sigma}{\sqrt{n}} \]</span></p>
+<ul>
+<li><span class="math inline">\(SE\)</span> is the standard error of the sample</li>
+<li><span class="math inline">\(\sigma\)</span> is the sample standard deviation</li>
+<li><span class="math inline">\(n\)</span> is the sample size.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="inference-framework-4" class="slide level2">
+<h2>Inference Framework</h2>
+<div>
+<ul>
+<li class="fragment">Drawback: standard analytic formulas apply for simple random samples of a population.</li>
+<li class="fragment">Another consideration is heteroskedasticity (though robust variance formulas are available)</li>
+<li class="fragment">In policy evaluation we often have both population sampling <em>and</em> treatment assignment correlated with clusters (e.g., states, households, etc.).</li>
+</ul>
+</div>
+</section>
+<section id="inference-framework-5" class="slide level2">
+<h2>Inference Framework</h2>
+<p>This leads to the following perennial questions:</p>
+<div>
+<ol type="1">
+<li class="fragment">Should we use robust standard errors?</li>
+<li class="fragment">Should we cluster?</li>
+<li class="fragment">What method of inference should we use?</li>
+</ol>
+</div>
+</section>
+<section id="four-questions-you-should-always-ask" class="slide level2">
+<h2>Four Questions You Should Always Ask</h2>
+<div>
+<ul>
+<li class="fragment">How were the data sampled?</li>
+<li class="fragment">How was treatment assigned?
+<ul>
+<li class="fragment">Is treatment assignment perfectly or partially correlated with cluster (e.g., state)?</li>
+<li class="fragment">If so, how many clusters do you observe? (large #? large fraction?)</li>
+</ul></li>
+</ul>
+</div>
+</section>
+<section id="four-questions-you-should-always-ask-1" class="slide level2">
+<h2>Four Questions You Should Always Ask</h2>
+<div>
+<ul>
+<li class="fragment">If you can answer these questions there is a clear pathway to conducting inference—though note that multiple pathways may exist!</li>
+<li class="fragment">We’ll now tackle each of these questions in turn.</li>
+</ul>
+</div>
+</section>
+<section id="section" class="slide level2" data-background-image="media/clustering-framework-blank.png" data-background-size="contain">
+<h2></h2>
+</section>
+<section>
+<section id="sampling-uncertainty" class="title-slide slide level1 center">
+<h1>Sampling Uncertainty</h1>
+
+</section>
+<section id="sampling-uncertainty-1" class="slide level2">
+<h2>Sampling Uncertainty</h2>
+<div>
+<ul>
+<li class="fragment">This is the standard dimension that classic statistics/econometrics covers.</li>
+<li class="fragment">It has to do with the fact that we typically obtain a random sample from the population of interest.</li>
+</ul>
+</div>
+</section>
+<section id="sampling-uncertainty-2" class="slide level2">
+<h2>Sampling Uncertainty</h2>
+<ul>
+<li>Ideally, each observation in a sample would contribute an equal amount of information about the parameters of interest.</li>
+</ul>
+</section>
+<section id="sampling-uncertainty-3" class="slide level2">
+<h2>Sampling Uncertainty</h2>
+<div>
+<ul>
+<li class="fragment">While simple random samples from a population are certainly feasible, we often analyze data sampled in complex ways.
+<ul>
+<li class="fragment">Stratified samples (e.g., independent samples within a fixed number of groups like states)</li>
+<li class="fragment">Clustered samples of households.</li>
+<li class="fragment">Repeated sampling of households/individuals.</li>
+<li class="fragment">Often, <em>all of the above.</em></li>
+</ul></li>
+</ul>
+</div>
+</section>
+<section id="section-1" class="slide level2" data-background-image="images/paste-3AF6EDA7.png" data-background-size="contain">
+<h2></h2>
+</section></section>
+<section>
+<section id="random-sampling" class="title-slide slide level1 center">
+<h1>Random Sampling</h1>
+
+</section>
+<section id="section-2" class="slide level2" data-background-image="media/clustering-framework-blank-transition-to-RR.png" data-background-size="contain">
+<h2></h2>
+</section>
+<section id="random-sampling-random-assignment" class="slide level2 smaller">
+<h2>Random Sampling, Random Assignment</h2>
+<p><strong>Scenario</strong>: Random sample of units from a large population with randomized treatment assignment at the unit level.</p>
+</section>
+<section id="random-sampling-random-assignment-1" class="slide level2 smaller">
+<h2>Random Sampling, Random Assignment</h2>
+<p><strong>Scenario</strong>: Random sample of units from a large population with randomized treatment assignment at the unit level.</p>
+<div class="callout callout-tip callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>No reason to cluster, even if there is within-cluster correlation in outcomes.</p>
+</div>
+</div>
+</div>
+<div>
+<ul>
+<li class="fragment"><p>Clustering standard errors can be harmful, resulting in unnecessarily wide confidence intervals.</p></li>
+<li class="fragment"><p>If the sample represents a large fraction of the population and treatment effects are heterogeneous across units, robust standard errors are also conservative.</p></li>
+</ul>
+</div>
+<p>Source: <span class="citation" data-cites="abadieWhenShouldYou2022a">Abadie et al. (<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">2022</a>)</span></p>
+</section>
+<section id="random-sampling-random-assignment-2" class="slide level2 smaller">
+<h2>Random Sampling, Random Assignment</h2>
+<p><strong>Scenario</strong>: Random sample of units from a large population with randomized treatment assignment at the unit level.</p>
+<div class="callout callout-tip callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>No reason to cluster, even if there is within-cluster correlation in outcomes.</p>
+</div>
+</div>
+</div>
+<div>
+<ul>
+<li class="fragment"><p>Clustering is not appropriate even if there is within-cluster correlation in outcomes (however those clusters are defined), and thus even if clustering makes a substantial difference in the magnitude of the standard errors.</p></li>
+<li class="fragment"><p>However, if the data contain information on attributes of the units that are correlated with unit-level treatment effects, the methods in <span class="citation" data-cites="abadieSamplingBasedDesignBasedUncertainty2020">Abadie et al. (<a href="#/ref-abadieSamplingBasedDesignBasedUncertainty2020" role="doc-biblioref" onclick="return false;">2020</a>)</span> can be applied to obtain less conservative standard errors.</p></li>
+</ul>
+</div>
+<p>Source: <span class="citation" data-cites="abadieWhenShouldYou2022a">Abadie et al. (<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">2022</a>)</span></p>
+</section>
+<section id="section-3" class="slide level2" data-background-image="media/clustering-framework-RR.png" data-background-size="contain">
+<h2></h2>
+</section>
+<section id="section-4" class="slide level2" data-background-image="media/clustering-framework-RR-CR.png" data-background-size="contain">
+<h2></h2>
+</section>
+<section id="cluster-sampling-random-assignment" class="slide level2">
+<h2>Cluster Sampling, Random Assignment</h2>
+</section>
+<section id="cluster-sampling-random-assignment-1" class="slide level2 smaller">
+<h2>Cluster Sampling, Random Assignment</h2>
+<p><strong>Scenario</strong>: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.</p>
+</section>
+<section id="cluster-sampling-random-assignment-2" class="slide level2 smaller">
+<h2>Cluster Sampling, Random Assignment</h2>
+<p><strong>Scenario</strong>: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.</p>
+<div>
+<ul>
+<li class="fragment">Returns to age at HS graduation within a large sample of US households: large number of clusters (households) sampled, but small fraction of total clusters sampled.</li>
+</ul>
+</div>
+</section>
+<section id="cluster-sampling-random-assignment-3" class="slide level2 smaller">
+<h2>Cluster Sampling, Random Assignment</h2>
+<p><strong>Scenario</strong>: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.</p>
+<div class="callout callout-tip callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>If <span class="math inline">\(q_k\)</span> small or if <span class="math inline">\(q_k\)</span> large but <span class="math inline">\(p_k\)</span> small, clustered standard errors are asymptotically correct (with large # of clusters).</p>
+</div>
+</div>
+</div>
+<div class="callout callout-important callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach. More later!</p>
+</div>
+</div>
+</div>
+<div>
+<ul>
+<li class="fragment"><span class="math inline">\(q_k\)</span> is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5).</li>
+<li class="fragment"><span class="math inline">\(p_k\)</span> is the fraction of the population sampled.</li>
+</ul>
+</div>
+<p>Source: <span class="citation" data-cites="abadieWhenShouldYou2022a">Abadie et al. (<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">2022</a>)</span></p>
+</section>
+<section id="section-5" class="slide level2" data-background-image="media/clustering-framework-RC.png" data-background-size="contain">
+<h2></h2>
+</section></section>
+<section>
+<section id="treatment-assignment" class="title-slide slide level1 center">
+<h1>Treatment Assignment</h1>
+
+</section>
+<section id="treatment-assignment-1" class="slide level2">
+<h2>Treatment Assignment</h2>
+<div>
+<ul>
+<li class="fragment">This dimension of uncertainty occurs because we often only observe one potential outcome for each treated unit.</li>
+<li class="fragment">This would remain the case even if we observed the entire population of interest!</li>
+</ul>
+</div>
+</section>
+<section id="treatment-assignment-2" class="slide level2">
+<h2>Treatment Assignment</h2>
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:right;"> unit_id </th>
+   <th style="text-align:right;"> cluster </th>
+   <th style="text-align:right;"> w_i </th>
+   <th style="text-align:right;"> y_obs </th>
+   <th style="text-align:left;"> y_1 </th>
+   <th style="text-align:left;"> y_0 </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:right;"> 856060 </td>
+   <td style="text-align:right;"> 41 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1.74 </td>
+   <td style="text-align:left;"> 1.74 </td>
+   <td style="text-align:left;"> ? </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 739098 </td>
+   <td style="text-align:right;"> 37 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1.22 </td>
+   <td style="text-align:left;"> 1.22 </td>
+   <td style="text-align:left;"> ? </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 277455 </td>
+   <td style="text-align:right;"> 18 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 1.85 </td>
+   <td style="text-align:left;"> ? </td>
+   <td style="text-align:left;"> 1.85 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 114550 </td>
+   <td style="text-align:right;"> 3 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 1.31 </td>
+   <td style="text-align:left;"> ? </td>
+   <td style="text-align:left;"> 1.31 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 891143 </td>
+   <td style="text-align:right;"> 41 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1.49 </td>
+   <td style="text-align:left;"> 1.49 </td>
+   <td style="text-align:left;"> ? </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</section>
+<section id="treatment-assignment-3" class="slide level2 smaller">
+<h2>Treatment Assignment</h2>
+<div>
+<ul>
+<li class="fragment">Often, treatment assignment is correlated with clusters (e.g., state, county, etc.).</li>
+<li class="fragment">If treatment is perfectly correlated with cluster, then everyone within the same cluster is either treated or untreated.
+<ul>
+<li class="fragment">Effect of Medicaid expansion on earnings.<br>
+</li>
+</ul></li>
+<li class="fragment">Alternatively, treatment could be partially correlated with cluster.
+<ul>
+<li class="fragment">Effect of attending college on earnings, where it is observed that college attendance is correlated within state, county, etc.</li>
+</ul></li>
+</ul>
+</div>
+</section>
+<section id="section-6" class="slide level2" data-background-image="media/clustering-framework-RR-to-RC.png" data-background-size="contain">
+<h2></h2>
+</section>
+<section id="random-sampling-clustered-assignment" class="slide level2 smaller">
+<h2>Random Sampling, Clustered Assignment</h2>
+<p><strong>Scenario</strong>: Random sample of units from a large population with partially or fully clustered treatment assignment.</p>
+</section>
+<section id="random-sampling-clustered-assignment-1" class="slide level2 smaller">
+<h2>Random Sampling, Clustered Assignment</h2>
+<p><strong>Scenario</strong>: Random sample of units from a large population with partially or fully clustered treatment assignment.</p>
+<div class="callout callout-tip callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>If assignment is perfectly clustered, <strong>and you observe a large number of clusters</strong>, use standard cluster adjustment.</p>
+</div>
+</div>
+</div>
+<div>
+<ul>
+<li class="fragment">Cluster at the level of the intervention (e.g., state)</li>
+</ul>
+</div>
+<p>Source: <span class="citation" data-cites="abadieWhenShouldYou2022a">Abadie et al. (<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">2022</a>)</span></p>
+</section>
+<section id="random-sampling-clustered-assignment-2" class="slide level2 smaller">
+<h2>Random Sampling, Clustered Assignment</h2>
+<p><strong>Scenario</strong>: Random sample of units from a large population with partially or fully clustered treatment assignment.</p>
+<div>
+<ul>
+<li class="fragment">If treatment is not perfectly correlated with cluster, then clustered standard errors may be too conservative.</li>
+<li class="fragment"><span class="citation" data-cites="abadieWhenShouldYou2022a">Abadie et al. (<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">2022</a>)</span> provide analytic formulas as well as a <strong>bootstrap</strong> procedure that can be used for inference.</li>
+</ul>
+</div>
+</section>
+<section id="bootstrap-inference" class="slide level2">
+<h2>Bootstrap Inference</h2>
+<div>
+<ul>
+<li class="fragment">Bootstrapping is a way to conduct inference when large-sample theory provides a poor guide.
+<ul>
+<li class="fragment">Small number of clusters</li>
+<li class="fragment">Treatment assignment that is partially correlated with cluster.</li>
+</ul></li>
+<li class="fragment">You will see multiple bootstrap methods in the next slides.
+<ul>
+<li class="fragment">Two-stage cluster bootstrap <span class="citation" data-cites="abadieWhenShouldYou2022a">(<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">Abadie et al. 2022</a>)</span></li>
+<li class="fragment">Wild cluster bootstrap <span class="citation" data-cites="cameronBootstrapbasedImprovementsInference2008">(<a href="#/ref-cameronBootstrapbasedImprovementsInference2008" role="doc-biblioref" onclick="return false;">Cameron, Gelbach, and Miller 2008</a>)</span></li>
+</ul></li>
+<li class="fragment">Let’s spend a few minutes on intuition for the bootstrap…</li>
+</ul>
+</div>
+</section>
+<section id="bootstrap-inference-1" class="slide level2" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Bootstrap Inference</h2>
+<p>Back to basics:</p>
+<div class="r-hstack">
+<div data-id="generate" data-auto-animate-delay="0" style="background: #2780e3; width: 200px; height: 150px; margin: 10px;">
+<p>Generate</p>
+</div>
+<div data-id="estimate" data-auto-animate-delay="0.1" style="background: #3fb618; width: 200px; height: 150px; margin: 10px;">
+<p>Estimate</p>
+</div>
+<div data-id="discriminate" data-auto-animate-delay="0.2" style="background: #e83e8c; width: 200px; height: 150px; margin: 10px;">
+<p>Discriminate</p>
+</div>
+</div>
+</section>
+<section id="bootstrap-inference-2" class="slide level2">
+<h2>Bootstrap Inference</h2>
+<div>
+<ul>
+<li class="fragment"><p>In practice, we don’t control the data generation process.</p></li>
+<li class="fragment"><p>Idea of bootstrap is to</p></li>
+</ul>
+</div>
+</section>
+<section id="bootstrap-inference-3" class="slide level2" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Bootstrap Inference</h2>
+<p>Back to basics:</p>
+<div class="r-stack">
+<div data-id="generate" style="background: #2780e3; width: 350px; height: 350px; border-radius: 200px;">
+<p>Generate</p>
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 250px; height: 250px; border-radius: 200px;">
+<p>Estimate</p>
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 150px; height: 150px; border-radius: 200px;">
+<p>Discriminate</p>
+</div>
+</div>
+</section>
+<section id="bootstrap-inference-4" class="slide level2" data-auto-animate="true" data-auto-animate-easing="ease-in-out">
+<h2 data-id="quarto-animate-title">Bootstrap Inference</h2>
+<ul>
+<li>Basic idea is to generate a large number of bootstrap samples that mimic the distribution from which the actual sample was obtained <span class="citation" data-cites="roodmanFastWildBootstrap2019">(<a href="#/ref-roodmanFastWildBootstrap2019" role="doc-biblioref" onclick="return false;">Roodman et al. 2019</a>)</span>.</li>
+</ul>
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 350px; height: 350px; border-radius: 200px;">
+<p>Bootstrap</p>
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 250px; height: 250px; border-radius: 200px;">
+<p>Estimate</p>
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 150px; height: 150px; border-radius: 200px;">
+<p>Discriminate</p>
+</div>
+</div>
+</section>
+<section id="bootstrap-inference-5" class="slide level2">
+<h2>Bootstrap Inference</h2>
+<div class="r-hstack">
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+<p>Bootstrap</p>
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+<p>Estimate</p>
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+<p>Discriminate</p>
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+</div>
+<div class="r-hstack">
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+</div>
+<div class="r-hstack">
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+<div class="r-stack">
+<div data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;">
+
+</div>
+<div data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;">
+
+</div>
+<div data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;">
+
+</div>
+</div>
+</div>
+</section>
+<section id="bootstrap-inference-6" class="slide level2">
+<h2>Bootstrap Inference</h2>
+<div>
+<ul>
+<li class="fragment">We repeatedly resample the sample (with replacement) and generate the parameter of interest each time.</li>
+<li class="fragment">The bootstrap P value is calculated as the proportion of the bootstrap values that are more extreme than the actual one from the original sample.</li>
+<li class="fragment">In this way, we essentially mimic the process we’ve used all along to understand the properties of estimators by generating data!</li>
+</ul>
+</div>
+</section>
+<section id="bootstrap-inference-7" class="slide level2">
+<h2>Bootstrap Inference</h2>
+<div>
+<ul>
+<li class="fragment">This is how bootstrapping works at a high level.</li>
+<li class="fragment">The various bootstrap procedures you’ll need have some additional wrinkles because of the clustered nature of sampling and/or treatment assignment.</li>
+<li class="fragment">Let’s now go back to the objective that brought us here …</li>
+</ul>
+</div>
+</section>
+<section id="random-sampling-clustered-assignment-3" class="slide level2 smaller">
+<h2>Random Sampling, Clustered Assignment</h2>
+<p><strong>Scenario</strong>: Random sample of units from a large population with partially or fully clustered treatment assignment.</p>
+<ul>
+<li>If treatment is not perfectly correlated with cluster, then clustered standard errors may be too conservative.</li>
+<li><span class="citation" data-cites="abadieWhenShouldYou2022a">Abadie et al. (<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">2022</a>)</span> provide analytic formulas as well as a <strong>bootstrap</strong> procedure that can be used for inference.</li>
+</ul>
+<div>
+<ul>
+<li class="fragment">The analytic variance formulas are called <strong>Causal Cluster Variance (CCV)</strong>.</li>
+<li class="fragment">This bootstrap procedure is called <strong>two-stage cluster bootstrap (TSCB)</strong>.</li>
+</ul>
+</div>
+</section>
+<section id="clustered-assignment" class="slide level2 smaller">
+<h2>Clustered Assignment</h2>
+<p><strong>Scenario</strong>: Random or clustered sample of units from a large population with <strong>fully</strong> clustered treatment assignment.</p>
+<div class="callout callout-tip callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>If assignment is perfectly clustered, <strong>and you observe a large number of clusters</strong>, use standard cluster adjustment.</p>
+</div>
+</div>
+</div>
+<p><strong>Scenario</strong>: Random or clustered sample of units from a large population with <strong>partially</strong> clustered treatment assignment.</p>
+<div class="callout callout-tip callout-style-simple">
+<div class="callout-body">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-content">
+<p>If assignment is partially clustered (i.e., some variation in Tx assignment within cluster), use CCV/TSCB.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="clustered-assignment-1" class="slide level2">
+<h2>Clustered Assignment</h2>
+<div class="columns">
+<div class="column">
+<p>Treatment perfectly correlated with cluster:</p>
+<div style="font-size: 0.5em">
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:right;"> unit_id </th>
+   <th style="text-align:right;"> cluster </th>
+   <th style="text-align:right;"> y_i </th>
+   <th style="text-align:right;"> pr_treated </th>
+   <th style="text-align:right;"> w_i </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:right;"> 301827 </td>
+   <td style="text-align:right;"> 20 </td>
+   <td style="text-align:right;"> 4.42 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 516605 </td>
+   <td style="text-align:right;"> 27 </td>
+   <td style="text-align:right;"> 2.10 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 446703 </td>
+   <td style="text-align:right;"> 27 </td>
+   <td style="text-align:right;"> 2.42 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 311899 </td>
+   <td style="text-align:right;"> 21 </td>
+   <td style="text-align:right;"> 1.61 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 855473 </td>
+   <td style="text-align:right;"> 41 </td>
+   <td style="text-align:right;"> 0.69 </td>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 937654 </td>
+   <td style="text-align:right;"> 46 </td>
+   <td style="text-align:right;"> 1.38 </td>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div><div class="column">
+<p>Treatment partially correlated with cluster:</p>
+<div style="font-size: 0.5em">
+<div class="cell">
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:right;"> unit_id </th>
+   <th style="text-align:right;"> cluster </th>
+   <th style="text-align:right;"> y_i </th>
+   <th style="text-align:right;"> pr_treated </th>
+   <th style="text-align:right;"> w_i </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:right;"> 203240 </td>
+   <td style="text-align:right;"> 11 </td>
+   <td style="text-align:right;"> 4.96 </td>
+   <td style="text-align:right;"> 0.49 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 311906 </td>
+   <td style="text-align:right;"> 21 </td>
+   <td style="text-align:right;"> 1.69 </td>
+   <td style="text-align:right;"> 0.55 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 308935 </td>
+   <td style="text-align:right;"> 21 </td>
+   <td style="text-align:right;"> 1.45 </td>
+   <td style="text-align:right;"> 0.55 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 248407 </td>
+   <td style="text-align:right;"> 14 </td>
+   <td style="text-align:right;"> -0.44 </td>
+   <td style="text-align:right;"> 0.54 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 717495 </td>
+   <td style="text-align:right;"> 36 </td>
+   <td style="text-align:right;"> 2.09 </td>
+   <td style="text-align:right;"> 0.37 </td>
+   <td style="text-align:right;"> 0 </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 992037 </td>
+   <td style="text-align:right;"> 49 </td>
+   <td style="text-align:right;"> 0.99 </td>
+   <td style="text-align:right;"> 0.68 </td>
+   <td style="text-align:right;"> 1 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div><div class="column">
+
+</div>
+</div>
+</section>
+<section id="section-7" class="slide level2" data-background-image="media/clustering-framework-TSCB.png" data-background-size="contain">
+<h2></h2>
+</section>
+<section id="section-8" class="slide level2" data-background-image="media/tscb-algorithm.png" data-background-size="contain">
+<h2></h2>
+<div class="footer">
+<p>Source: <span class="citation" data-cites="abadieWhenShouldYou2022a">Abadie et al. (<a href="#/ref-abadieWhenShouldYou2022a" role="doc-biblioref" onclick="return false;">2022</a>)</span></p>
+</div>
+</section>
+<section id="a-practical-guide-to-tscb" class="slide level2">
+<h2>A Practical Guide to TSCB</h2>
+<div>
+<ol type="1">
+<li class="fragment">Start with your sample. At a minimum, you’ll need
+<ul>
+<li class="fragment">Outcome</li>
+<li class="fragment">Treatment indicator</li>
+<li class="fragment">Cluster variable</li>
+</ul></li>
+</ol>
+</div>
+</section>
+<section id="a-practical-guide-to-tscb-1" class="slide level2">
+<h2>A Practical Guide to TSCB</h2>
+<div>
+<ol start="2" type="1">
+<li class="fragment">Determine <span class="math inline">\(q_k\)</span>, the fraction of (population-level) clusters that are sampled.
+<ul>
+<li class="fragment">It could be high! (e.g., for a state policy evaluation using a national survey that includes all states, this implies <span class="math inline">\(q_k=1.0\)</span>)</li>
+<li class="fragment">It could be low! (e.g., a national survey of households)</li>
+</ul></li>
+</ol>
+</div>
+</section>
+<section id="a-practical-guide-to-tscb-2" class="slide level2">
+<h2>A Practical Guide to TSCB</h2>
+<div>
+<ol start="3" type="1">
+<li class="fragment">Define a number of bootstrap replications (e.g., <span class="math inline">\(B=100\)</span>)
+<ul>
+<li class="fragment">You’re now ready to iterate through the bootstrap procedure replication by replication!</li>
+</ul></li>
+</ol>
+</div>
+</section>
+<section id="a-practical-guide-to-tscb-3" class="slide level2 smaller">
+<h2>A Practical Guide to TSCB</h2>
+<p>For each bootstrap replication …</p>
+<div>
+<ol start="4" type="1">
+<li class="fragment"><p>Create a “pseudo-sample” by replicating your original sample <span class="math inline">\(1/q_k\)</span> times.</p>
+<ul>
+<li class="fragment">If <span class="math inline">\(1/q_k\)</span> is not an integer, you can use the methods in <span class="citation" data-cites="chaoBootstrapMethodFinite1985">Chao and Lo (<a href="#/ref-chaoBootstrapMethodFinite1985" role="doc-biblioref" onclick="return false;">1985</a>)</span>.</li>
+<li class="fragment">Essentially, you solve for a fraction <span class="math inline">\(\alpha\)</span> using a fairly simple formula and some basic algebra.</li>
+<li class="fragment">If you observe 20 of 50 clusters (such that <span class="math inline">\(q_k=0.4\)</span> and <span class="math inline">\(1/q_k=2.25\)</span>), as you proceed through the B bootstrap replications, you’d replicate the sample 2 times with probability <span class="math inline">\(\alpha\)</span> or 3 times with probability <span class="math inline">\(1-\alpha\)</span>.</li>
+</ul></li>
+</ol>
+</div>
+</section>
+<section id="a-practical-guide-to-tscb-4" class="slide level2 smaller">
+<h2>A Practical Guide to TSCB</h2>
+<p>For each bootstrap replication …</p>
+<div>
+<ol start="5" type="1">
+<li class="fragment">For each cluster in your pseudo-sample, calculate and record the fraction of observations treated.
+<ul>
+<li class="fragment">This is the empricial distribution of cluster-level treatment fractions, or <span class="math inline">\(\bar{W}_{k,m}\)</span>.</li>
+<li class="fragment"><strong>NOTE</strong>: To proceed, <span class="math inline">\(\bar{W}_{k,m}\)</span> <em>must</em> be between 0 and 1 for all clusters.</li>
+<li class="fragment">If treatment assignment is perfectly correlated with cluster, then just use cluster robust inference (if you have a sufficient number clusters! If you don’t, skip to the section on inference with a small number of clusters … )</li>
+</ul></li>
+</ol>
+</div>
+</section>
+<section id="a-practical-guide-to-tscb-5" class="slide level2">
+<h2>A Practical Guide to TSCB</h2>
+<p>For each bootstrap replication …</p>
+<div>
+<ol start="6" type="1">
+<li class="fragment">Randomly draw clusters from your pseudo-sample.
+<ul>
+<li class="fragment">If you observe 20 clusters in your original sample, then randomly draw 20 clusters from your pseudo-sample.</li>
+<li class="fragment">Draw these clusters <em>without</em> replacement.</li>
+</ul></li>
+</ol>
+</div>
+</section>
+<section id="a-practical-guide-to-tscb-6" class="slide level2">
+<h2>A Practical Guide to TSCB</h2>
+<p>For each bootstrap replication …</p>
+<div>
+<ol start="7" type="1">
+<li class="fragment">For each of these randomly drawn clusters, sample a treatment fraction value from <span class="math inline">\(\bar{W}_{k,m}\)</span>.
+<ul>
+<li class="fragment">You sample here <em>with</em> replacement.</li>
+<li class="fragment">This is the new <strong>assignment probability</strong> for each sampled cluster, called <span class="math inline">\(A_{k,m}\)</span>.</li>
+</ul></li>
+</ol>
+</div>
+</section>
+<section id="a-practical-guide-to-tscb-7" class="slide level2">
+<h2>A Practical Guide to TSCB</h2>
+<p>For each bootstrap replication …</p>
+<div>
+<ol start="8" type="1">
+<li class="fragment">Next, within each sampled cluster (each of which has cluster sample size <span class="math inline">\(N_{k,m}\)</span>), sample (with replacement) treated and control units.</li>
+</ol>
+<ul>
+<li class="fragment">Sample <span class="math inline">\(N_{k,m}A_{k,m}\)</span> treated units.</li>
+<li class="fragment">Sample <span class="math inline">\(N_{k,m}(1 - A_{k,m})\)</span> untreated units.</li>
+<li class="fragment">Do this for each sampled cluster in your bootstrap replicate sample.</li>
+</ul>
+</div>
+</section>
+<section id="a-practical-guide-to-tscb-8" class="slide level2">
+<h2>A Practical Guide to TSCB</h2>
+<p>For each bootstrap replication …</p>
+<div>
+<ol start="9" type="1">
+<li class="fragment">Estimate your outcome regression (e.g., DID using least squares or a fixed effect model) on this bootstrap sample, are record the statistic/parameter you are interested in (e.g., <span class="math inline">\(\hat \tau\)</span>)</li>
+</ol>
+</div>
+</section>
+<section id="a-practical-guide-to-tscb-9" class="slide level2">
+<h2>A Practical Guide to TSCB</h2>
+<div>
+<ol start="10" type="1">
+<li class="fragment">Repeat steps 4-9 <span class="math inline">\(B\)</span> times and collect the <span class="math inline">\(\hat \tau\)</span> estimates.
+<ul>
+<li class="fragment">You can now calculate the standard deviation of these estimates as an estimate of the standard error.</li>
+<li class="fragment">You could also calculate a p-value by calculating the fraction of bootstrap estimates that are as or more extreme than your estimate from the original data.</li>
+</ul></li>
+</ol>
+</div>
+</section>
+<section id="small-cluster-bias" class="slide level2">
+<h2>Small Cluster Bias</h2>
+<div>
+<ul>
+<li class="fragment">Thus far we have assumed we have a sufficiently large number of clusters (e.g., &gt;30) in our sample.</li>
+<li class="fragment">Justification of inference with cluster-robust standard errors assumes that the number of clusters goes to infinity.</li>
+</ul>
+</div>
+</section>
+<section id="small-cluster-bias-1" class="slide level2">
+<h2>Small Cluster Bias</h2>
+<div>
+<ul>
+<li class="fragment">What happens if we have only a few clusters?
+<ul>
+<li class="fragment">Example: Evaluation of a state-level policy change based on a sample of 8 states with 4 treated and 4 untreated.</li>
+</ul></li>
+<li class="fragment"><span class="citation" data-cites="cameronBootstrapbasedImprovementsInference2008">Cameron, Gelbach, and Miller (<a href="#/ref-cameronBootstrapbasedImprovementsInference2008" role="doc-biblioref" onclick="return false;">2008</a>)</span>: With a small number of clusters, cluster-robust standard errors are downwards biased.
+<ul>
+<li class="fragment">You’re going to over-reject the null hypothesis because your standard errors are too small.</li>
+</ul></li>
+</ul>
+</div>
+</section>
+<section id="small-cluster-bias-2" class="slide level2">
+<h2>Small Cluster Bias</h2>
+<div>
+<ul>
+<li class="fragment">How can we deal with this?</li>
+<li class="fragment">Two primary ways (though there are others):
+<ul>
+<li class="fragment">Wild cluster bootstrap.</li>
+<li class="fragment">Randomization inference</li>
+</ul></li>
+</ul>
+</div>
+</section>
+<section id="section-9" class="slide level2" data-background-image="media/clustering-framework-CRCC-to-small.png" data-background-size="contain">
+<h2></h2>
+</section>
+<section id="wild-cluster-bootstrap" class="slide level2">
+<h2>Wild cluster bootstrap</h2>
+<div>
+<ul>
+<li class="fragment">Same basic idea as a regular bootstrap.</li>
+<li class="fragment">Main difference is that rather than resampling rows of our data, we resample the residuals after fitting our outcome model.</li>
+</ul>
+</div>
+</section>
+<section id="wild-cluster-bootstrap-1" class="slide level2">
+<h2>Wild cluster bootstrap</h2>
+<p>For each bootstrap replicate …</p>
+<div>
+<ul>
+<li class="fragment">Sample (with replacement) the residuals after fitting the main regression model.</li>
+<li class="fragment">We then apply a weight to each residual.
+<ul>
+<li class="fragment">Weight is -1 with probability 0.5 and 1 with probability 0.5.</li>
+</ul></li>
+<li class="fragment">The catch is that everyone within the same cluster receives the same weight value (i.e., we sample 1 or -1 by cluster).</li>
+</ul>
+</div>
+</section>
+<section id="wild-cluster-bootstrap-2" class="slide level2">
+<h2>Wild cluster bootstrap</h2>
+<p>For each bootstrap replicate …</p>
+<div>
+<ul>
+<li class="fragment">Because we only resample (and reweight the residuals) the other X variables used in the regression stay the same.</li>
+<li class="fragment">The coefficients and X’s from the original regression can be used to obtain a predicted value.</li>
+<li class="fragment">This predicted value plus the new (sampled and re-weighted) residuals are used to construct a new outcome value.</li>
+</ul>
+</div>
+</section>
+<section id="wild-cluster-bootstrap-3" class="slide level2">
+<h2>Wild cluster bootstrap</h2>
+<p>For each bootstrap replicate …</p>
+<div>
+<ul>
+<li class="fragment">Re-estimate the regression using the new outcome values.</li>
+<li class="fragment">Repeat <span class="math inline">\(B\)</span> times and collect the estimates.</li>
+<li class="fragment">You can use these estimates to construct a p-value based on how extreme the original value is within the distribution of estimates generated via the bootstrap samples.</li>
+</ul>
+</div>
+</section>
+<section id="wild-cluster-bootstrap-4" class="slide level2">
+<h2>Wild cluster bootstrap</h2>
+<div>
+<ul>
+<li class="fragment">Wild cluster bootstrap is easily executed in both Stata and R.</li>
+<li class="fragment">New “fast” routines can complete this process in seconds (or less).</li>
+</ul>
+</div>
+</section>
+<section id="section-10" class="slide level2" data-background-image="media/clustering-framework-small.png" data-background-size="contain">
+<h2></h2>
+</section>
+<section id="permutation-inference" class="slide level2">
+<h2>Permutation Inference</h2>
+<div>
+<ul>
+<li class="fragment">Another approach (though it can be a bit more conservative) is to use randomization inference.</li>
+<li class="fragment">Basic idea here is to randomly permute the treatment indicator.</li>
+<li class="fragment">This is a useful approach when treatment is perfectly correlated with clusters (e.g., state policy change) and you only have a few clusters in your sample.</li>
+</ul>
+</div>
+</section>
+<section id="permutation-inference-1" class="slide level2">
+<h2>Permutation Inference</h2>
+<div>
+<ul>
+<li class="fragment">Example: State policy change with 12 total states (4 treated, 8 untreated)</li>
+<li class="fragment">Idea: Iterative exercise where you randomly select the 4 “treated” states and re-estimate the outcome model each time.
+<ul>
+<li class="fragment">There are 495 possible combinations of 4 treated states out of 12 total states.</li>
+<li class="fragment">You can therefore construct a distribution of 495 different treatment effect estimates.</li>
+<li class="fragment">How “extreme” is the estimate in your primary sample within this distribution of 495 estimates?</li>
+</ul></li>
+</ul>
+</div>
+</section>
+<section id="permutation-inference-2" class="slide level2">
+<h2>Permutation Inference</h2>
+<div>
+<ul>
+<li class="fragment">A nice feature of this approach is that you get an exact p-value.</li>
+<li class="fragment">If the total possible number of permutations is large (e.g., 20 choose 10 = 184,756), you could always just permute cluster treatment status, say, 1,000 times to approximate the distribution.</li>
+<li class="fragment">A downside is that constructing 95% confidence intervals requires strong assumptions (homogeneity of treatment effect).</li>
+</ul>
+</div>
+</section>
+<section id="section-11" class="slide level2" data-background-image="media/clustering-framework-small2.png" data-background-size="contain">
+<h2></h2>
+</section>
+<section id="references" class="slide level2 smaller scrollable">
+<h2>References</h2>
+
+<div class="footer footer-default">
+<p><a href="../index.html">Back to Website</a></p>
+</div>
+<div id="refs" class="references csl-bib-body hanging-indent" role="doc-bibliography">
+<div id="ref-abadieSamplingBasedDesignBasedUncertainty2020" class="csl-entry" role="doc-biblioentry">
+Abadie, Alberto, Susan Athey, Guido W. Imbens, and Jeffrey M. Wooldridge. 2020. <span>“Sampling-<span>Based</span> Versus <span>Design-Based Uncertainty</span> in <span>Regression Analysis</span>.”</span> <em>Econometrica</em> 88 (1): 265–96.
+</div>
+<div id="ref-abadieWhenShouldYou2022a" class="csl-entry" role="doc-biblioentry">
+Abadie, Alberto, Susan Athey, Guido Imbens, and Jeffrey Wooldridge. 2022. <span>“When <span>Should You Adjust Standard Errors</span> for <span>Clustering</span>?”</span> <span>arXiv</span>. <a href="https://doi.org/10.48550/arXiv.1710.02926">https://doi.org/10.48550/arXiv.1710.02926</a>.
+</div>
+<div id="ref-cameronBootstrapbasedImprovementsInference2008" class="csl-entry" role="doc-biblioentry">
+Cameron, A. Colin, Jonah B. Gelbach, and Douglas L. Miller. 2008. <span>“Bootstrap-Based Improvements for Inference with Clustered Errors.”</span> <em>The Review of Economics and Statistics</em> 90 (3): 414–27.
+</div>
+<div id="ref-chaoBootstrapMethodFinite1985" class="csl-entry" role="doc-biblioentry">
+Chao, Min-Te, and Shaw-Hwa Lo. 1985. <span>“A Bootstrap Method for Finite Population.”</span> <em>Sankhyā: The Indian Journal of Statistics, Series A</em>, 399–405.
+</div>
+<div id="ref-roodmanFastWildBootstrap2019" class="csl-entry" role="doc-biblioentry">
+Roodman, David, Morten Ørregaard Nielsen, James G. MacKinnon, and Matthew D. Webb. 2019. <span>“Fast and Wild: <span>Bootstrap</span> Inference in <span>Stata</span> Using Boottest.”</span> <em>The Stata Journal</em> 19 (1): 4–60.
+</div>
+</div>
+</section></section>
     </div>
   </div>
 
@@ -485,14 +1778,14 @@
         previewLinks: false,
 
         // Transition style (none/fade/slide/convex/concave/zoom)
-        transition: 'none',
+        transition: 'fade',
 
         // Transition speed (default/fast/slow)
         transitionSpeed: 'default',
 
         // Transition style for full page slide backgrounds
         // (none/fade/slide/convex/concave/zoom)
-        backgroundTransition: 'none',
+        backgroundTransition: 'fade',
 
         // Number of slides away from the current that are visible
         viewDistance: 3,
@@ -539,6 +1832,48 @@
         ]
       });
     </script>
+    
+    <script>
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+      // slide changes (different for each slide format).
+      (function () {
+        function fireSlideChanged(previousSlide, currentSlide) {
+
+          // dispatch for htmlwidgets
+          const event = window.document.createEvent("Event");
+          event.initEvent("slideenter", true, true);
+          window.document.dispatchEvent(event);
+
+          // dispatch for shiny
+          if (window.jQuery) {
+            if (previousSlide) {
+              window.jQuery(previousSlide).trigger("hidden");
+            }
+            if (currentSlide) {
+              window.jQuery(currentSlide).trigger("shown");
+            }
+          }
+        }
+
+        // hookup for reveal
+        if (window.Reveal) {
+          window.Reveal.addEventListener("slidechanged", function(event) {
+            fireSlideChanged(event.previousSlide, event.currentSlide);
+          });
+        }
+
+        // hookup for slidy
+        if (window.w3c_slidy) {
+          window.w3c_slidy.add_observer(function (slide_num) {
+            // slide_num starts at position 1
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+          });
+        }
+
+      })();
+    </script>
+
     <script id="quarto-html-after-body" type="application/javascript">
     window.document.addEventListener("DOMContentLoaded", function (event) {
       const toggleBodyColorMode = (bsSheetEl) => {

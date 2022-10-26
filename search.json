@@ -228,7 +228,7 @@
     "href": "blog/drafts/post1.html#power",
     "title": "Using Simulation to Calculate Power and Minimum Detectable Effects",
     "section": "Power",
-    "text": "Power\n\nB = 1000\npower =\n    seq(100,1000,100) %>%\n    map(~(mc_replicate(B,est_power(modifyList(params,list(beta = .1,n=.x))),mc.cores=10))) %>%\n    map_dbl(~(mean(.x)))  %>%\n    data.frame(row.names = seq(100,1000,100)) %>%\n    rownames_to_column(var = \"N\") %>%\n    set_names(c(\"N\",\"power\")) %>%\n    as_tibble() %>%\n    mutate(N = as.numeric(paste0(N)))\npower %>% knitr::kable()\n\n\n\n\nN\npower\n\n\n\n\n100\n0.163\n\n\n200\n0.272\n\n\n300\n0.416\n\n\n400\n0.506\n\n\n500\n0.588\n\n\n600\n0.703\n\n\n700\n0.751\n\n\n800\n0.807\n\n\n900\n0.840\n\n\n1000\n0.883\n\n\n\n\npower %>%\n    ggplot(aes(x = N , y = power)) + geom_line() +\n    ggthemes::theme_few()"
+    "text": "Power\n\nB = 1000\npower =\n    seq(100,1000,100) %>%\n    map(~(mc_replicate(B,est_power(modifyList(params,list(beta = .1,n=.x))),mc.cores=10))) %>%\n    map_dbl(~(mean(.x)))  %>%\n    data.frame(row.names = seq(100,1000,100)) %>%\n    rownames_to_column(var = \"N\") %>%\n    set_names(c(\"N\",\"power\")) %>%\n    as_tibble() %>%\n    mutate(N = as.numeric(paste0(N)))\npower %>% knitr::kable()\n\n\n\n\nN\npower\n\n\n\n\n100\n0.185\n\n\n200\n0.286\n\n\n300\n0.410\n\n\n400\n0.533\n\n\n500\n0.610\n\n\n600\n0.695\n\n\n700\n0.746\n\n\n800\n0.814\n\n\n900\n0.852\n\n\n1000\n0.877\n\n\n\n\npower %>%\n    ggplot(aes(x = N , y = power)) + geom_line() +\n    ggthemes::theme_few()"
   },
   {
     "objectID": "blog/drafts/twfe-twm-and-did.html",
@@ -483,11 +483,452 @@
     "text": "More Resources\n\nA nice overview paper on peer review.\nNature Masterclass on Peer Review\n\n\n\nBack to Website"
   },
   {
-    "objectID": "slides/lec_inference.html#test",
-    "href": "slides/lec_inference.html#test",
+    "objectID": "slides/lec_inference.html#why-do-inference",
+    "href": "slides/lec_inference.html#why-do-inference",
     "title": "Inference for Program and Policy Evaluation",
-    "section": "Test",
-    "text": "Test"
+    "section": "Why do inference?",
+    "text": "Why do inference?\n\n\nWe often observe a sample of a population.\nEstimation under repeated sampling will yield a different result each time.\nThe (hypothetical) collection of results obtained (for a fixed sample size) can be summarized in a sampling distribution."
+  },
+  {
+    "objectID": "slides/lec_inference.html#why-do-inference-1",
+    "href": "slides/lec_inference.html#why-do-inference-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Why do inference?",
+    "text": "Why do inference?\n\n\nThe standard deviation of the sampling distribution is the standard error of the estimator.\nWe can also construct 95% confidence intervals that will, in expectation, cover the “truth” 95% of the time."
+  },
+  {
+    "objectID": "slides/lec_inference.html#why-do-inference-2",
+    "href": "slides/lec_inference.html#why-do-inference-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Why do inference?",
+    "text": "Why do inference?\n\nThis repeated sampling framework fits squarely within the generate, estimate, discriminate process we have used to understand estimation, bias, consistency, etc."
+  },
+  {
+    "objectID": "slides/lec_inference.html#our-course-thus-far",
+    "href": "slides/lec_inference.html#our-course-thus-far",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Our course thus far",
+    "text": "Our course thus far\n\n\nGenerate\n\n\nEstimate\n\n\nDiscriminate"
+  },
+  {
+    "objectID": "slides/lec_inference.html#our-course-thus-far-1",
+    "href": "slides/lec_inference.html#our-course-thus-far-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Our course thus far",
+    "text": "Our course thus far\n\n\nGenerate\n\n\nEstimate\n\n\nDiscriminate"
+  },
+  {
+    "objectID": "slides/lec_inference.html#our-course-thus-far-2",
+    "href": "slides/lec_inference.html#our-course-thus-far-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Our course thus far",
+    "text": "Our course thus far\n\n\n\nGenerate\n\n\nEstimate\n\n\nDiscriminate"
+  },
+  {
+    "objectID": "slides/lec_inference.html#inference-framework",
+    "href": "slides/lec_inference.html#inference-framework",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Inference Framework",
+    "text": "Inference Framework\n\n\nThis conceptualization will become important later when we think about bootstrapping.\nBut first, we need to understand different types of inference and when we might use each.\nTo do so, we’ll construct a decision framework for how we do inference."
+  },
+  {
+    "objectID": "slides/lec_inference.html#inference-framework-1",
+    "href": "slides/lec_inference.html#inference-framework-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Inference Framework",
+    "text": "Inference Framework\nWe can think of two dimensions of uncertainty in a policy evaluation:\n\n\nSampling: we only observe a sample of the population of interest.\nTreatment assignment: we (often) only observe one potential outcome."
+  },
+  {
+    "objectID": "slides/lec_inference.html#inference-framework-2",
+    "href": "slides/lec_inference.html#inference-framework-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Inference Framework",
+    "text": "Inference Framework\nWe can think of two dimensions of uncertainty in a policy evaluation:\n\nSampling: we only observe a sample of the population of interest.\nTreatment assignment: we (often) only observe one potential outcome.\n\nOur objective here is to develop an inference decision framework around these dimensions."
+  },
+  {
+    "objectID": "slides/lec_inference.html#inference-framework-3",
+    "href": "slides/lec_inference.html#inference-framework-3",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Inference Framework",
+    "text": "Inference Framework\n\n\n\nAnalytic inference relies on equations that use sample analogues to estimate a population-level parameter, such as a standard error.\n\n\nExample:\n\\[ SE = \\frac{\\sigma}{\\sqrt{n}} \\]\n\n\\(SE\\) is the standard error of the sample\n\\(\\sigma\\) is the sample standard deviation\n\\(n\\) is the sample size."
+  },
+  {
+    "objectID": "slides/lec_inference.html#inference-framework-4",
+    "href": "slides/lec_inference.html#inference-framework-4",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Inference Framework",
+    "text": "Inference Framework\n\n\nDrawback: standard analytic formulas apply for simple random samples of a population.\nAnother consideration is heteroskedasticity (though robust variance formulas are available)\nIn policy evaluation we often have both population sampling and treatment assignment correlated with clusters (e.g., states, households, etc.)."
+  },
+  {
+    "objectID": "slides/lec_inference.html#inference-framework-5",
+    "href": "slides/lec_inference.html#inference-framework-5",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Inference Framework",
+    "text": "Inference Framework\nThis leads to the following perennial questions:\n\n\nShould we use robust standard errors?\nShould we cluster?\nWhat method of inference should we use?"
+  },
+  {
+    "objectID": "slides/lec_inference.html#four-questions-you-should-always-ask",
+    "href": "slides/lec_inference.html#four-questions-you-should-always-ask",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Four Questions You Should Always Ask",
+    "text": "Four Questions You Should Always Ask\n\n\nHow were the data sampled?\nHow was treatment assigned?\n\nIs treatment assignment perfectly or partially correlated with cluster (e.g., state)?\nIf so, how many clusters do you observe? (large #? large fraction?)"
+  },
+  {
+    "objectID": "slides/lec_inference.html#four-questions-you-should-always-ask-1",
+    "href": "slides/lec_inference.html#four-questions-you-should-always-ask-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Four Questions You Should Always Ask",
+    "text": "Four Questions You Should Always Ask\n\n\nIf you can answer these questions there is a clear pathway to conducting inference—though note that multiple pathways may exist!\nWe’ll now tackle each of these questions in turn."
+  },
+  {
+    "objectID": "slides/lec_inference.html#sampling-uncertainty-1",
+    "href": "slides/lec_inference.html#sampling-uncertainty-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Sampling Uncertainty",
+    "text": "Sampling Uncertainty\n\n\nThis is the standard dimension that classic statistics/econometrics covers.\nIt has to do with the fact that we typically obtain a random sample from the population of interest."
+  },
+  {
+    "objectID": "slides/lec_inference.html#sampling-uncertainty-2",
+    "href": "slides/lec_inference.html#sampling-uncertainty-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Sampling Uncertainty",
+    "text": "Sampling Uncertainty\n\nIdeally, each observation in a sample would contribute an equal amount of information about the parameters of interest."
+  },
+  {
+    "objectID": "slides/lec_inference.html#sampling-uncertainty-3",
+    "href": "slides/lec_inference.html#sampling-uncertainty-3",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Sampling Uncertainty",
+    "text": "Sampling Uncertainty\n\n\nWhile simple random samples from a population are certainly feasible, we often analyze data sampled in complex ways.\n\nStratified samples (e.g., independent samples within a fixed number of groups like states)\nClustered samples of households.\nRepeated sampling of households/individuals.\nOften, all of the above."
+  },
+  {
+    "objectID": "slides/lec_inference.html#random-sampling-random-assignment",
+    "href": "slides/lec_inference.html#random-sampling-random-assignment",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Random Sampling, Random Assignment",
+    "text": "Random Sampling, Random Assignment\nScenario: Random sample of units from a large population with randomized treatment assignment at the unit level."
+  },
+  {
+    "objectID": "slides/lec_inference.html#random-sampling-random-assignment-1",
+    "href": "slides/lec_inference.html#random-sampling-random-assignment-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Random Sampling, Random Assignment",
+    "text": "Random Sampling, Random Assignment\nScenario: Random sample of units from a large population with randomized treatment assignment at the unit level.\n\n\n\n\n\n\nNo reason to cluster, even if there is within-cluster correlation in outcomes.\n\n\n\n\n\nClustering standard errors can be harmful, resulting in unnecessarily wide confidence intervals.\nIf the sample represents a large fraction of the population and treatment effects are heterogeneous across units, robust standard errors are also conservative.\n\n\nSource: Abadie et al. (2022)"
+  },
+  {
+    "objectID": "slides/lec_inference.html#random-sampling-random-assignment-2",
+    "href": "slides/lec_inference.html#random-sampling-random-assignment-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Random Sampling, Random Assignment",
+    "text": "Random Sampling, Random Assignment\nScenario: Random sample of units from a large population with randomized treatment assignment at the unit level.\n\n\n\n\n\n\nNo reason to cluster, even if there is within-cluster correlation in outcomes.\n\n\n\n\n\nClustering is not appropriate even if there is within-cluster correlation in outcomes (however those clusters are defined), and thus even if clustering makes a substantial difference in the magnitude of the standard errors.\nHowever, if the data contain information on attributes of the units that are correlated with unit-level treatment effects, the methods in Abadie et al. (2020) can be applied to obtain less conservative standard errors.\n\n\nSource: Abadie et al. (2022)"
+  },
+  {
+    "objectID": "slides/lec_inference.html#cluster-sampling-random-assignment",
+    "href": "slides/lec_inference.html#cluster-sampling-random-assignment",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Cluster Sampling, Random Assignment",
+    "text": "Cluster Sampling, Random Assignment"
+  },
+  {
+    "objectID": "slides/lec_inference.html#cluster-sampling-random-assignment-1",
+    "href": "slides/lec_inference.html#cluster-sampling-random-assignment-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Cluster Sampling, Random Assignment",
+    "text": "Cluster Sampling, Random Assignment\nScenario: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level."
+  },
+  {
+    "objectID": "slides/lec_inference.html#cluster-sampling-random-assignment-2",
+    "href": "slides/lec_inference.html#cluster-sampling-random-assignment-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Cluster Sampling, Random Assignment",
+    "text": "Cluster Sampling, Random Assignment\nScenario: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.\n\n\nReturns to age at HS graduation within a large sample of US households: large number of clusters (households) sampled, but small fraction of total clusters sampled."
+  },
+  {
+    "objectID": "slides/lec_inference.html#cluster-sampling-random-assignment-3",
+    "href": "slides/lec_inference.html#cluster-sampling-random-assignment-3",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Cluster Sampling, Random Assignment",
+    "text": "Cluster Sampling, Random Assignment\nScenario: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.\n\n\n\n\n\n\nIf \\(q_k\\) small or if \\(q_k\\) large but \\(p_k\\) small, clustered standard errors are asymptotically correct (with large # of clusters).\n\n\n\n\n\n\n\n\n\nIf the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach. More later!\n\n\n\n\n\n\\(q_k\\) is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5).\n\\(p_k\\) is the fraction of the population sampled.\n\n\nSource: Abadie et al. (2022)"
+  },
+  {
+    "objectID": "slides/lec_inference.html#treatment-assignment-1",
+    "href": "slides/lec_inference.html#treatment-assignment-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Treatment Assignment",
+    "text": "Treatment Assignment\n\n\nThis dimension of uncertainty occurs because we often only observe one potential outcome for each treated unit.\nThis would remain the case even if we observed the entire population of interest!"
+  },
+  {
+    "objectID": "slides/lec_inference.html#treatment-assignment-2",
+    "href": "slides/lec_inference.html#treatment-assignment-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Treatment Assignment",
+    "text": "Treatment Assignment\n\n\n\n\n \n  \n    unit_id \n    cluster \n    w_i \n    y_obs \n    y_1 \n    y_0 \n  \n \n\n  \n    856060 \n    41 \n    1 \n    1.74 \n    1.74 \n    ? \n  \n  \n    739098 \n    37 \n    1 \n    1.22 \n    1.22 \n    ? \n  \n  \n    277455 \n    18 \n    0 \n    1.85 \n    ? \n    1.85 \n  \n  \n    114550 \n    3 \n    0 \n    1.31 \n    ? \n    1.31 \n  \n  \n    891143 \n    41 \n    1 \n    1.49 \n    1.49 \n    ?"
+  },
+  {
+    "objectID": "slides/lec_inference.html#treatment-assignment-3",
+    "href": "slides/lec_inference.html#treatment-assignment-3",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Treatment Assignment",
+    "text": "Treatment Assignment\n\n\nOften, treatment assignment is correlated with clusters (e.g., state, county, etc.).\nIf treatment is perfectly correlated with cluster, then everyone within the same cluster is either treated or untreated.\n\nEffect of Medicaid expansion on earnings.\n\n\nAlternatively, treatment could be partially correlated with cluster.\n\nEffect of attending college on earnings, where it is observed that college attendance is correlated within state, county, etc."
+  },
+  {
+    "objectID": "slides/lec_inference.html#random-sampling-clustered-assignment",
+    "href": "slides/lec_inference.html#random-sampling-clustered-assignment",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Random Sampling, Clustered Assignment",
+    "text": "Random Sampling, Clustered Assignment\nScenario: Random sample of units from a large population with partially or fully clustered treatment assignment."
+  },
+  {
+    "objectID": "slides/lec_inference.html#random-sampling-clustered-assignment-1",
+    "href": "slides/lec_inference.html#random-sampling-clustered-assignment-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Random Sampling, Clustered Assignment",
+    "text": "Random Sampling, Clustered Assignment\nScenario: Random sample of units from a large population with partially or fully clustered treatment assignment.\n\n\n\n\n\n\nIf assignment is perfectly clustered, and you observe a large number of clusters, use standard cluster adjustment.\n\n\n\n\n\nCluster at the level of the intervention (e.g., state)\n\n\nSource: Abadie et al. (2022)"
+  },
+  {
+    "objectID": "slides/lec_inference.html#random-sampling-clustered-assignment-2",
+    "href": "slides/lec_inference.html#random-sampling-clustered-assignment-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Random Sampling, Clustered Assignment",
+    "text": "Random Sampling, Clustered Assignment\nScenario: Random sample of units from a large population with partially or fully clustered treatment assignment.\n\n\nIf treatment is not perfectly correlated with cluster, then clustered standard errors may be too conservative.\nAbadie et al. (2022) provide analytic formulas as well as a bootstrap procedure that can be used for inference."
+  },
+  {
+    "objectID": "slides/lec_inference.html#bootstrap-inference",
+    "href": "slides/lec_inference.html#bootstrap-inference",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Bootstrap Inference",
+    "text": "Bootstrap Inference\n\n\nBootstrapping is a way to conduct inference when large-sample theory provides a poor guide.\n\nSmall number of clusters\nTreatment assignment that is partially correlated with cluster.\n\nYou will see multiple bootstrap methods in the next slides.\n\nTwo-stage cluster bootstrap (Abadie et al. 2022)\nWild cluster bootstrap (Cameron, Gelbach, and Miller 2008)\n\nLet’s spend a few minutes on intuition for the bootstrap…"
+  },
+  {
+    "objectID": "slides/lec_inference.html#bootstrap-inference-1",
+    "href": "slides/lec_inference.html#bootstrap-inference-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Bootstrap Inference",
+    "text": "Bootstrap Inference\nBack to basics:\n\n\nGenerate\n\n\nEstimate\n\n\nDiscriminate"
+  },
+  {
+    "objectID": "slides/lec_inference.html#bootstrap-inference-2",
+    "href": "slides/lec_inference.html#bootstrap-inference-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Bootstrap Inference",
+    "text": "Bootstrap Inference\n\n\nIn practice, we don’t control the data generation process.\nIdea of bootstrap is to"
+  },
+  {
+    "objectID": "slides/lec_inference.html#bootstrap-inference-3",
+    "href": "slides/lec_inference.html#bootstrap-inference-3",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Bootstrap Inference",
+    "text": "Bootstrap Inference\nBack to basics:\n\n\nGenerate\n\n\nEstimate\n\n\nDiscriminate"
+  },
+  {
+    "objectID": "slides/lec_inference.html#bootstrap-inference-4",
+    "href": "slides/lec_inference.html#bootstrap-inference-4",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Bootstrap Inference",
+    "text": "Bootstrap Inference\n\nBasic idea is to generate a large number of bootstrap samples that mimic the distribution from which the actual sample was obtained (Roodman et al. 2019).\n\n\n\nBootstrap\n\n\nEstimate\n\n\nDiscriminate"
+  },
+  {
+    "objectID": "slides/lec_inference.html#bootstrap-inference-5",
+    "href": "slides/lec_inference.html#bootstrap-inference-5",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Bootstrap Inference",
+    "text": "Bootstrap Inference\n\n\n\nBootstrap\n\n\nEstimate\n\n\nDiscriminate"
+  },
+  {
+    "objectID": "slides/lec_inference.html#bootstrap-inference-6",
+    "href": "slides/lec_inference.html#bootstrap-inference-6",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Bootstrap Inference",
+    "text": "Bootstrap Inference\n\n\nWe repeatedly resample the sample (with replacement) and generate the parameter of interest each time.\nThe bootstrap P value is calculated as the proportion of the bootstrap values that are more extreme than the actual one from the original sample.\nIn this way, we essentially mimic the process we’ve used all along to understand the properties of estimators by generating data!"
+  },
+  {
+    "objectID": "slides/lec_inference.html#bootstrap-inference-7",
+    "href": "slides/lec_inference.html#bootstrap-inference-7",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Bootstrap Inference",
+    "text": "Bootstrap Inference\n\n\nThis is how bootstrapping works at a high level.\nThe various bootstrap procedures you’ll need have some additional wrinkles because of the clustered nature of sampling and/or treatment assignment.\nLet’s now go back to the objective that brought us here …"
+  },
+  {
+    "objectID": "slides/lec_inference.html#random-sampling-clustered-assignment-3",
+    "href": "slides/lec_inference.html#random-sampling-clustered-assignment-3",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Random Sampling, Clustered Assignment",
+    "text": "Random Sampling, Clustered Assignment\nScenario: Random sample of units from a large population with partially or fully clustered treatment assignment.\n\nIf treatment is not perfectly correlated with cluster, then clustered standard errors may be too conservative.\nAbadie et al. (2022) provide analytic formulas as well as a bootstrap procedure that can be used for inference.\n\n\n\nThe analytic variance formulas are called Causal Cluster Variance (CCV).\nThis bootstrap procedure is called two-stage cluster bootstrap (TSCB)."
+  },
+  {
+    "objectID": "slides/lec_inference.html#clustered-assignment",
+    "href": "slides/lec_inference.html#clustered-assignment",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Clustered Assignment",
+    "text": "Clustered Assignment\nScenario: Random or clustered sample of units from a large population with fully clustered treatment assignment.\n\n\n\n\n\n\nIf assignment is perfectly clustered, and you observe a large number of clusters, use standard cluster adjustment.\n\n\n\nScenario: Random or clustered sample of units from a large population with partially clustered treatment assignment.\n\n\n\n\n\n\nIf assignment is partially clustered (i.e., some variation in Tx assignment within cluster), use CCV/TSCB."
+  },
+  {
+    "objectID": "slides/lec_inference.html#clustered-assignment-1",
+    "href": "slides/lec_inference.html#clustered-assignment-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Clustered Assignment",
+    "text": "Clustered Assignment\n\n\nTreatment perfectly correlated with cluster:\n\n\n\n\n\n \n  \n    unit_id \n    cluster \n    y_i \n    pr_treated \n    w_i \n  \n \n\n  \n    301827 \n    20 \n    4.42 \n    0 \n    0 \n  \n  \n    516605 \n    27 \n    2.10 \n    1 \n    1 \n  \n  \n    446703 \n    27 \n    2.42 \n    1 \n    1 \n  \n  \n    311899 \n    21 \n    1.61 \n    1 \n    1 \n  \n  \n    855473 \n    41 \n    0.69 \n    1 \n    1 \n  \n  \n    937654 \n    46 \n    1.38 \n    0 \n    0 \n  \n\n\n\n\n\n\n\nTreatment partially correlated with cluster:\n\n\n\n\n\n \n  \n    unit_id \n    cluster \n    y_i \n    pr_treated \n    w_i \n  \n \n\n  \n    203240 \n    11 \n    4.96 \n    0.49 \n    0 \n  \n  \n    311906 \n    21 \n    1.69 \n    0.55 \n    1 \n  \n  \n    308935 \n    21 \n    1.45 \n    0.55 \n    1 \n  \n  \n    248407 \n    14 \n    -0.44 \n    0.54 \n    0 \n  \n  \n    717495 \n    36 \n    2.09 \n    0.37 \n    0 \n  \n  \n    992037 \n    49 \n    0.99 \n    0.68 \n    1"
+  },
+  {
+    "objectID": "slides/lec_inference.html#section-8",
+    "href": "slides/lec_inference.html#section-8",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "",
+    "text": "Source: Abadie et al. (2022)"
+  },
+  {
+    "objectID": "slides/lec_inference.html#a-practical-guide-to-tscb",
+    "href": "slides/lec_inference.html#a-practical-guide-to-tscb",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "A Practical Guide to TSCB",
+    "text": "A Practical Guide to TSCB\n\n\nStart with your sample. At a minimum, you’ll need\n\nOutcome\nTreatment indicator\nCluster variable"
+  },
+  {
+    "objectID": "slides/lec_inference.html#a-practical-guide-to-tscb-1",
+    "href": "slides/lec_inference.html#a-practical-guide-to-tscb-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "A Practical Guide to TSCB",
+    "text": "A Practical Guide to TSCB\n\n\nDetermine \\(q_k\\), the fraction of (population-level) clusters that are sampled.\n\nIt could be high! (e.g., for a state policy evaluation using a national survey that includes all states, this implies \\(q_k=1.0\\))\nIt could be low! (e.g., a national survey of households)"
+  },
+  {
+    "objectID": "slides/lec_inference.html#a-practical-guide-to-tscb-2",
+    "href": "slides/lec_inference.html#a-practical-guide-to-tscb-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "A Practical Guide to TSCB",
+    "text": "A Practical Guide to TSCB\n\n\nDefine a number of bootstrap replications (e.g., \\(B=100\\))\n\nYou’re now ready to iterate through the bootstrap procedure replication by replication!"
+  },
+  {
+    "objectID": "slides/lec_inference.html#a-practical-guide-to-tscb-3",
+    "href": "slides/lec_inference.html#a-practical-guide-to-tscb-3",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "A Practical Guide to TSCB",
+    "text": "A Practical Guide to TSCB\nFor each bootstrap replication …\n\n\nCreate a “pseudo-sample” by replicating your original sample \\(1/q_k\\) times.\n\nIf \\(1/q_k\\) is not an integer, you can use the methods in Chao and Lo (1985).\nEssentially, you solve for a fraction \\(\\alpha\\) using a fairly simple formula and some basic algebra.\nIf you observe 20 of 50 clusters (such that \\(q_k=0.4\\) and \\(1/q_k=2.25\\)), as you proceed through the B bootstrap replications, you’d replicate the sample 2 times with probability \\(\\alpha\\) or 3 times with probability \\(1-\\alpha\\)."
+  },
+  {
+    "objectID": "slides/lec_inference.html#a-practical-guide-to-tscb-4",
+    "href": "slides/lec_inference.html#a-practical-guide-to-tscb-4",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "A Practical Guide to TSCB",
+    "text": "A Practical Guide to TSCB\nFor each bootstrap replication …\n\n\nFor each cluster in your pseudo-sample, calculate and record the fraction of observations treated.\n\nThis is the empricial distribution of cluster-level treatment fractions, or \\(\\bar{W}_{k,m}\\).\nNOTE: To proceed, \\(\\bar{W}_{k,m}\\) must be between 0 and 1 for all clusters.\nIf treatment assignment is perfectly correlated with cluster, then just use cluster robust inference (if you have a sufficient number clusters! If you don’t, skip to the section on inference with a small number of clusters … )"
+  },
+  {
+    "objectID": "slides/lec_inference.html#a-practical-guide-to-tscb-5",
+    "href": "slides/lec_inference.html#a-practical-guide-to-tscb-5",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "A Practical Guide to TSCB",
+    "text": "A Practical Guide to TSCB\nFor each bootstrap replication …\n\n\nRandomly draw clusters from your pseudo-sample.\n\nIf you observe 20 clusters in your original sample, then randomly draw 20 clusters from your pseudo-sample.\nDraw these clusters without replacement."
+  },
+  {
+    "objectID": "slides/lec_inference.html#a-practical-guide-to-tscb-6",
+    "href": "slides/lec_inference.html#a-practical-guide-to-tscb-6",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "A Practical Guide to TSCB",
+    "text": "A Practical Guide to TSCB\nFor each bootstrap replication …\n\n\nFor each of these randomly drawn clusters, sample a treatment fraction value from \\(\\bar{W}_{k,m}\\).\n\nYou sample here with replacement.\nThis is the new assignment probability for each sampled cluster, called \\(A_{k,m}\\)."
+  },
+  {
+    "objectID": "slides/lec_inference.html#a-practical-guide-to-tscb-7",
+    "href": "slides/lec_inference.html#a-practical-guide-to-tscb-7",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "A Practical Guide to TSCB",
+    "text": "A Practical Guide to TSCB\nFor each bootstrap replication …\n\n\nNext, within each sampled cluster (each of which has cluster sample size \\(N_{k,m}\\)), sample (with replacement) treated and control units.\n\n\nSample \\(N_{k,m}A_{k,m}\\) treated units.\nSample \\(N_{k,m}(1 - A_{k,m})\\) untreated units.\nDo this for each sampled cluster in your bootstrap replicate sample."
+  },
+  {
+    "objectID": "slides/lec_inference.html#a-practical-guide-to-tscb-8",
+    "href": "slides/lec_inference.html#a-practical-guide-to-tscb-8",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "A Practical Guide to TSCB",
+    "text": "A Practical Guide to TSCB\nFor each bootstrap replication …\n\n\nEstimate your outcome regression (e.g., DID using least squares or a fixed effect model) on this bootstrap sample, are record the statistic/parameter you are interested in (e.g., \\(\\hat \\tau\\))"
+  },
+  {
+    "objectID": "slides/lec_inference.html#a-practical-guide-to-tscb-9",
+    "href": "slides/lec_inference.html#a-practical-guide-to-tscb-9",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "A Practical Guide to TSCB",
+    "text": "A Practical Guide to TSCB\n\n\nRepeat steps 4-9 \\(B\\) times and collect the \\(\\hat \\tau\\) estimates.\n\nYou can now calculate the standard deviation of these estimates as an estimate of the standard error.\nYou could also calculate a p-value by calculating the fraction of bootstrap estimates that are as or more extreme than your estimate from the original data."
+  },
+  {
+    "objectID": "slides/lec_inference.html#small-cluster-bias",
+    "href": "slides/lec_inference.html#small-cluster-bias",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Small Cluster Bias",
+    "text": "Small Cluster Bias\n\n\nThus far we have assumed we have a sufficiently large number of clusters (e.g., >30) in our sample.\nJustification of inference with cluster-robust standard errors assumes that the number of clusters goes to infinity."
+  },
+  {
+    "objectID": "slides/lec_inference.html#small-cluster-bias-1",
+    "href": "slides/lec_inference.html#small-cluster-bias-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Small Cluster Bias",
+    "text": "Small Cluster Bias\n\n\nWhat happens if we have only a few clusters?\n\nExample: Evaluation of a state-level policy change based on a sample of 8 states with 4 treated and 4 untreated.\n\nCameron, Gelbach, and Miller (2008): With a small number of clusters, cluster-robust standard errors are downwards biased.\n\nYou’re going to over-reject the null hypothesis because your standard errors are too small."
+  },
+  {
+    "objectID": "slides/lec_inference.html#small-cluster-bias-2",
+    "href": "slides/lec_inference.html#small-cluster-bias-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Small Cluster Bias",
+    "text": "Small Cluster Bias\n\n\nHow can we deal with this?\nTwo primary ways (though there are others):\n\nWild cluster bootstrap.\nRandomization inference"
+  },
+  {
+    "objectID": "slides/lec_inference.html#wild-cluster-bootstrap",
+    "href": "slides/lec_inference.html#wild-cluster-bootstrap",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Wild cluster bootstrap",
+    "text": "Wild cluster bootstrap\n\n\nSame basic idea as a regular bootstrap.\nMain difference is that rather than resampling rows of our data, we resample the residuals after fitting our outcome model."
+  },
+  {
+    "objectID": "slides/lec_inference.html#wild-cluster-bootstrap-1",
+    "href": "slides/lec_inference.html#wild-cluster-bootstrap-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Wild cluster bootstrap",
+    "text": "Wild cluster bootstrap\nFor each bootstrap replicate …\n\n\nSample (with replacement) the residuals after fitting the main regression model.\nWe then apply a weight to each residual.\n\nWeight is -1 with probability 0.5 and 1 with probability 0.5.\n\nThe catch is that everyone within the same cluster receives the same weight value (i.e., we sample 1 or -1 by cluster)."
+  },
+  {
+    "objectID": "slides/lec_inference.html#wild-cluster-bootstrap-2",
+    "href": "slides/lec_inference.html#wild-cluster-bootstrap-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Wild cluster bootstrap",
+    "text": "Wild cluster bootstrap\nFor each bootstrap replicate …\n\n\nBecause we only resample (and reweight the residuals) the other X variables used in the regression stay the same.\nThe coefficients and X’s from the original regression can be used to obtain a predicted value.\nThis predicted value plus the new (sampled and re-weighted) residuals are used to construct a new outcome value."
+  },
+  {
+    "objectID": "slides/lec_inference.html#wild-cluster-bootstrap-3",
+    "href": "slides/lec_inference.html#wild-cluster-bootstrap-3",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Wild cluster bootstrap",
+    "text": "Wild cluster bootstrap\nFor each bootstrap replicate …\n\n\nRe-estimate the regression using the new outcome values.\nRepeat \\(B\\) times and collect the estimates.\nYou can use these estimates to construct a p-value based on how extreme the original value is within the distribution of estimates generated via the bootstrap samples."
+  },
+  {
+    "objectID": "slides/lec_inference.html#wild-cluster-bootstrap-4",
+    "href": "slides/lec_inference.html#wild-cluster-bootstrap-4",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Wild cluster bootstrap",
+    "text": "Wild cluster bootstrap\n\n\nWild cluster bootstrap is easily executed in both Stata and R.\nNew “fast” routines can complete this process in seconds (or less)."
+  },
+  {
+    "objectID": "slides/lec_inference.html#permutation-inference",
+    "href": "slides/lec_inference.html#permutation-inference",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Permutation Inference",
+    "text": "Permutation Inference\n\n\nAnother approach (though it can be a bit more conservative) is to use randomization inference.\nBasic idea here is to randomly permute the treatment indicator.\nThis is a useful approach when treatment is perfectly correlated with clusters (e.g., state policy change) and you only have a few clusters in your sample."
+  },
+  {
+    "objectID": "slides/lec_inference.html#permutation-inference-1",
+    "href": "slides/lec_inference.html#permutation-inference-1",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Permutation Inference",
+    "text": "Permutation Inference\n\n\nExample: State policy change with 12 total states (4 treated, 8 untreated)\nIdea: Iterative exercise where you randomly select the 4 “treated” states and re-estimate the outcome model each time.\n\nThere are 495 possible combinations of 4 treated states out of 12 total states.\nYou can therefore construct a distribution of 495 different treatment effect estimates.\nHow “extreme” is the estimate in your primary sample within this distribution of 495 estimates?"
+  },
+  {
+    "objectID": "slides/lec_inference.html#permutation-inference-2",
+    "href": "slides/lec_inference.html#permutation-inference-2",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "Permutation Inference",
+    "text": "Permutation Inference\n\n\nA nice feature of this approach is that you get an exact p-value.\nIf the total possible number of permutations is large (e.g., 20 choose 10 = 184,756), you could always just permute cluster treatment status, say, 1,000 times to approximate the distribution.\nA downside is that constructing 95% confidence intervals requires strong assumptions (homogeneity of treatment effect)."
+  },
+  {
+    "objectID": "slides/lec_inference.html#references",
+    "href": "slides/lec_inference.html#references",
+    "title": "Inference for Program and Policy Evaluation",
+    "section": "References",
+    "text": "References\n\n\nBack to Website\n\n\n\nAbadie, Alberto, Susan Athey, Guido W. Imbens, and Jeffrey M. Wooldridge. 2020. “Sampling-Based Versus Design-Based Uncertainty in Regression Analysis.” Econometrica 88 (1): 265–96.\n\n\nAbadie, Alberto, Susan Athey, Guido Imbens, and Jeffrey Wooldridge. 2022. “When Should You Adjust Standard Errors for Clustering?” arXiv. https://doi.org/10.48550/arXiv.1710.02926.\n\n\nCameron, A. Colin, Jonah B. Gelbach, and Douglas L. Miller. 2008. “Bootstrap-Based Improvements for Inference with Clustered Errors.” The Review of Economics and Statistics 90 (3): 414–27.\n\n\nChao, Min-Te, and Shaw-Hwa Lo. 1985. “A Bootstrap Method for Finite Population.” Sankhyā: The Indian Journal of Statistics, Series A, 399–405.\n\n\nRoodman, David, Morten Ørregaard Nielsen, James G. MacKinnon, and Matthew D. Webb. 2019. “Fast and Wild: Bootstrap Inference in Stata Using Boottest.” The Stata Journal 19 (1): 4–60."
   },
   {
     "objectID": "slides/next-gen-DID.html#policy-evaluation-methods-until-2018",
