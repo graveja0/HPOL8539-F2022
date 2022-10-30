@@ -1,0 +1,1694 @@
+---
+title: "Inference for Program and Policy Evaluation"
+format:
+  revealjs:
+    transition: fade
+    background-transition: fade
+    highlight-style: ayu-mirage
+    footer: |
+      [Back to Website](../index.html)
+editor_options: 
+  chunk_output_type: console
+bibliography: ../references.bib
+---
+```{r, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(fastDummies)
+library(sandwich)
+library(glue)
+library(furrr)
+library(progressr)
+library(fixest)
+library(rsample)
+library(tidymodels)
+library(fwildclusterboot)
+library(knitr)
+library(kableExtra)
+
+lut <- c("ols"="Classic Inference","rols" = "Robust","cols"= "Clustered","wild cluster" = "Wild Cluster","tscb" = "Two-Stage Cluster Bootstrap")
+
+
+map_progress <- function(.x, .f, ..., .id = NULL) {
+  # Source: https://www.jamesatkins.net/post/2020/progress-bar-in-purrrmap_df/
+  .f <- purrr::as_mapper(.f, ...)
+  pb <- progress::progress_bar$new(total = length(.x), force = TRUE)
+
+  f <- function(...) {
+    pb$tick()
+    .f(...)
+  }
+  purrr::map(.x, f, ..., .id = .id)
+}
+
+params <- list(
+  tau = 0,
+  N = 1e6,
+  n = 10000,
+  M = 50
+)
+
+make_population_data <- function(params) {
+
+  with(params,{
+
+    year <-
+      data.frame(year = 2013:2014,
+                 year_fe = arima.sim(n=length(2013:2014), list(ar = 0.8, order=c(1,0,0))) %>% as.vector()) %>%
+      as_tibble()
+
+    n_k <- n_ki <- 1:N
+
+    m_k = 1:M
+
+    year_cluster <- 1:M %>% map(~(      data.frame(year = 2013:2014,
+                                                   year_fe_cluster = arima.sim(n=length(2013:2014), list(ar = 0.8, order=c(1,0,0))) %>% as.vector()) %>%
+                                          as_tibble())) %>%
+      bind_rows(.id ="cluster") %>%
+      mutate(cluster = as.numeric(paste0(cluster)))
+
+    sampled_clusters <- rep(1,length(m_k))
+    names(sampled_clusters) = m_k
+
+    min_ = 0
+
+    while(min_<= ceiling(n/sum(sampled_clusters))) {
+      cluster_pop_frac <- rnbinom(M,size=1,mu=1000)
+      cluster_pop_frac = cluster_pop_frac / sum(cluster_pop_frac)
+      cluster_pop_size = ceiling(cluster_pop_frac * N)
+      diff = sum(cluster_pop_size)-N
+      cluster_pop_size[which(cluster_pop_size==max(cluster_pop_size))] <- cluster_pop_size[which(cluster_pop_size==max(cluster_pop_size))] - diff
+
+      # The number of units in cluster m of population k is nk,m >= 1.
+      # Cluster population sample size
+
+      n_km <- cluster_pop_size
+      names(n_km) = paste0(m_k)
+      min_cluster_size = min_ = min(n_km)
+    }
+
+    # Let mk,i \in {1,...,mk} denote the cluster that unit i of population k belongs to.
+    m_ki = rep(as.numeric(names(n_km)),n_km) %>% sort()
+
+    # Random Sampling, Random Assignment
+    unit <-
+      data.frame(unit = 1:N,
+                 unit_fe = rnorm(N)) %>%
+      mutate(cluster = m_ki) %>%
+      mutate(x_i = rnorm(nrow(.),mean = 0, sd = 0.2))
+
+    df_pop_  <-
+      tibble(unit = 1:N) %>%
+      left_join(unit,"unit") %>%
+      crossing(.,year) %>%
+      mutate(unit_error = rnorm(nrow(.))) %>%
+      inner_join(year_cluster, c("cluster","year"))
+
+    df_pop1 <-
+      df_pop_ %>%
+      mutate(y_it_1 = 0.5 + tau * as.integer(year==2014)  + unit_fe + year_fe + year_fe_cluster + unit_error*x_i) %>%
+      gather(y_i,value,-unit,-unit_fe,-cluster,-year,-year_fe,-unit_error,-x_i) %>%
+      arrange(unit,year,y_i) %>%
+      mutate(y_i = glue("{y_i}_{year}")) %>%
+      select(unit,cluster,y_i,value) %>%
+      spread(y_i,value) %>%
+      mutate(y_1 = y_it_1_2014 - y_it_1_2013) %>%
+      select(unit,cluster,y_1)
+
+    df_pop0 <-
+      df_pop_ %>%
+      mutate(y_it_0 = 0.5 + 0  + unit_fe + year_fe + year_fe_cluster + unit_error*x_i) %>%
+      gather(y_i,value,-unit,-unit_fe,-cluster,-year,-year_fe,-unit_error,-x_i) %>%
+      arrange(unit,year,y_i) %>%
+      mutate(y_i = glue("{y_i}_{year}")) %>%
+      select(unit,cluster,y_i,value) %>%
+      spread(y_i,value) %>%
+      mutate(y_0 = y_it_0_2014 - y_it_0_2013) %>%
+      select(unit,cluster,y_0)
+
+    df_pop <-
+      df_pop1 %>%
+      inner_join(df_pop0,c("unit","cluster"))
+
+    return(list(params = params, df = df_pop))
+  })
+}
+
+sample_population <- function(pop, n_cluster = NULL, sample = c("R","C")) {
+  params <- pop$params
+  df <- pop$df
+
+  n_k <- n_ki <- df$unit
+  m_k <- unique(df$cluster)
+  names(m_k) = m_k
+
+  if (!is.null(n_cluster)) {
+    q_k = n_cluster / length(m_k)
+    sampled_clusters <- runif(length(m_k))
+    names(sampled_clusters) <- paste0(m_k)
+    sampled_clusters <- sort(sampled_clusters)[1:n_cluster]
+  } else {
+    n_cluster = length(m_k)
+    sampled_clusters <- m_k
+  }
+
+  # Let mk,i \in {1,...,mk} denote the cluster that unit i of population k belongs to.
+  m_ki = df$cluster
+
+  # Random Sampling, Random Assignment
+  unit <-
+    df %>%
+    mutate(unit_sampled_rand = runif(nrow(.))) %>%
+    arrange(unit_sampled_rand) %>%
+    mutate(unit_sampled_rand = as.integer(row_number()<=params$n)) %>%
+    arrange(unit)
+
+  sampled_units <-
+    unit %>%
+    mutate(cluster_sampled = as.integer(cluster %in% names(sampled_clusters))) %>%
+    filter(cluster_sampled==1) %>%
+    mutate(uniform = runif(n=nrow(.))) %>%
+    arrange(cluster,uniform) %>%
+    group_by(cluster) %>%
+    filter(row_number() %in% 1:(ceiling(params$n/length(sampled_clusters)))) %>%
+    ungroup() %>%
+    arrange(uniform) %>%
+    filter(row_number() %in% 1:params$n) %>%
+    pull(unit)
+
+  df_samp   <-
+    unit %>%
+    mutate(unit_sampled_cluster = as.integer(unit %in% sampled_units))
+
+  if (sample=="C") {
+    return(df_samp %>% filter(unit_sampled_cluster==1))
+  } else if (sample=="R") {
+    return(df_samp %>% filter(unit_sampled_rand==1))
+  }
+}
+
+treatment_assignment <- function(df, assignment = c("R","C"), mu_treated=0.5, sd_treated=0)  {
+  if (assignment == "R") {
+    df %>%
+      mutate(w_i = rbinom(nrow(.),size=1, prob = mu_treated)) %>%
+      mutate(y_i = w_i * y_1 + (1 - w_i) * y_0)
+  } else if (assignment=="C") {
+    if (sd_treated !=0 ) {
+      tmp_ <-
+        df %>%
+          select(cluster) %>%
+          unique() %>%
+          mutate(pr_treated = rbeta(nrow(.),shape1=mu_treated*10,shape2=(1-mu_treated)*10))
+
+    } else if (sd_treated==0) {
+      n_treated = round(mu_treated * length(unique(df$cluster)),0)
+      tmp_ <-
+        df %>%
+        select(cluster) %>%
+        unique() %>% 
+        arrange(runif(nrow(.))) %>% 
+        mutate(pr_treated = as.integer(row_number()<=n_treated)) 
+    }
+
+    df %>%
+      left_join(tmp_,"cluster") %>%
+      mutate(w_i = runif(nrow(.))) %>%
+      mutate(w_i = as.integer(w_i <= pr_treated)) %>%
+      mutate(y_i = w_i * y_1 + (1 - w_i) * y_0)
+  }
+}
+
+run_ols <- function(df_, standard = TRUE, robust = TRUE, cluster = TRUE, permutation = FALSE, wild_cluster = TRUE, tscb_inf = FALSE, 
+                    B = 100, P = 100) {
+  
+  out <- list() 
+  
+  # Standard OLS
+  ols_ <- lm(y_i~w_i, data = df_)
+  ols <- ols_ %>% broom::tidy(conf.int=TRUE) %>% mutate(method="ols")
+  
+  if (standard) out <- bind_rows(out,ols)
+
+  # Heteroskedasticity Robust Inference
+  rols <- feols(y_i~w_i, vcov = "hetero", data = df_) %>% broom::tidy(conf.int=TRUE) %>% mutate(method = "rols")
+  if (robust) out <- bind_rows(out,rols)
+  
+  # Cluster Robust Inference
+  cols <- feols(y_i~w_i,
+                cluster = ~cluster,
+                ssc = fixest::ssc(adj = TRUE,
+                                  cluster.adj = TRUE,
+                                  cluster.df = 'conventional'),
+                data = df_) %>% broom::tidy(conf.int=TRUE) %>% mutate(method = "cols")
+  
+  if (cluster) out <- bind_rows(out, cols)
+
+  if (permutation) {
+      # Permutation Inference
+      df_permuted <- permutations(df_, w_i, times = P,  apparent=TRUE)
+      ols_perm_ <- map_df(df_permuted$splits, function(x) {
+        lm(y_i~w_i, data = analysis(x)) %>% broom::tidy(conf.int=TRUE) %>% mutate(method="ols_perm") %>% filter(term=="w_i") %>% select(term,estimate,method)
+      },.id = "iteration")
+      est_perm <- ols_perm_ %>% filter(iteration == P + 1) %>% select(term,estimate,method)
+      std.error <- ols_perm_ %>% filter(iteration <= P ) %>% summarise(std.error = sd(estimate)) %>% pull(std.error)
+      null.dist <- ols_perm_ %>% filter(iteration <= P ) %>% pull(estimate)
+      point.est <- est_perm$estimate[1]
+      p.value <- mean(abs(null.dist) >= abs(point.est))
+      ols_perm <- cbind.data.frame(est_perm,std.error,p.value)
+      
+      out <- bind_rows(out,ols_perm)
+
+  }
+
+  if (wild_cluster) {
+     # Wild Cluster Bootstrap
+      boot_ols <- boottest(
+        ols_,
+        clustid = "cluster",
+        param = "w_i",
+        B = 9999
+      )
+      ols_wildc <-
+        summary(boot_ols) %>%
+        data.frame() %>%
+        mutate(term = "w_i") %>%
+        mutate(method = "wild cluster")
+      
+      out <- bind_rows(out,ols_wildc)
+  }
+ 
+  if (tscb_inf) {
+    fit_ols <- function(split, bar_W,...) {
+    set.seed(123)
+    df_fit <-
+      analysis(split)  %>%
+      mutate(A = sample(bar_W,nrow(.),replace=TRUE)) %>%
+      mutate(n = map_dbl(data,~(nrow(.x)))) %>%
+      mutate(n_tx = round(A*n)) %>%
+      mutate(n_cx = n - n_tx) %>%
+      # mutate(n_tx_is_zero = as.integer(n_tx==0),
+      #        n_cx_is_zero = as.integer(n_cx==0)) %>%
+      # mutate(n_tx = ifelse(n_tx_is_zero==1, 2, n_tx),
+      #        n_cx = ifelse(n_cx_is_zero==1,2,n_cx)) %>%
+      mutate(index_tx = map2(data,n_tx,~(.x %>% ungroup() %>% mutate(index=row_number()) %>% filter(w_i==1) %>% pull(index) %>% base::sample(x = ., size = .y, replace=TRUE)))) %>%
+      mutate(index_cx = map2(data,n_cx,~(.x %>% ungroup() %>% mutate(index=row_number()) %>% filter(w_i==0) %>% pull(index) %>% base::sample(x = ., size = .y, replace=TRUE)))) %>%
+      mutate(data_tx = map2(data,index_tx,~({.x}[.y,]))) %>%
+      mutate(data_cx = map2(data,index_cx,~({.x}[.y,]))) %>%
+      mutate(data_boot = map2(data_tx,data_cx,~(bind_rows(.x,.y)))) %>%
+      select(cluster,data_boot,cluster_i) %>%
+      unnest(cols = data_boot)
+
+    with(df_fit,lm(y_i ~ w_i)) %>% broom::tidy() %>% mutate(method = "tscb") %>% filter(term=="w_i") %>%
+      select(term,estimate,method)
+  }
+
+  tscb <- function(df_,B,.f) {
+    f <- function(...) {
+      .f(...)
+    }
+    # Two Stage Cluster Bootstrap
+
+    # Stage 1
+    # 1a. Create psuedo population by replicating each cluster 1/q_k times
+
+    # Find the two nearest multiples of n
+    clusters_in_sample <- length(unique(df_$cluster))
+    N1 = clusters_in_sample*floor(params$M/clusters_in_sample)
+    N2 = clusters_in_sample*ceiling(params$M/clusters_in_sample)
+    k1 = N1/clusters_in_sample; k1
+    k2 = N2/clusters_in_sample; k2
+    # if we expand teh sample k_j  times,
+    F_t <- function(t) {
+      (1-(clusters_in_sample/t)) * (t*(clusters_in_sample-1))/((t-1)*clusters_in_sample)
+    }
+    if (k2>k1) {
+      alpha <- (F_t(params$M/clusters_in_sample)-F_t(k2))/(F_t(k1)-F_t(k2)); alpha
+    } else {
+      alpha = 1
+    }
+
+    N <- sample(c(N1,N2),1,prob=c(alpha,1-alpha))
+    k = N/clusters_in_sample; k
+
+    df_expanded <-
+      crossing(df_, replicate = 1:k) %>%
+      mutate(cluster = glue("{cluster}_{replicate}"))
+
+    # 1b for each cluster in teh pseudo population, calcualte the assignment probability
+    bar_W <-
+      df_expanded %>%
+      group_by(cluster) %>%
+      summarise(w_i = mean(w_i)) %>%
+      deframe()
+
+    # 1c create a bootstrap sample of clusters by randomly drawing clusters from the
+    # pseudo population from stage 1a
+
+    tmp_ <-
+      df_expanded %>%
+      group_by(cluster) %>%
+      nest() %>%
+      ungroup() %>%
+      mutate(cluster_i = row_number())
+
+    indices <- 1:B %>% map(~(list(analysis = sample(tmp_$cluster_i,clusters_in_sample, replace = FALSE) %>% as.vector())))
+
+    splits <- lapply(indices, make_splits, data = tmp_)
+    tscb_splits <- manual_rset(splits, paste0("split",1:B))
+    null.dist <- tscb_splits$splits %>% map_df(~(f(.x,bar_W=bar_W))) %>% pull(estimate)
+    point.est <- lm(y_i ~ w_i, data = df_) %>% tidy() %>% filter(term=="w_i") %>% pull(estimate)
+    std.error <- sd(null.dist)
+    p.value <- mean(abs(null.dist) >= abs(point.est))
+    tscb <- cbind.data.frame(estimate=point.est,std.error,p.value) %>% mutate(term = "w_i", method = "tscb")
+    return(tscb)
+  }
+
+  ols_tscb <- df_ %>% tscb(df_  = ., B = B, fit_ols)
+  out <- bind_rows(out,ols_tscb)
+  }
+  out <- out %>% filter(term=="w_i")
+  return(out)
+}
+
+```
+
+
+```{r, eval = TRUE, cache = TRUE}
+# plan("multisession")
+# res_aR_txCP <-
+#   1:B %>% map_progress(~({
+#     pop %>% sample_population (sample="R") %>%
+#       filter(unit_sampled_rand==1) %>%
+#       treatment_assignment(assignment = "C", mu_treated = 0.5, sd_treated=10) %>%
+#       do({
+#         ols <- lm(y_i~w_i, data = .) %>% broom::tidy(conf.int=TRUE) %>% mutate(method="ols")
+#         rols <- feols(y_i~w_i, vcov = "hetero", data = .) %>% broom::tidy(conf.int=TRUE) %>% mutate(method = "rols")
+#         cols <- feols(y_i~w_i, cluster = "cluster", data = .) %>% broom::tidy(conf.int=TRUE) %>% mutate(method = "cols")
+#
+#         df_permuted <- permutations(., w_i, times = P,  apparent=TRUE)
+#         ols_perm_ <- map_df(df_permuted$splits, function(x) {
+#           lm(y_i~w_i, data = analysis(x)) %>% broom::tidy(conf.int=TRUE) %>% mutate(method="ols_perm") %>% filter(term=="w_i") %>% select(term,estimate,method)
+#         },.id = "iteration")
+#         est_perm <- ols_perm_ %>% filter(iteration == P + 1) %>% select(term,estimate,method)
+#         std.error <- ols_perm_ %>% filter(iteration <= P ) %>% summarise(std.error = sd(estimate)) %>% pull(std.error)
+#         ols_perm <- cbind.data.frame(est_perm,std.error)
+#         bind_rows(ols,rols,cols,ols_perm) %>% filter(term=="w_i")
+#         })
+#   }))
+
+set.seed(62381)
+pop <- 
+  params %>% 
+  make_population_data()
+
+set.seed(62381)
+df_RR <- 
+  pop %>% sample_population(sample="R") %>%
+  filter(unit_sampled_rand==1) %>% 
+  treatment_assignment(assignment = "R", mu_treated = 0.5)
+set.seed(62381)
+
+df_C50R <- 
+  pop %>% sample_population(sample="C") %>% 
+  filter(unit_sampled_cluster==1) %>% 
+  treatment_assignment(assignment = "R", mu_treated = 0.5)
+
+set.seed(62381)
+df_C30R <- 
+  pop %>% sample_population(sample="C", n_cluster = 30) %>% 
+  filter(unit_sampled_cluster==1) %>% 
+  treatment_assignment(assignment = "R", mu_treated = 0.5)
+
+set.seed(62381)
+df_C10R <- 
+  pop %>% sample_population(sample="C", n_cluster = 10) %>% 
+  filter(unit_sampled_cluster==1) %>% 
+  treatment_assignment(assignment = "R", mu_treated = 0.5)
+
+set.seed(62381)
+df_RC <- 
+  pop %>% sample_population(sample="R") %>%
+  filter(unit_sampled_rand==1) %>% 
+  treatment_assignment(assignment = "C", mu_treated = 0.5, sd_treated = 0)
+
+set.seed(623812345)
+df_RCp <- 
+  pop %>% sample_population(sample="R") %>%
+  filter(unit_sampled_rand==1) %>% 
+  treatment_assignment(assignment = "C", mu_treated = 0.5, sd_treated = 10)
+
+set.seed(62381)
+df_C50C <- 
+  pop %>% sample_population(sample="C") %>% 
+  filter(unit_sampled_cluster==1)  %>% 
+  treatment_assignment(assignment = "C", mu_treated = 0.5, sd_treated = 0)
+
+set.seed(62381)
+df_C50Cp <- 
+  pop %>% sample_population(sample="C") %>% 
+  filter(unit_sampled_cluster==1)%>% 
+  treatment_assignment(assignment = "C", mu_treated = 0.5, sd_treated = 10)
+
+set.seed(62381)
+df_C30C <- 
+  pop %>% sample_population(sample="C", n_cluster = 30) %>% 
+  filter(unit_sampled_cluster==1)  %>% 
+  treatment_assignment(assignment = "C", mu_treated = 0.5, sd_treated = 0)
+
+set.seed(62381)
+df_C30Cp <- 
+  pop %>% sample_population(sample="C", n_cluster = 30) %>% 
+  filter(unit_sampled_cluster==1)%>% 
+  treatment_assignment(assignment = "C", mu_treated = 0.5, sd_treated = 10)
+
+set.seed(62381)
+df_C10C <- 
+  pop %>% sample_population(sample="C", n_cluster = 10) %>% 
+  filter(unit_sampled_cluster==1)  %>% 
+  treatment_assignment(assignment = "C", mu_treated = 0.5, sd_treated = 0)
+
+set.seed(62381)
+df_C10Cp <- 
+  pop %>% sample_population(sample="C", n_cluster = 10) %>% 
+  filter(unit_sampled_cluster==1)%>% 
+  treatment_assignment(assignment = "C", mu_treated = 0.5, sd_treated = 10)
+
+
+
+# df_ <-
+#   pop %>% sample_population(sample="C") %>%
+#   filter(unit_sampled_cluster==1) %>%
+#   treatment_assignment(assignment = "C", mu_treated = 0.5, sd_treated=10)  %>%
+#   data.frame()
+# 
+# B = 10  # Bootstrap samples
+# P = 50  # Permutation samples
+
+# df_ %>% run_ols()
+
+```
+
+
+## Why do inference?
+
+::: incremental
+-   We often observe a sample of a population.
+-   Estimation under repeated sampling will yield a different result each time.
+-   The (hypothetical) collection of results obtained (for a fixed sample size) can be summarized in a sampling distribution.
+:::
+
+## Why do inference?
+
+::: incremental
+-   The standard deviation of the sampling distribution is the standard error of the estimator.
+-   We can also construct 95% confidence intervals that will, in expectation, cover the "truth" 95% of the time.
+:::
+
+## Why do inference?
+
+-   This repeated sampling framework fits squarely within the **generate**, **estimate**, **discriminate** process we have used to understand estimation, bias, consistency, etc.
+
+## Our course thus far {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+::: r-hstack
+::: {data-id="generate" auto-animate-delay="0" style="background: #2780e3; width: 200px; height: 150px; margin: 10px;"}
+Generate
+:::
+
+::: {data-id="estimate" auto-animate-delay="0.1" style="background: #3fb618; width: 200px; height: 150px; margin: 10px;"}
+Estimate
+:::
+
+::: {data-id="discriminate" auto-animate-delay="0.2" style="background: #e83e8c; width: 200px; height: 150px; margin: 10px;"}
+Discriminate
+:::
+:::
+
+## Our course thus far {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 350px; height: 350px; border-radius: 200px;"}
+Generate
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 250px; height: 250px; border-radius: 200px;"}
+Estimate
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 150px; height: 150px; border-radius: 200px;"}
+Discriminate
+:::
+:::
+
+## Our course thus far {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+::: r-hstack
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+:::
+
+::: r-hstack
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+:::
+
+::: r-hstack
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+:::
+
+## Inference Framework {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+::: incremental
+-   This conceptualization will become important later when we think about **bootstrapping.**
+-   But first, we need to understand different types of inference and when we might use each. 
+-   To do so, we'll construct a **decision framework** for how we do inference.
+::: 
+
+## Inference Framework
+
+We can think of two dimensions of uncertainty in a policy evaluation:
+
+::: incremental
+1.  **Sampling**: we only observe a sample of the population of interest.
+2.  **Treatment assignment**: we (often) only observe one potential outcome. 
+
+:::
+
+## Inference Framework
+
+We can think of two dimensions of uncertainty in a policy evaluation:
+
+1.  **Sampling**: we only observe a sample of the population of interest.
+2.  **Treatment assignment**: we (often) only observe one potential outcome. 
+
+Our objective here is to develop an inference decision framework around these dimensions.
+
+## Inference Framework
+
+
+::: columns
+
+::: column
+
+
+- **Analytic** inference relies on equations that use sample analogues to estimate a population-level parameter, such as a standard error. 
+
+:::
+
+::: column
+
+Example:
+
+$$ SE = \frac{\sigma}{\sqrt{n}} $$
+- $SE$ is the standard error of the sample
+- $\sigma$ is the sample standard deviation
+- $n$ is the sample size. 
+:::
+:::
+
+## Inference Framework
+
+::: incremental
+
+- Drawback: standard analytic formulas apply for simple random samples of a population.
+- Another consideration is heteroskedasticity (though robust variance formulas are available)
+- In policy evaluation we often have both population sampling *and* treatment assignment correlated with clusters (e.g., states, households, etc.). 
+
+:::
+
+## Inference Framework
+
+This leads to the following frequently-asked questions: 
+
+::: incremental
+1.  Should we use robust standard errors?
+2.  Should we cluster?
+3.  What method of inference should we use?
+:::
+
+## Four Questions You Should Ask
+
+::: incremental
+- How were the data sampled? 
+- How was treatment assigned? 
+    - Is treatment assignment perfectly or partially correlated with cluster (e.g., state)?
+    - If so, how many clusters do you observe? (large #? large fraction?)
+  
+:::
+
+## Four Questions You Should Ask
+
+::: incremental
+
+- If you can answer these questions there is a clear pathway to conducting inference---though note that multiple pathways may exist!
+- We'll now tackle each of these questions in turn.
+
+:::
+
+##  {background-image="media/clustering-framework-blank.png" data-background-size="contain"}
+
+# Sampling Uncertainty
+
+## Sampling Uncertainty
+
+::: incremental
+-   This is the standard dimension that classic statistics/econometrics covers.
+-   It has to do with the fact that we typically obtain a random sample from the population of interest.
+:::
+
+
+## Sampling Uncertainty
+
+::: incremental
+
+-   While simple random samples from a population are certainly feasible, we often analyze data sampled in complex ways.
+    -   Stratified samples (e.g., independent samples within a fixed number of groups like states)
+    -   Clustered samples of households.
+    -   Repeated sampling of households/individuals.
+    -   Often, *all of the above.*
+:::
+
+##  {background-image="images/paste-3AF6EDA7.png" data-background-size="contain"}
+
+# Random Sampling
+
+##  {background-image="media/clustering-framework-blank-transition-to-RR.png" data-background-size="contain"}
+
+## Random Sampling, Random Assignment {.smaller}
+
+**Scenario**: Random sample of units from a large population with randomized treatment assignment at the unit level.
+
+## Random Sampling, Random Assignment {.smaller}
+
+**Scenario**: Random sample of units from a large population with randomized treatment assignment at the unit level.
+
+::: {.callout-tip appearance="simple"}
+No reason to cluster, even if there is within-cluster correlation in outcomes.
+:::
+
+::: incremental
+- Clustering standard errors can be harmful, resulting in unnecessarily wide confidence intervals. 
+
+- If the sample represents a large fraction of the population and treatment effects are heterogeneous across units, robust standard errors are also conservative. 
+
+:::
+
+Source: @abadieWhenShouldYou2022a
+
+## Random Sampling, Random Assignment {.smaller}
+
+**Scenario**: Random sample of units from a large population with randomized treatment assignment at the unit level.
+
+::: {.callout-tip appearance="simple"}
+No reason to cluster, even if there is within-cluster correlation in outcomes.
+:::
+
+::: incremental
+
+- Clustering is not appropriate even if there is within-cluster correlation in outcomes (however those clusters are defined), and thus even if clustering makes a substantial difference in the magnitude of the standard errors.
+
+- However, if the data contain information on attributes of the units that are correlated with unit-level treatment effects, the methods in @abadieSamplingBasedDesignBasedUncertainty2020 can be applied to obtain less conservative standard errors.
+:::
+
+Source: @abadieWhenShouldYou2022a
+
+
+##  {background-image="media/clustering-framework-RR.png" data-background-size="contain"}
+
+## Example
+
+::: incremental
+- Basic 2x2 difference-in-difference design with null ATT $\tau=0$. 
+- Run a linear OLS DID specification for two time periods (pre vs. post)
+- Vary sampling design and assignment mechanisms. 
+:::
+
+## DID Example
+
+```{r, cache = TRUE}
+df_RR %>% 
+  run_ols(standard = TRUE,
+            robust = TRUE, 
+            cluster = TRUE, 
+            permutation = FALSE,
+            wild_cluster = FALSE, 
+            tscb_inf = FALSE,B=100) %>% 
+  mutate(method = lut[method]) %>% 
+  select(method,estimate,std.error,p.value) %>% 
+  kable(digits=3,col.names = c("Method","Coefficient","SE","p-value"),caption = "Inference under random sampling and random assignment") %>% 
+  kable_styling()
+```
+
+
+##  {background-image="media/clustering-framework-RR-CR.png" data-background-size="contain"}
+
+## Cluster Sampling, Random Assignment 
+
+## Cluster Sampling, Random Assignment {.smaller}
+
+**Scenario**: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.
+
+## Cluster Sampling, Random Assignment {.smaller}
+
+**Scenario**: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.
+
+::: incremental
+- Returns to age at HS graduation within a large sample of US households: large number of clusters (households) sampled, but small fraction of total clusters sampled. 
+:::
+
+## Cluster Sampling, Random Assignment {.smaller auto-animate="true" auto-animate-easing="ease-in-out"}
+
+**Scenario**: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.
+
+::: incremental
+- $q_k$ is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5). 
+- $p_k$ is the fraction of the population sampled. 
+:::
+
+Source: @abadieWhenShouldYou2022a
+
+## Cluster Sampling, Random Assignment {.smaller auto-animate="true" auto-animate-easing="ease-in-out"}
+
+**Scenario**: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.
+
+::: {.callout-tip appearance="simple"}
+If $q_k$ small or if $q_k$ large but $p_k$ small, clustered standard errors are asymptotically correct (with large # of clusters).
+:::
+
+
+- $q_k$ is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5). 
+- $p_k$ is the fraction of the population sampled. 
+
+
+Source: @abadieWhenShouldYou2022a
+
+
+## Cluster Sampling, Random Assignment {.smaller auto-animate="true" auto-animate-easing="ease-in-out"}
+
+**Scenario**: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.
+
+::: {.callout-tip appearance="simple"}
+If $q_k$ small or if $q_k$ large but $p_k$ small, clustered standard errors are asymptotically correct (with large # of clusters).
+:::
+
+::: {.callout-important appearance="simple"}
+If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach. More later!
+:::
+
+
+- $q_k$ is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5). 
+- $p_k$ is the fraction of the population sampled. 
+
+
+Source: @abadieWhenShouldYou2022a
+
+
+## DID Example
+
+::: {.callout-tip appearance="simple"}
+If $q_k$ small or if $q_k$ large but $p_k$ small, clustered standard errors are asymptotically correct (with large # of clusters).
+:::
+
+```{r, message = FALSE, warning = FALSE}
+df_C30R %>% 
+  run_ols(standard = TRUE,
+            robust = TRUE, 
+            cluster = TRUE, 
+            permutation = FALSE,
+            wild_cluster = FALSE, 
+            tscb_inf = FALSE,B=100) %>% 
+  mutate(method = lut[method]) %>% 
+  filter(method %in% c("Robust","Clustered")) %>% 
+  select(method,estimate,std.error,p.value) %>% 
+  kable(digits=3,col.names = c("Method","Coefficient","SE","p-value"),caption = "Inference under cluster (30/50) sampling and random assignment") %>% 
+  kable_styling()
+```
+
+## DID Example 
+
+::: {.callout-important appearance="simple"}
+If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach. More later!
+:::
+
+```{r, message = FALSE, warning = FALSE}
+df_C10R %>% 
+  run_ols(standard = TRUE,
+            robust = TRUE, 
+            cluster = TRUE, 
+            permutation = FALSE,
+            wild_cluster = FALSE, 
+            tscb_inf = FALSE,B=100) %>% 
+  mutate(method = lut[method]) %>% 
+  select(method,estimate,std.error,p.value) %>% 
+  filter(method %in% c("Robust","Clustered")) %>% 
+  kable(digits=3,col.names = c("Method","Coefficient","SE","p-value"),caption = "Inference under cluster (10/50) sampling and random assignment") %>% 
+  kable_styling()
+```
+
+
+
+##  {background-image="media/clustering-framework-RC.png" data-background-size="contain"}
+
+
+# Treatment Assignment
+
+
+## Treatment Assignment
+
+::: incremental
+- This dimension of uncertainty occurs because we often only observe one potential outcome for each treated unit. 
+- This would remain the case even if we observed the entire population of interest!
+:::
+
+## Treatment Assignment
+
+```{r}
+set.seed(12345)
+df_RR %>% 
+  arrange(runif(nrow(.))) %>% 
+  select(unit_id = unit, cluster, w_i, y_obs = y_i, y_1, y_0) %>% 
+  head(n=5) %>%
+  ungroup() %>% 
+  data.frame() %>% 
+  mutate(y_1 = ifelse(w_i=="1",paste0(round(y_1,2)),"?"),
+         y_0 = ifelse(w_i=="1","?",paste0(round(y_0,2)))) %>% 
+  kable(digits=2) %>% 
+  kable_styling()
+```
+
+
+
+## Treatment Assignment {.smaller}
+
+::: incremental
+- Often, treatment assignment is correlated with clusters (e.g., state, county, etc.).
+- If treatment is perfectly correlated with cluster, then everyone within the same cluster is either treated or untreated.
+    - Effect of Medicaid expansion on earnings.  
+- Alternatively, treatment could be partially correlated with cluster.
+    - Effect of attending college on earnings, where it is observed that college attendance is correlated within state, county, etc. 
+
+:::
+
+##  {background-image="media/clustering-framework-RR-to-RC.png" data-background-size="contain"}
+
+## Random Sampling, Clustered Assignment {.smaller}
+
+**Scenario**: Random sample of units from a large population with partially or fully clustered treatment assignment.
+
+
+## Random Sampling, Clustered Assignment {.smaller}
+
+**Scenario**: Random sample of units from a large population with partially or fully clustered treatment assignment.
+
+::: {.callout-tip appearance="simple"}
+If assignment is perfectly clustered, **and you observe a large number of clusters**, use standard cluster adjustment.
+:::
+
+::: incremental
+- Cluster at the level of the intervention (e.g., state)
+:::
+
+Source: @abadieWhenShouldYou2022a
+
+## DID Example
+
+- Random sampling of population
+- All 50 state clusters observed
+- Treatment perfectly correlated with cluster
+
+```{r, message = FALSE, warning = FALSE}
+df_RC %>% 
+  run_ols(standard = TRUE,
+            robust = TRUE, 
+            cluster = TRUE, 
+            permutation = FALSE,
+            wild_cluster = FALSE, 
+            tscb_inf = FALSE,B=100) %>% 
+  mutate(method = lut[method]) %>% 
+  select(method,estimate,std.error,p.value) %>% 
+  filter(method %in% c("Robust","Clustered")) %>% 
+  kable(digits=3,col.names = c("Method","Coefficient","SE","p-value")) %>% 
+  kable_styling()
+```
+
+
+
+## Random Sampling, Clustered Assignment {.smaller}
+
+**Scenario**: Random sample of units from a large population with partially or fully clustered treatment assignment.
+
+::: incremental
+
+- If treatment is not perfectly correlated with cluster, then clustered standard errors may be too conservative. 
+- @abadieWhenShouldYou2022a provide analytic formulas as well as a **bootstrap** procedure that can be used for inference. 
+
+:::
+
+
+##  Bootstrap Inference
+
+::: incremental
+
+- Bootstrapping is a way to conduct inference when large-sample theory provides a poor guide.
+    - Small number of clusters
+    - Treatment assignment that is partially correlated with cluster. 
+    
+- You will see multiple bootstrap methods in the next slides.
+    - Two-stage cluster bootstrap [@abadieWhenShouldYou2022a]
+    - Wild cluster bootstrap [@cameronBootstrapbasedImprovementsInference2008]
+
+- Let's spend a few minutes on intuition for the bootstrap...
+
+:::
+
+
+
+
+
+## Bootstrap Inference  {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+Back to basics:
+
+::: r-stack
+::: {data-id="generate" style="background: #2780e3; width: 350px; height: 350px; border-radius: 200px;"}
+Generate
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 250px; height: 250px; border-radius: 200px;"}
+Estimate
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 150px; height: 150px; border-radius: 200px;"}
+Discriminate
+:::
+:::
+
+## Bootstrap Inference  {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+
+- Basic idea is to generate a large number of bootstrap samples that mimic the distribution from which the actual sample was obtained [@roodmanFastWildBootstrap2019].
+
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 350px; height: 350px; border-radius: 200px;"}
+Bootstrap
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 250px; height: 250px; border-radius: 200px;"}
+Estimate
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 150px; height: 150px; border-radius: 200px;"}
+Discriminate
+:::
+:::
+
+## Bootstrap Inference
+
+::: r-hstack
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+:::
+
+::: r-hstack
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+:::
+
+::: r-hstack
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+
+::: r-stack
+::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
+:::
+
+::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
+:::
+
+::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
+:::
+:::
+:::
+
+## Bootstrap Inference
+
+::: incremental
+- We repeatedly resample the sample (with replacement) and generate the parameter of interest each time.
+- The bootstrap P value is calculated as the proportion of the bootstrap values that are more extreme than the actual one from the original sample.
+- In this way, we essentially mimic the process we've used all along to understand the properties of estimators by generating data!
+:::
+
+## Bootstrap Inference
+
+::: incremental
+- This is how bootstrapping works at a high level. 
+- The various bootstrap procedures you'll need have some additional wrinkles because of the clustered nature of sampling and/or treatment assignment. 
+- Let's now go back to the objective that brought us here ... 
+:::
+
+
+## Random Sampling, Clustered Assignment {.smaller}
+
+**Scenario**: Random sample of units from a large population with partially or fully clustered treatment assignment.
+
+- If treatment is not perfectly correlated with cluster, then clustered standard errors may be too conservative. 
+- @abadieWhenShouldYou2022a provide analytic formulas as well as a **bootstrap** procedure that can be used for inference. 
+
+::: incremental
+- The analytic variance formulas are called **Causal Cluster Variance (CCV)**. 
+- This bootstrap procedure is called **two-stage cluster bootstrap (TSCB)**. 
+:::
+
+## Clustered Assignment {.smaller auto-animate="true" auto-animate-easing="ease-in-out"}
+
+**Scenario**: Random or clustered sample of units from a large population with **fully** clustered treatment assignment.
+
+::: {.callout-tip appearance="simple"}
+If assignment is perfectly clustered, **and you observe a large number of clusters**, use standard cluster adjustment.
+:::
+
+
+
+## Clustered Assignment {.smaller auto-animate="true" auto-animate-easing="ease-in-out"}
+
+**Scenario**: Random or clustered sample of units from a large population with **fully** clustered treatment assignment.
+
+::: {.callout-tip appearance="simple"}
+If assignment is perfectly clustered, **and you observe a large number of clusters**, use standard cluster adjustment.
+:::
+
+**Scenario**: Random or clustered sample of units from a large population with **partially** clustered treatment assignment.
+
+::: {.callout-tip appearance="simple"}
+If assignment is partially clustered (i.e., some variation in Tx assignment within cluster), use CCV/TSCB.
+:::
+
+## Clustered Assignment 
+
+::: columns 
+
+::: column
+
+Treatment perfectly correlated with cluster: 
+
+::: {style="font-size: 0.5em"}
+```{r}
+set.seed(234)
+df_C10C %>% 
+  arrange(runif(nrow(.))) %>% 
+  head() %>% 
+  select(unit_id = unit, cluster, y_i,  pr_treated, w_i) %>% 
+  kable(digits = 2) %>% 
+  kable_styling()
+```
+:::
+:::
+:::
+
+
+## Clustered Assignment 
+
+::: columns 
+
+::: column
+
+Treatment perfectly correlated with cluster: 
+
+::: {style="font-size: 0.5em"}
+```{r}
+set.seed(234)
+df_C10C %>% 
+  arrange(runif(nrow(.))) %>% 
+  head() %>% 
+  select(unit_id = unit, cluster, y_i,  pr_treated, w_i) %>% 
+  kable(digits = 2) %>% 
+  kable_styling()
+```
+:::
+:::
+
+::: column
+
+Treatment partially correlated with cluster: 
+
+::: {style="font-size: 0.5em"}
+
+```{r}
+set.seed(234)
+df_C10Cp %>% 
+  arrange(runif(nrow(.))) %>% 
+  head() %>% 
+  select(unit_id = unit, cluster, y_i,  pr_treated,w_i) %>% 
+  kable(digits = 2) %>% 
+  kable_styling()
+```
+:::
+:::
+
+::: column
+
+:::
+:::
+
+##  {background-image="media/clustering-framework-TSCB.png" data-background-size="contain"}
+
+##  {background-image="media/tscb-algorithm.png" data-background-size="contain"}
+
+
+::: footer
+Source: @abadieWhenShouldYou2022a
+:::
+
+
+
+## A Practical Guide to TSCB
+
+::: incremental
+1. Start with your sample. At a minimum, you'll need
+    - Outcome
+    - Treatment indicator
+    - Cluster variable
+:::
+
+## A Practical Guide to TSCB
+
+::: incremental
+2. Determine $q_k$, the fraction of (population-level) clusters that are sampled.
+    - It could be high! (e.g., for a state policy evaluation using a national survey that includes all states, this implies $q_k=1.0$)
+    - It could be low! (e.g., a national survey of households)
+:::
+
+    
+## A Practical Guide to TSCB
+
+::: incremental
+3. Define a number of bootstrap replications (e.g., $B=100$)
+    - You're now ready to iterate through the bootstrap procedure replication by replication!
+:::
+
+    
+## A Practical Guide to TSCB {.smaller}
+
+For each bootstrap replication ... 
+
+::: incremental
+
+4. Create a "pseudo-sample" by replicating your original sample $1/q_k$ times. 
+
+    - If $1/q_k$ is not an integer, you can use the methods in @chaoBootstrapMethodFinite1985. 
+    - Essentially, you solve for a fraction $\alpha$ using a fairly simple formula and some basic algebra.
+    - If you observe 20 of 50 clusters (such that $q_k=0.4$ and $1/q_k=2.25$), as you proceed through the B bootstrap replications, you'd replicate the sample 2 times with probability $\alpha$ or 3 times with probability $1-\alpha$. 
+:::
+
+## A Practical Guide to TSCB {.smaller}
+
+For each bootstrap replication ... 
+
+::: incremental
+
+5. For each cluster in your pseudo-sample, calculate and record the fraction of observations treated. 
+    - This is the empricial distribution of cluster-level treatment fractions, or $\bar{W}_{k,m}$. 
+    - **NOTE**: To proceed, $\bar{W}_{k,m}$ *must* be between 0 and 1 for all clusters. 
+    - If treatment assignment is perfectly correlated with cluster, then just use cluster robust inference (if you have a sufficient number clusters! If you don't, skip to the section on inference with a small number of clusters ... )
+
+:::
+
+
+## A Practical Guide to TSCB
+
+For each bootstrap replication ... 
+
+::: incremental
+
+6. Randomly draw clusters from your pseudo-sample.
+    - If you observe 20 clusters in your original sample, then randomly draw 20 clusters from your pseudo-sample. 
+    - Draw these clusters *without* replacement. 
+
+:::
+
+
+## A Practical Guide to TSCB
+
+For each bootstrap replication ... 
+
+::: incremental
+
+7. For each of these randomly drawn clusters, sample a treatment fraction value from $\bar{W}_{k,m}$. 
+    - You sample here *with* replacement. 
+    - This is the new **assignment probability** for each sampled cluster, called $A_{k,m}$. 
+
+:::
+
+## A Practical Guide to TSCB
+
+For each bootstrap replication ... 
+
+::: incremental
+
+8. Next, within each sampled cluster (each of which has cluster sample size $N_{k,m}$), sample (with replacement) treated and control units.
+  - Sample $N_{k,m}A_{k,m}$ treated units.
+  - Sample $N_{k,m}(1 - A_{k,m})$ untreated units. 
+  - Do this for each sampled cluster in your bootstrap replicate sample. 
+
+:::
+
+## A Practical Guide to TSCB
+
+For each bootstrap replication ... 
+
+::: incremental
+
+9. Estimate your outcome regression (e.g., DID using least squares or a fixed effect model) on this bootstrap sample, are record the statistic/parameter you are interested in (e.g., $\hat \tau$)
+
+:::
+
+## A Practical Guide to TSCB
+
+::: incremental
+
+10. Repeat steps 4-9 $B$ times and collect the $\hat \tau$ estimates. 
+    - You can now calculate the standard deviation of these estimates as an estimate of the standard error. 
+    - You could also calculate a p-value by calculating the fraction of bootstrap estimates that are as or more extreme than your estimate from the original data. 
+
+:::
+
+
+## DID Example
+
+```{r, cache = TRUE, message = FALSE, warning = FALSE}
+df_C30Cp %>% 
+  run_ols(standard = TRUE,
+            robust = TRUE, 
+            cluster = TRUE, 
+            permutation = FALSE,
+            wild_cluster = FALSE, 
+            tscb_inf = TRUE, B=100) %>% 
+  mutate(method = lut[method]) %>% 
+  select(method,estimate,std.error,p.value) %>% 
+  kable(digits=3,col.names = c("Method","Coefficient","SE","p-value")) %>% 
+  kable_styling()
+```
+
+
+## Small Cluster Bias
+
+::: incremental 
+
+- Thus far we have assumed we have a sufficiently large number of clusters (e.g., >30) in our sample. 
+- Justification of inference with cluster-robust standard errors assumes that the number of clusters goes to infinity.
+:::
+
+
+## Small Cluster Bias
+
+::: incremental 
+- What happens if we have only a few clusters?
+    - Example: Evaluation of a state-level policy change based on a sample of 8 states with 4 treated and 4 untreated.
+- @cameronBootstrapbasedImprovementsInference2008: With a small number of clusters, cluster-robust standard errors are downwards biased.
+    - You're going to over-reject the null hypothesis because your standard errors are too small. 
+:::
+
+## DID Example 
+
+::: {.callout-important appearance="simple"}
+If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach. 
+:::
+
+```{r, message = FALSE, warning = FALSE}
+df_C10R %>% 
+  run_ols(standard = TRUE,
+            robust = TRUE, 
+            cluster = TRUE, 
+            permutation = FALSE,
+            wild_cluster = FALSE, 
+            tscb_inf = FALSE,B=100) %>% 
+  mutate(method = lut[method]) %>% 
+  select(method,estimate,std.error,p.value) %>% 
+  filter(method %in% c("Robust","Clustered")) %>% 
+  kable(digits=3,col.names = c("Method","Coefficient","SE","p-value"),caption = "Inference under cluster (10/50) sampling and random assignment") %>% 
+  kable_styling()
+```
+
+
+## Small Cluster Bias
+
+::: incremental
+- How can we deal with this? 
+- Two primary ways (though there are others):
+    - Wild cluster bootstrap.
+    - Randomization inference
+:::
+
+##  {background-image="media/clustering-framework-CRCC-to-small.png" data-background-size="contain"}
+
+
+## Wild cluster bootstrap
+
+::: incremental
+- Same basic idea as a regular bootstrap.
+- Main difference is that rather than resampling rows of our data, we resample the residuals after fitting our outcome model. 
+:::
+
+## Wild cluster bootstrap
+
+For each bootstrap replicate ...
+
+::: incremental
+- Sample (with replacement) the residuals after fitting the main regression model.
+- We then apply a weight to each residual.
+  - Weight is -1 with probability 0.5 and 1 with probability 0.5.
+- The catch is that everyone within the same cluster receives the same weight value (i.e., we sample 1 or -1 by cluster). 
+
+:::
+
+## Wild cluster bootstrap
+
+For each bootstrap replicate ...
+
+::: incremental
+- Because we only resample (and reweight the residuals) the other X variables used in the regression stay the same. 
+- The coefficients and X's from the original regression can be used to obtain a predicted value.
+- This predicted value plus the new (sampled and re-weighted) residuals are used to construct a new outcome value. 
+:::
+ 
+ 
+## Wild cluster bootstrap
+
+For each bootstrap replicate ...
+
+::: incremental
+- Re-estimate the regression using the new outcome values. 
+- Repeat $B$ times and collect the estimates. 
+- You can use these estimates to construct a p-value based on how extreme the original value is within the distribution of estimates generated via the bootstrap samples. 
+:::
+
+## Wild cluster bootstrap
+
+::: incremental
+- Wild cluster bootstrap is easily executed in both Stata and R.
+- New "fast" routines can complete this process in seconds (or less). 
+:::
+
+## DID Example 
+
+::: {.callout-important appearance="simple"}
+If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach. 
+:::
+
+```{r, message = FALSE, warning = FALSE, cache =TRUE}
+res <- invisible({
+  sink("")
+    tmp_ <-
+  df_C10Cp %>% 
+ run_ols(standard = TRUE,
+            robust = TRUE, 
+            cluster = TRUE, 
+            permutation = FALSE,
+            wild_cluster = TRUE, 
+            tscb_inf = TRUE,B=100) %>% 
+  mutate(method = lut[method]) %>% 
+  select(method,estimate,std.error,p.value) %>% 
+  filter(method %in% c("Robust","Clustered","Wild Cluster","Two-Stage Cluster Bootstrap"))
+  sink()
+  tmp_
+  })
+
+res %>% 
+  kable(digits=3,col.names = c("Method","Coefficient","SE","p-value"),caption = "Inference under cluster (10/50) sampling and clustered assignment") %>% 
+  kable_styling()
+```
+
+##  {background-image="media/clustering-framework-small.png" data-background-size="contain"}
+
+
+## Permutation Inference
+
+::: incremental
+- Another approach (though it can be a bit more conservative) is to use randomization inference.
+- Basic idea here is to randomly permute the treatment indicator. 
+- This is a useful approach when treatment is perfectly correlated with clusters (e.g., state policy change) and you only have a few clusters in your sample. 
+:::
+
+## Permutation Inference
+
+::: incremental
+- Example: State policy change with 12 total states (4 treated, 8 untreated)
+- Idea: Iterative exercise where you randomly select the 4 "treated" states and re-estimate the outcome model each time.
+  - There are 495 possible combinations of 4 treated states out of 12 total states.
+  - You can therefore construct a distribution of 495 different treatment effect estimates. 
+  - How "extreme" is the estimate in your primary sample within this distribution of 495 estimates? 
+:::
+
+## Permutation Inference
+
+::: incremental
+- A nice feature of this approach is that you get an exact p-value. 
+- If the total possible number of permutations is large (e.g., 20 choose 10  = 184,756), you could always just permute cluster treatment status, say, 1,000 times to approximate the distribution. 
+- A downside is that constructing 95% confidence intervals requires strong assumptions (homogeneity of treatment effect). 
+:::
+
+##  {background-image="media/clustering-framework-small2.png" data-background-size="contain"}
+
+## References
+

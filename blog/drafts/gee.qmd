@@ -6,6 +6,11 @@ editor_options:
 ---
 
 [Source](https://data.library.virginia.edu/getting-started-with-generalized-estimating-equations/)
+[Nice comparison with RE](https://journals.lww.com/epidem/Fulltext/2010/07000/To_GEE_or_Not_to_GEE__Comparing_Population_Average.7.aspx)
+[Another nice resource](https://www.goldsteinepi.com/blog/multilevelandlongitudinalmodelingapproaches/index.html)
+[A course on these topics](https://www4.stat.ncsu.edu/~davidian/st732/notes.html)
+[Nice discussion](https://www.researchgate.net/post/When_do_you_apply_GLMM_vs_GEE)
+[Another nice paper comparing RE and GEE](https://www.researchgate.net/profile/Stefanie-Muff/post/When_do_you_apply_GLMM_vs_GEE/attachment/5ae029764cde260d15dac6e2/AS%3A619199688880152%401524640118960/download/MarginalConditional_2016_MEE.pdf)
 
 ```{r}
 

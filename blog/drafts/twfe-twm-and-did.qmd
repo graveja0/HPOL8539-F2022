@@ -26,6 +26,7 @@ library(knitr)
 library(kableExtra)
 library(gt)
 library(did)
+library(RStata)
 
 options("RStata.StataPath" = "/Applications/Stata/StataSE.app/Contents/MacOS/stata-se")
 options("RStata.StataVersion" = 16)
@@ -363,7 +364,7 @@ df_ %>%
 We next estimate the models
 
 | Method                | Command   | Design Variables  | Fixed or Random Effect |
-|-----------------------|-----------|-------------------|------------------------|
+|------------------|------------------|------------------|------------------|
 | Two-Way Fixed Effects | `feols()` | `w` + `f*`        | Unit Fixed Effect      |
 | Pooled OLS            | `lm()`    | `w` + `f*` + `d*` |                        |
 | Two-Way Mundlak       | `lmer()`  | `w` + `f*` + `d*` | Unit Random Effect     |
@@ -516,7 +517,7 @@ df_ <-
 We next estimate the models
 
 | Method                | Command   | Design Variables       | Fixed or Random Effect |
-|-----------------------|-----------|------------------------|------------------------|
+|------------------|------------------|------------------|------------------|
 | Two-Way Fixed Effects | `feols()` | `w : f*` + `f*`        | Unit Fixed Effect      |
 | Pooled OLS            | `lm()`    | `w : f*` + `f*` + `d*` |                        |
 | Two-Way Mundlak       | `lmer()`  | `w : f*` + `f*` + `d*` | Unit Random Effect     |
@@ -686,7 +687,7 @@ df_ <-
 We next estimate the models
 
 | Method                | Command   | Design Variables  | Fixed or Random Effect |
-|-----------------------|-----------|-------------------|------------------------|
+|------------------|------------------|------------------|------------------|
 | Two-Way Fixed Effects | `feols()` | `w` + `f*`        | Unit Fixed Effect      |
 | Pooled OLS            | `lm()`    | `w` + `f*` + `d*` |                        |
 | Two-Way Mundlak       | `lmer()`  | `w` + `f*` + `d*` | Unit Random Effect     |
@@ -833,7 +834,7 @@ df4a_ <-
 We next estimate the models
 
 | Method                | Command   | Design Variables       | Fixed or Random Effect |
-|-----------------------|-----------|------------------------|------------------------|
+|------------------|------------------|------------------|------------------|
 | Two-Way Fixed Effects | `feols()` | `w : d*` + `f*`        | Unit Fixed Effect      |
 | Pooled OLS            | `lm()`    | `w : d*` + `f*` + `d*` |                        |
 | Two-Way Mundlak       | `lmer()`  | `w : d*` + `f*` + `d*` | Unit Random Effect     |
@@ -1012,7 +1013,7 @@ df4b_ <-
 We next estimate the models
 
 | Method                | Command   | Design Variables       | Fixed or Random Effect |
-|-----------------------|-----------|------------------------|------------------------|
+|------------------|------------------|------------------|------------------|
 | Two-Way Fixed Effects | `feols()` | `w : d*` + `f*`        | Unit Fixed Effect      |
 | Pooled OLS            | `lm()`    | `w : d*` + `f*` + `d*` |                        |
 | Two-Way Mundlak       | `lmer()`  | `w : d*` + `f*` + `d*` | Unit Random Effect     |
@@ -1160,7 +1161,7 @@ treatment_years4b_nev
 We next estimate the models
 
 | Method                | Command   | Design Variables       | Fixed or Random Effect |
-|-----------------------|-----------|------------------------|------------------------|
+|------------------|------------------|------------------|------------------|
 | Two-Way Fixed Effects | `feols()` | `w : d*` + `f*`        | Unit Fixed Effect      |
 | Pooled OLS            | `lm()`    | `w : d*` + `f*` + `d*` |                        |
 | Two-Way Mundlak       | `lmer()`  | `w : d*` + `f*` + `d*` | Unit Random Effect     |
@@ -1377,7 +1378,7 @@ df5_ <-
 We next estimate the models
 
 | Method                | Command   | Design Variables        | Fixed or Random Effect |
-|-----------------------|-----------|-------------------------|------------------------|
+|------------------|------------------|------------------|------------------|
 | Two-Way Fixed Effects | `feols()` | `d* : f*` + `f*`        | Unit Fixed Effect      |
 | Pooled OLS            | `lm()`    | `d* : f*` + `f*` + `d*` |                        |
 | Two-Way Mundlak       | `lmer()`  | `d* : f*` + `f*` + `d*` | Unit Random Effect     |
@@ -1603,7 +1604,7 @@ df6_ <-
 We next estimate the models
 
 | Method                | Command   | Design Variables        | Fixed or Random Effect |
-|-----------------------|-----------|-------------------------|------------------------|
+|------------------|------------------|------------------|------------------|
 | Two-Way Fixed Effects | `feols()` | `d* : f*` + `f*`        | Unit Fixed Effect      |
 | Pooled OLS            | `lm()`    | `d* : f*` + `f*` + `d*` |                        |
 | Two-Way Mundlak       | `lmer()`  | `d* : f*` + `f*` + `d*` | Unit Random Effect     |

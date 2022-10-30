@@ -236,7 +236,7 @@ params6b=  list(
             "1998" = 18:35,
             "NA" = 36:50),
   bin = c(-5,5))
-``` 
+```
 
 ```{r, echo = FALSE}
 # params = params6 
@@ -497,8 +497,6 @@ data5b <- df5b$df %>%
   mutate(treated =1)
 haven::write_dta(data5b %>% mutate_at(vars(treatment_time,year),function(x) as.numeric(paste0(x))), path = "~/Desktop/data5b.dta")
 
-
-
 df6 <- make_data(params6,N=1000) 
 data6 <- df6$df %>% 
   select(dep_var,treatment_time = group, state,unit, year, treat) %>% 
@@ -512,15 +510,11 @@ data6b <- df6b$df %>%
   mutate(treated =1)
 haven::write_dta(data6b %>% mutate_at(vars(treatment_time,year),function(x) as.numeric(paste0(x))), path = "~/Desktop/data6b.dta")
 
-
 df6 %>%  plot_data() + ylim(c(-2,6)) + scale_x_continuous(expand = expand_scale(mult = c(0,.25)))
 
 df6b %>%  plot_data() + ylim(c(-2,6)) + scale_x_continuous(expand = expand_scale(mult = c(0,.25)))
 
 ```
-
-
-
 
 [Source](https://friosavila.github.io/playingwithstata/main_jwdid.html)
 

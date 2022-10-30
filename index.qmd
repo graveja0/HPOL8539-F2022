@@ -76,7 +76,7 @@ schedule <- list(
      "8:45 - 10:45" = "CS] Statistical Inference for Policy Evaluation"
   ),  
   day11 = list(
-     "8:45 - 10:45" = "CS] Synthetic Control Methods"
+     "8:45 - 10:45" = "CS] Non-Parallel Trends and Conditional DID, Synthetic Control Methods"
   ),     
   day12 = list(
      "8:45 - 10:45" = "CS] Quantile Treatment Effects and Changes-in-Changes"

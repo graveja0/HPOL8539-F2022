@@ -317,10 +317,9 @@ params6b=  list(
               "1998" = 0.3),
   tx = list("1989" = 1:17,
             "1998" = 18:35,
-            "NA" = 35:50),
+            "NA" = 36:50),
   bin = c(-5,5))
 ```
-
 
 # Data Setup
 
@@ -477,7 +476,7 @@ crossing(d = as.numeric(gsub("d_","",grep("d_",colnames(d_star),value=TRUE))),f 
 ## Common Treatment Timing
 
 | Method                | Estimation Formula                              | Fixed or Random Effect |
-|-------------------|------------------------------------|-------------------|
+|-------------------|----------------------------------|-------------------|
 | Two-Way Fixed Effects | `feols(I(w : f*) + factor(time)  | unit)`       | Unit Fixed Effect      |
 | Pooled OLS            | `lm(I(w : f*) + factor(time) + d*)`             |                        |
 | Two-Way Mundlak       | `lmer(I(w : f*) + factor(time) + d* + (1|unit)` | Unit Random Effect     |
@@ -485,7 +484,7 @@ crossing(d = as.numeric(gsub("d_","",grep("d_",colnames(d_star),value=TRUE))),f 
 ## Staggered Treatment Timing
 
 | Method                | Estimation Formula                               | Fixed or Random Effect |
-|-------------------|------------------------------------|-------------------|
+|-------------------|----------------------------------|-------------------|
 | Two-Way Fixed Effects | `feols(I(d* : f*) + factor(time)  | unit)`       | Unit Fixed Effect      |
 | Pooled OLS            | `lm(I(d* : f*) + factor(time) + d*)`             |                        |
 | Two-Way Mundlak       | `lmer(I(d* : f*) + factor(time) + d* + (1|unit)` | Unit Random Effect     |
@@ -493,7 +492,7 @@ crossing(d = as.numeric(gsub("d_","",grep("d_",colnames(d_star),value=TRUE))),f 
 ## Staggered Treatment Timing with Covariate(s)
 
 | Method                | Estimation Formula                                                                                                                | Fixed or Random Effect |
-|-------------------|------------------------------------|-------------------|
+|-------------------|----------------------------------|-------------------|
 | Two-Way Fixed Effects | `feols(I(w : d* : f*) + I(w : d* : f* : x_dm_d*) + factor(time) + I(factor(time) * x_dm_d*) | unit)`                              | Unit Fixed Effect      |
 | Pooled OLS            | `lm(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* + x + I(d* : x_dm_d*))`              |                        |
 | Two-Way Mundlak       | `lmer(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* +  x + I(d* : x_dm_d*) + (1|unit)` | Unit Random Effect     |

@@ -1,0 +1,1292 @@
+---
+title: "Fourteen DID estimators walk into a bar $\\tau$"
+subtitle: HPOL8539
+author: John Graves
+date: September 21, 2022
+format: revealjs
+editor: visual
+bibliography: references.bib
+---
+
+## Policy Evaluation Methods Until 2018
+
+![](media/did-profit-meme2.jpeg){fig-align="center"}
+
+## Policy Evaluation: 2018-2021
+
+![](media/vandebilt-econometricians.jpeg){fig-align="center"}
+
+## Policy Evaluation: 2018-2021
+
+The rest of us:
+
+<iframe src="https://giphy.com/embed/9bXjoBk28pwnKLKoKb" width="320" height="480" frameBorder="0" class="giphy-embed" allowFullScreen>
+
+</iframe>
+
+<p><a href="https://giphy.com/gifs/fire-panic-9bXjoBk28pwnKLKoKb"></a></p>
+
+## Policy Evaluation: 2021
+
+Econometricians:
+
+::: columns
+::: {.column width="50%"}
+<iframe src="https://giphy.com/embed/WOliLGRz7TJtGAazTp" width="480" height="270" frameBorder="0" class="giphy-embed" allowFullScreen>
+
+</iframe>
+
+<p><a href="https://giphy.com/gifs/AppleTV-apple-tv-appletv-tamacti-WOliLGRz7TJtGAazTp"></a></p>
+:::
+
+::: {.column width="50%"}
+<iframe src="https://giphy.com/embed/Q3siJKQdEjjtZMpR8Q" width="480" height="326" frameBorder="0" class="giphy-embed" allowFullScreen>
+
+</iframe>
+
+<p><a href="https://giphy.com/gifs/governorofpoker-oprah-you-get-a-car-Q3siJKQdEjjtZMpR8Q"></a></p>
+:::
+:::
+
+## Policy Evaluation: 2021
+
+The rest of us:
+
+<iframe src="https://giphy.com/embed/vVEjKbAUFtZzFzjYbz" width="480" height="270" frameBorder="0" class="giphy-embed" allowFullScreen>
+
+</iframe>
+
+<p><a href="https://giphy.com/gifs/the-weeknd-superbowl-vVEjKbAUFtZzFzjYbz"></a></p>
+
+
+## After Today 
+
+![](https://c.tenor.com/FMsgba28dlUAAAAM/sugarbardi.gif)
+
+
+
+
+
+## Today's Plan {.smaller}
+
+::: incremental
+1.  General principles for DID designs with staggered adoption.
+2.  Data wrangling for DID designs with staggered adoption.
+3.  `learnr` exercise for eight DID estimators.
+
+-   We're going to ignore standard TWFE and TWFE Event Study estimators, given all the problems.
+-   We'll also focus on dynamic treatment effect estimates, though some estimators also yield static estimates.
+-   We'll also skip over extended POLS and extended Mundlak (random effects), though implementing them is straightforward (see last week's exercises).
+
+4.  We'll come back to "conditional DID" in a future class (i.e., the design variables will not include covariates)
+:::
+
+## General principles for DID designs with staggered adoption.
+
+Data selection and setup is key.
+
+::: callout-important
+1.  If all groups are eventually treated, you'll need to "trim" the data of all observations on or after the last treated cohort date.
+:::
+
+## General principles for DID designs with staggered adoption.
+
+Data selection and setup is key.
+
+::: callout-important
+2.  Define a treatment cohort variable with values set to the first year of treatment for the unit. Never treated units should be assigned a value of 0 for this cohort variable.
+:::
+
+## General principles for DID designs with staggered adoption.
+
+Data selection and setup is key.
+
+::: callout-important
+3.  When constructing a relative-time variable (i.e., `time - cohort_tx_time`), never treated units should get a value of `-Inf`.
+:::
+
+## General principles for DID designs with staggered adoption. {.smaller}
+
+Once you do all the above, you are teed up to fit any of the NextGen DID estimators.
+
+-   @wooldridgeTwoWayFixedEffects2021: Extended TWFE, POLS and Mundlak (Random Effects) regression.
+-   @callawayDifferenceindifferencesMultipleTime2021 : Group-time ATTs
+-   @borusyakRevisitingEventStudy2021 : Imputation-based DID
+-   @gardnerTwoStageDifferenceinDifferences2021 : Two-stage DID
+-   @dechaisemartinTwowayFixedEffects2020 : Generalized "fix" for two-way fixed effects.
+-   @atheyMatrixCompletionMethods2021: Matrix completion methods
+-   @cengizEffectMinimumWages2019: Stacked regression
+
+## NextGen DID Estimators
+
+-   I won't go through details today, but you should familiarize yourself with whatever method you choose.
+
+## NextGen DID Estimators
+
+::: incremental
+-   Standard practice used to be just (naively) fitting a TWFE-based regression.
+    -   This is fine in the simple 2x2 DID case.
+    -   It breaks down in the presense of staggered treatment adoption and heterogeneous treatment effects.
+-  @wooldridgeTwoWayFixedEffects2021 demonstrates that a carefully specified regression can give us a line of sight through the danger zones. 
+:::
+
+## NextGen DID Estimators
+
+::: incremental
+-   In general, the other new estimators are explicit about making "clean" comparisons and avoiding "forbidden" comparisons.
+-   General Idea #1: estimate "clean" treatment effects for various treatment cohorts, and then aggregate them together into relative time (or calendar time).
+-  General Idea #2: Imputation of missing potential outcomes.
+:::
+
+
+## NextGen DID Estimators
+
+::: incremental
+
+-   Benefit of new estimators: in principle, you're being transparent about your comparisons and the "weights" you use to aggregate across groups.
+
+-   Double-edged sword: many of the estimators have R & Stata commands, but they can be a bit of a "black box."
+
+-   @rothWhatTrendingDifferenceinDifferences2022 provides a very nice, approchable summary of the recent literature. [Link to paper.](https://jonathandroth.github.io/assets/files/DiD_Review_Paper.pdf)
+:::
+
+# Data Setup
+
+```{r setup, include=FALSE}
+#| echo: false
+#| message: false
+#| warning: false
+#| code-fold: true 
+
+
+## NOTE THIS IS SIMPLY THE SETUP CODE FOR THE LEARNR EXERCISE 
+
+library(tidyverse)
+library(fixest)
+library(glue)
+library(here)
+library(janitor)
+library(haven)
+library(fastDummies)
+library(broom)
+library(lme4)
+library(directlabels)
+library(ggthemes)
+library(knitr)
+library(kableExtra)
+library(gt)
+library(did)
+library(did2s)
+library(DIDmultiplegt)
+library(DiagrammeR)
+library(mcreplicate)
+library(furrr)
+library(tictoc)
+library(progressr)
+library(ggsci)
+library(hrbrthemes)
+library(gsynth)
+library(didimputation)
+library(modelsummary)
+ests_lut <- c("cdh" = "Chaisemartin and D’Haultfœuille (2020, 2021)",
+              "cs_nt" = "Calloway and Sant'Anna (2021)\nNever Treated as Control",
+              "cs_nyt" = "Calloway and Sant'Anna (2021)\nNot Yet Treated as As Control",
+              "etwfe" = "Wooldridge (2021) Extended TWFE",
+              "gard"  = "Gardner (2021)","pols"="Wooldridge (2021) Extended POLS",
+              "stacked_es" = "Stacked Event Study", "stacked_twfe" = "Stacked TWFE",
+              "sunab" = "Sun and Abraham (2021)", "twfe" = "Two-Way Fixed Effects (TWFE)",
+              "twfe_es" = "TWFE Event Study", "twm" = "Wooldridge (2021) Extended Mundlak\n(Random Effects)",
+              "twfe_mc" = "Matrix Completion\nTWFE Event Study", "twfe_mc_static" = "Matrix Completion\nStatic TWFE",
+              "imputation" = "Borusyak, Jaravel, and Spiess (2021)")
+
+
+
+theme_set(ggthemes::theme_tufte())
+
+make_data <- function(params, N = 500, start = 2005, stop = 2022,rho_t = 0.8) {
+  mu <- params$mu
+  mu_t <- params$mu_t
+  tx = params$tx
+  bin <- params$bin
+  T = length(start:stop)
+
+  # Year fixed effects (allowing for auto-correlation within groups across time)
+  year <-
+      data.frame(year = start:stop,
+                 year_fe = arima.sim(n=length(start:stop), list(ar = rho_t, order=c(1,0,0))) %>% as.vector()) %>%
+    as_tibble()
+
+  df_truth_ <-suppressWarnings({
+    map(tx,~(.x %>% data.frame())) %>%
+      bind_rows(.id = "tx") %>%
+      set_names(c("group","state")) %>%
+      as_tibble() %>%
+      suppressMessages(mutate(group = as.numeric(paste0(group)))) %>%
+      left_join(
+        map(mu,~(.x %>% data.frame())) %>%
+          bind_rows(.id = "tx") %>%
+          set_names(c("group","mu")) %>%
+          inner_join(
+            map(mu_t,~(.x %>% data.frame())) %>%
+              bind_rows(.id = "tx") %>%
+              set_names(c("group","mu_t")),"group"
+          ), c("group")
+      ) %>%
+      mutate(group = ifelse(!is.na(group),as.numeric(paste0(group)),NA))
+  })
+
+  # For dynamic treatment effects
+  df_truth_t <-
+    crossing(state = unique(df_truth_$state), year = unique(year$year)) %>%
+    left_join(df_truth_,"state") %>%
+    mutate(rel_time = pmax(year-group)) %>%
+    mutate(tau = ifelse(!is.na(mu) & rel_time>=0,mu,0),
+           tau_t = ifelse(!is.na(mu_t) &rel_time>=0,mu_t,0)) %>%
+    group_by(group, state) %>%
+    mutate(cumtau = tau + cumsum(tau_t))   %>%
+    group_by(rel_time) %>%
+    summarise(mu_truth = mean(cumtau)) %>% na.omit()
+
+  df_truth <-
+    crossing(state = unique(df_truth_$state), year = unique(year$year)) %>%
+    left_join(df_truth_,"state") %>%
+    mutate(rel_time = pmax(year-group)) %>%
+    mutate(tau = ifelse(!is.na(mu) & rel_time>=0,mu,0),
+           tau_t = ifelse(!is.na(mu_t) &rel_time>=0,mu_t,0)) %>%
+    group_by(group, state) %>%
+    mutate(cumtau = tau + cumsum(tau_t)) %>%
+    mutate(max_time_post = max(year-group)) %>%
+    ungroup() %>%
+    mutate(max_time_post = min(max_time_post,na.rm=TRUE)) %>%
+    #filter(rel_time <= max_time_post) %>%
+    filter(cumtau>0) %>% group_by(group) %>% summarise(mean = mean(cumtau)) %>%
+    as_tibble() %>%
+    left_join(
+      tx %>% map_dbl(~(length(.x))) %>% data.frame() %>% rownames_to_column(var = "group") %>% set_names(c("group","weight")) %>%
+        filter(group != "NA") %>%
+        mutate(total_weight = sum(weight)) %>%
+        mutate(group = as.numeric(paste0(group))),
+      "group") %>%
+    mutate(mu_truth = mean*weight/total_weight) %>%
+    summarise(mu_truth = sum(mu_truth)) %>%
+    mutate(rel_time = NA) %>%
+    mutate(type = "Static")  %>%
+    bind_rows(
+      df_truth_t %>%
+        mutate(type = "Dynamic")
+    )
+
+  # Units
+  unit <-
+    tibble(
+      unit = 1:N,
+      unit_fe = rnorm(N, 0, 0.5),
+      # generate state
+      state = sample(rep(1:50, N/50), N, replace = FALSE)) %>%
+    left_join(
+      df_truth_,c("state")
+    ) %>%
+    ungroup() %>%
+    mutate_at(vars(mu,mu_t),~ifelse(is.na(.),0,.)) %>%
+    mutate(evertreated = ifelse(is.na(as.numeric(group)),"C","T")) %>%
+    mutate(hat_gamma = mu) %>%
+    mutate(hat_gamma_t = mu_t) %>%
+    # generate unit specific yearly treatment effects
+    rowwise() %>%
+    mutate(gamma = rnorm(1, hat_gamma, .2)) %>%
+    mutate(gamma_t = ifelse(mu_t!=0,rnorm(1,hat_gamma_t,0.2),0)) %>%
+    mutate(x_i = rgamma(1,1))
+
+  df_x_it <-
+    unit %>%
+    select(unit) %>%
+    mutate(x_it = map(unit,~(arima.sim(n=length(start:stop), list(ar = rho_t, order=c(1,0,0)))))) %>%
+    mutate(year = map(unit,~(start:stop))) %>%
+    unnest(cols = c(x_it,year)) %>%
+    select(unit,year,x_it)
+
+
+  # full interaction of unit X year
+  df <-
+    crossing(unit, year) %>%
+    left_join(df_x_it, c("unit","year")) %>%
+    # make error term and get treatment indicators and treatment effects
+    mutate(error = rnorm(nrow(.), 0, 0.5),
+           treat = ifelse(year >= group & !is.na(group), 1, 0),
+           tau = ifelse(treat == 1, gamma, 0),
+           tau_t = ifelse(treat==1,gamma_t,0)) %>%
+    # calculate the dep variable
+    group_by(unit) %>%
+    mutate(cumtau = tau + cumsum(tau_t)) %>%
+    mutate(dep_var = unit_fe + year_fe + cumtau + error) %>%
+    mutate(dep_var_x = unit_fe + year_fe + x_i + x_it + cumtau + error) %>%
+    mutate(rel_year = year - as.numeric(group)) %>%
+    mutate(rel_year = ifelse(rel_year == -Inf, NA, rel_year))%>%
+    dummy_cols(select_columns = "rel_year") %>%
+    mutate(across(starts_with("rel_year_"), ~replace_na(., 0))) %>%
+    # generate pre and post dummies
+    mutate(Pre = ifelse((rel_year < bin[1]) * (!is.na(rel_year)), 1, 0),
+           Post = ifelse((rel_year > bin[2]) * (!is.na(rel_year)), 1, 0)) %>%
+    mutate(bin1 = bin[1],
+           bin2 = bin[2]) %>% 
+    select(unit,year, y_it = dep_var, w_it = treat,x_i, x_it, group, starts_with("rel_year"))
+
+  rel_names = grep("rel_year_",names(df),value=TRUE)
+  if (length(grep("rel_year_NA",rel_names)>0)) {
+     rel_names <- rel_names[-grep("rel_year_NA",rel_names)]
+  }
+ 
+  rel_order = as.numeric(gsub("rel_year_","",rel_names))
+  rel_vars <-
+    cbind.data.frame(rel_names,rel_order) %>%
+    arrange(rel_order) %>%
+    mutate(rel_names = gsub("_-","_lag",rel_names)) %>% na.omit() %>%
+    mutate(bin1 = params$bin[1],
+           bin2 = params$bin[2]) %>%
+    mutate(nrow_prebin = n()) %>%
+    filter(rel_order >= bin1  & rel_order<=bin2) %>%
+    filter(rel_order!=-1)
+
+  df_final <-
+    df  %>%
+    mutate(group = ifelse(group=="NA",Inf,group)) %>%
+    select(-contains("rel_year")) %>%
+    mutate(rel_year = year - group) %>%
+    mutate(rel_year = ifelse(rel_year == -Inf, NA, rel_year)) %>%
+    dummy_cols(select_columns = "rel_year") %>%
+    mutate(across(starts_with("rel_year_"), ~replace_na(., 0))) %>%
+    # generate pre and post dummies
+    mutate(pre = ifelse((rel_year < -5) * (!is.na(rel_year)), 1, 0),
+           post = ifelse((rel_year > 5) * (!is.na(rel_year)), 1, 0)) %>%
+    mutate_at(vars(pre,post),~ifelse(is.na(rel_year),0,.)) %>%
+    rename_at(vars(contains("rel_year_")),function(x) gsub("_-","_lag",x)) %>%
+    select(-contains("rel_year_NA")) %>%
+    mutate(rel_year = ifelse(is.na(rel_year),-Inf,rel_year)) 
+
+
+  return(list(df = df_final, truth = df_truth, truth_g = df_truth_, params = params))
+
+}
+
+plot_data <- function(df) {
+
+  df$df <- 
+    df$df %>% 
+    group_by(unit) %>% 
+    mutate(evertreated = max(w_it))
+  
+  year_range <- range(df$df$year)
+
+  staggered <- ifelse(length(unique(na.omit(df$df$group)))>1,"Staggered","Single Treatment Time")
+
+  control <- ifelse("C" %in% unique(df$df$evertreated),TRUE,FALSE)
+
+  if (control) {
+    df_ <- df$df %>%
+      mutate(group = ifelse(evertreated=="C","Never Treated",paste0(group)))
+  } else {
+    df_ <- df$df
+  }
+  unique_groups <- unique(df_$group)
+  colors <- c("#A7473A","#4B5F6C","#51806a")[1:length(unique_groups)]
+  names(colors) = unique(df_$group)
+
+  df_vline <- suppressWarnings({
+    data.frame(group = unique(df_$group),xintercept = unique(as.numeric(df_$group)) - 0.5) %>%
+      mutate(color = colors[factor(group)])
+  })
+
+  suppressWarnings({
+    df_ %>%
+      ggplot(aes(x = year, y = y_it)) +
+      # unit specific lines
+      geom_line(alpha = 1/10, color = "grey",aes(group = unit)) +
+      # group specific averages
+      geom_line(
+        data = . %>%
+          group_by(group, year) %>%
+          summarize(y_it = mean(y_it)) ,
+        aes(x = year, y = y_it, group = factor(group),
+            color = factor(group)), size = 1) +
+      labs(x = "", y = "", color = "Group") +
+      geom_vline(data = df_vline, aes(xintercept = xintercept, color = factor(group)),linetype="dashed",size=1) +
+      ggsci::scale_color_aaas()+
+      geom_dl(data =
+                . %>%
+                group_by(group, year) %>%
+                summarize(y_it = mean(y_it)), method = "last.bumpup",aes(label = group)) +
+      scale_y_continuous(limits = c(-3, 20)) +
+      scale_x_continuous(limits = year_range, expand = c(0.25,0))  + theme(legend.position = "none") +
+      theme_bw() +
+      theme(legend.position = "none")
+  })
+}
+
+prepare <- function(df,params) {
+  df_orig = df
+  
+  any_never_treated <- function(df) {
+    n_years <- max(df$year) - min(df$year) + 1
+
+    never_treated <-
+      df %>%
+      ungroup() %>%
+      filter(w_it==0) %>%
+      group_by(unit) %>%
+      count(year) %>%
+      summarise(n = sum(n)) %>%
+      ungroup()  %>%
+      mutate(never_treated = as.integer(n==n_years))
+
+    any_never_treated = max(never_treated$never_treated)==1
+    any_never_treated
+  }
+
+  get_d_star <- function(df) {
+
+    df %>%
+      select(unit,year,w_it) %>%
+      unique() %>%
+      filter(w_it==1) %>%
+      group_by(unit) %>%
+      filter(year==min(year)) %>%
+      select(-w_it) %>%
+      rename(d = year) %>%
+      dummy_cols("d") %>%
+      select(unit,starts_with("d_")) %>%
+      right_join(df %>% select(unit) %>% unique(),"unit") %>%
+      mutate_at(vars(starts_with("d_")),~ifelse(is.na(.),0,.)) %>%
+      mutate(never_treated = as.integer(rowSums(.[,-1])==0))
+  }
+
+  get_f_star <- function(df) {
+    with(df,table(year,w_it)) %>% data.frame() %>%
+      filter(w_it==1 & Freq>0) %>%
+      select(f_star = year)
+  }
+
+  get_cohort_year_interactions <- function(df,d_star, f_star) {
+    crossing(d = as.numeric(gsub("d_","",grep("d_",colnames(d_star),value=TRUE))),f = as.numeric(paste0(f_star$f_star))) %>%
+      mutate(value = as.numeric(f>=d)) %>%
+      mutate(f = paste0("f_",f)) %>%
+      mutate(d = paste0("d_",d)) %>%
+      spread(f,value) %>%
+      gather(f,value,-d) %>%
+      filter(value==1) %>%
+      arrange(d,f) %>%
+      select(-value) %>%
+      mutate(i = paste0("I(",d,"*",f,")"))
+  }
+
+  is_there_any_never_treated <- df %>% any_never_treated(); is_there_any_never_treated
+  
+  if (!is_there_any_never_treated) {
+    d_star_ <- df %>% get_d_star() %>% select(contains("d_")) %>% colnames() %>% gsub("d_","",.) %>% as.numeric(paste0(.)) %>% max(); d_star_
+    df <- 
+      df_orig %>% filter(year < d_star_)
+      
+  }
+  
+  d_star <- df %>% get_d_star()
+  f_star <- df %>% get_f_star()
+  
+  cohort <-
+    suppressWarnings({
+      d_star %>%
+        gather(cohort,member,-unit) %>%
+        filter(member==1) %>%
+        arrange(unit) %>%
+        select(-member) %>%
+        mutate(cohort2 = ifelse(cohort=="never_treated",0,as.numeric(paste0(gsub("d_","",cohort))))) %>%
+        select(-cohort) %>%
+        rename(cohort = cohort2)
+    })
+
+  cohort_year_interactions <- df %>% get_cohort_year_interactions(., d_star = d_star, f_star = f_star)
+
+  df_final <-
+    df %>%
+    select(unit,year,y_it,starts_with("x_i"),w_it, contains("rel_year")) %>%
+    left_join(d_star,"unit") %>%
+    mutate_at(vars(starts_with("d_")),~ifelse(is.na(.),0,.)) %>%
+    mutate(f = ifelse(year %in% f_star$f_star,year,NA)) %>%
+    dummy_cols("f",ignore_na=TRUE) %>%
+    mutate_at(vars(starts_with("f_")),~ifelse(is.na(.),0,.))  %>%
+    dummy_cols("year",ignore_na=TRUE) %>%
+    select(-f) %>%
+    left_join(cohort,"unit") 
+  
+  
+  df_truth <- 
+    df_final %>% 
+    select(cohort,rel_year) %>% 
+    filter(cohort>0) %>% 
+    unique() %>% 
+    left_join(
+      params$mu %>% bind_cols() %>% 
+        gather(cohort,mu) %>% 
+        left_join(params$mu_t %>% bind_cols() %>% 
+                    gather(cohort,mu_t)) %>% 
+        mutate(cohort = as.numeric(paste0(cohort)))
+    ) %>% 
+    mutate(w_it = as.integer(rel_year>=0)) %>% 
+    mutate(y_it = w_it * (mu + mu_t * (rel_year + 1))) %>% 
+    group_by(cohort,rel_year) %>%
+    summarise(y_it_truth = mean(y_it)) 
+  
+  df_final <- 
+    df_final %>% 
+    left_join(df_truth,c("cohort","rel_year")) %>% 
+    mutate(y_it_truth = ifelse(is.na(y_it_truth),0,y_it_truth))
+  
+  es_vars <- grep("rel_year_",colnames(df),value=TRUE)
+  es_vars <- es_vars[-grep("rel_year_lag1",es_vars)]
+  es_order <- order(as.numeric(gsub("rel_year_|","",gsub("rel_year_lag","-",es_vars))))
+  es_vars <- es_vars[es_order]
+
+  ff_etwfe <- as.formula(paste0("y_it ~",paste0(cohort_year_interactions$i,collapse="+"),"+ factor(year) | unit"))
+  ff_pols <- as.formula(paste0("y_it ~",paste0(cohort_year_interactions$i,collapse="+"),"+",paste0(grep("^d_",colnames(df_final), value=TRUE),collapse="+"),"+ factor(year)"))
+  ff_re <- as.formula(paste0("y_it ~",paste0(cohort_year_interactions$i,collapse="+"),"+",paste0(grep("^d_",colnames(df_final), value=TRUE),collapse="+"),"+ factor(year) + (1| unit)"))
+  ff_twfe <- as.formula(paste0("y_it ~ w_it + factor(year) | unit"))
+  ff_es <- as.formula(paste0("y_it ~ ",paste0(es_vars,collapse="+"),"+factor(year) | unit"))
+  return(list(df = df_final, ff_pols = ff_pols, ff_twfe = ff_twfe, ff_es = ff_es, ff_etwfe = ff_etwfe, ff_re = ff_re, d_star = d_star, f_star = f_star, cohort_year_interactions = cohort_year_interactions, is_there_any_never_treated = is_there_any_never_treated, params = params))
+}
+
+estimate <- function(df_) {
+
+  ff_twfe <- df_[["ff_twfe"]]
+  fit_twfe <- feols(ff_twfe, data = df_$df)
+
+  ff_es <- df_[["ff_es"]]
+  fit_es <- feols(ff_es,dat = df_$df)
+
+  ff_etwfe <- df_[["ff_etwfe"]]
+  fit_etwfe <- feols(ff_etwfe, data = df_$df)
+
+  ff_pols <- df_[["ff_pols"]]
+  fit_pols <- lm(ff_pols,data = df_$df)
+
+  ff_re <- df_[["ff_re"]]
+  fit_re <- lmer(ff_re, data = df_$df)
+
+  # Calloway-Sant'Anna
+  fit_cs_nyt = att_gt(
+    yname         = "y_it",
+    tname         = "year",
+    idname        = "unit",
+    gname         = "cohort",
+    # xformla       = NULL,            # No additional controls in this dataset
+    control_group = "notyettreated", # Too few groups for "nevertreated" default
+    clustervars   = "unit",
+    data          = df_$df
+  )
+
+  est_cs_nyt <-  tibble(cohort = paste0(fit_cs_nyt$group), year = fit_cs_nyt$t, cs_nyt= fit_cs_nyt$att)
+
+  if (df_$is_there_any_never_treated) {
+    fit_cs_nt = att_gt(
+    yname         = "y_it",
+    tname         = "year",
+    idname        = "unit",
+    gname         = "cohort",
+    # xformla       = NULL,            # No additional controls in this dataset
+    control_group = "nevertreated", # Too few groups for "nevertreated" default
+    clustervars   = "unit",
+    data          = df_$df
+  )
+    fit_cs_nt
+    est_cs_nt <-  tibble(cohort = paste0(fit_cs_nt$group), year = fit_cs_nt$t, cs_nt= fit_cs_nt$att)
+    est_cs <-
+      est_cs_nyt %>%
+      left_join(est_cs_nt,c("cohort","year"))
+
+  } else {
+    est_cs <-
+      est_cs_nyt 
+  }
+  
+  # Gardner (2021)
+  fit_gard1 <-
+    did2s(
+      data         = df_$df,
+      yname        = "y_it",
+      first_stage  = ~ 0 | unit + year, # 0 b/c we have no controls in this dataset
+      second_stage = ~ i(w_it),      # binary treatment dummy (not an event-study)
+      treatment    = "w_it",
+      cluster_var  = "unit",
+    )
+
+  fit_gard2 <-
+    did2s(
+      data         = df_$df,
+      yname        = "y_it",
+      first_stage  = ~ 0 | unit + year,
+      second_stage = ~ i(rel_year, ref = -c(1, Inf)), # Use relative time var. for event-study
+      treatment    = "w_it",
+      cluster_var  = "unit"
+    )
+
+  # Chaisemartin and D’Haultfœuille (2020, 2021)
+  fit_cdh_ <-  did_multiplegt(
+    df_$df, 'y_it', 'unit', 'year', 'w_it', # original regression params
+    dynamic   = 3,                  # no. of post-treatment periods
+    placebo   = 3,                  # no. of pre-treatment periods
+    brep      = 0,                  # no. of bootstraps (required for SEs)
+    cluster   = 'unit',                # variable to cluster SEs on
+    parallel  = TRUE                 # run the bootstraps in parallel
+  )
+  tidy.did_multiplegt = function(x) {
+    # Note: Adapted from https://asjadnaqvi.github.io/DiD/docs/code_r/07_did_multiplegt_r/
+    ests = x[grepl("^placebo_|^effect|^dynamic_", names(x))]
+    ret = suppressWarnings({
+      data.frame(
+        term      = names(ests),
+        estimate  = as.numeric(ests)
+      ) %>%
+        na.omit() %>%
+        mutate(rel_time = term) %>%
+        mutate(rel_time = gsub("placebo_","-",rel_time)) %>%
+        mutate(rel_time = gsub("dynamic_","",rel_time)) %>%
+        mutate(rel_time = gsub("effect","0",rel_time)) %>%
+        mutate(rel_time = as.numeric(paste0(rel_time)))
+    }) %>%
+      arrange(rel_time)
+
+
+
+    return(ret)
+  }
+
+  fit_cdh <-
+    fit_cdh_  %>% tidy.did_multiplegt()
+
+  # Stacked Regression
+
+  # Version 1: Static DID
+
+  event_window <- c(df_$params$bin[1],df_$params$bin[2])
+  k_a <- event_window[1]
+  k_b <- event_window[2]
+  
+  cohorts <- unique(df_$df$cohort) %>% sort()
+  cohorts <- cohorts[cohorts>0]; cohorts
+  
+  df_st <-
+    cohorts %>%
+    map_df(~({
+      df_$df %>% 
+        mutate(sub_experiment = .x) %>%
+        filter(cohort==.x | (cohort > .x + k_b) | (cohort==0)) %>%
+        filter(year >= (.x + k_a) & year <= (.x + k_b))   %>% 
+        group_by(year) %>%
+        mutate(post = max(w_it)) %>% 
+        ungroup() %>% 
+        select(-contains("rel_year")) %>% 
+        mutate(rel_year = year - .x) %>% 
+        mutate(rel_year = ifelse(rel_year == -Inf, NA, rel_year)) %>%
+        mutate(rel_year = ifelse(cohort==.x,rel_year,0)) %>% 
+        dummy_cols(select_columns = "rel_year")  %>% 
+        mutate(across(starts_with("rel_year_"), ~replace_na(., 0))) %>%
+        mutate(Pre = ifelse((rel_year < k_a) * (!is.na(rel_year)), 1, 0),
+               Post = ifelse((rel_year > k_b) * (!is.na(rel_year)), 1, 0)) %>%
+        mutate(w = as.integer(cohort==.x))  %>%
+        mutate(unit = paste0(unit,"_",.x)) %>%
+        mutate(year = paste0(year,"_",.x))  %>% 
+        rename_at(vars(starts_with("rel_year_")), function(x) gsub("-","lag",x))   
+    })) %>% 
+    mutate_at(vars(starts_with("rel_year_")), function(x) ifelse(is.na(x),0,x))  
+  
+  # Ensure that no forbidden comparisons are made (i.e., a max year outside the scope of the data woudl result in rel_year_X to be set to 0, when in practice it woudl be 1 if the data were observed)
+    clean_comparisons <- 
+      df_st %>% 
+        filter(cohort!=0) %>% 
+        group_by(sub_experiment,cohort) %>% 
+        count(rel_year) %>% 
+        group_by(cohort) %>% 
+        mutate(max_rel_year = max(rel_year)) %>% 
+        ungroup() %>% 
+        mutate(max_rel_year = min(max_rel_year)) %>% 
+        filter(rel_year<=max_rel_year) %>% 
+        select(sub_experiment, cohort, rel_year) %>% 
+        # Not yet treated comparison
+        bind_rows(
+          df_st %>% 
+            filter(cohort==0) %>% 
+            group_by(sub_experiment,cohort) %>% 
+            count(rel_year) %>% 
+            select(sub_experiment, cohort, rel_year)
+        )
+  
+  df_st_ <- 
+    df_st %>% 
+    inner_join(clean_comparisons,c("sub_experiment","cohort","rel_year")) %>% 
+    I()
+  
+  es_vars <- grep("rel_year_",colnames(df_st_),value=TRUE)
+  es_vars <- es_vars[-grep("rel_year_lag1",es_vars)]
+  es_order <- order(as.numeric(gsub("rel_year_|","",gsub("rel_year_lag","-",es_vars))))
+  es_vars <- es_vars[es_order]
+  ff_es <- as.formula(paste0("y_it ~ ",paste0(es_vars,collapse="+"),"+factor(year) | unit")) 
+  
+  fit_stacked_static_twfe <- feols(y_it ~ w_it + factor(year) | unit, data = df_st_); summary(fit_stacked_static_twfe)
+  fit_stacked_dynamic_es <- feols(ff_es, data = df_st_ ); summary(fit_stacked_dynamic_es)
+
+  # Sun and Abraham 2020
+  fit_sa = feols(
+    y_it ~ sunab(cohort, rel_year) | unit + year,
+    data = df_$df, vcov = ~unit
+  )
+
+  fit_mc <- gsynth(y_it ~ w_it,
+                 data = df_$df,
+                 index = c("unit","year"), estimator = "mc",
+                 se = FALSE, force = "two-way"); fit_mc
+
+  fit_imp <- did_imputation(data = df_$df, yname = "y_it", gname = "cohort",
+                     tname = "year", idname = "unit", 
+                     # event-study
+                     horizon=TRUE, pretrends = -5:-1)
+  
+    
+  truth_rel <- df_$df %>% filter(cohort!=0) %>% select(cohort,rel_year,y_it_truth,year) %>% group_by(rel_year) %>% summarise(truth = mean(y_it_truth))
+  truth_year <- df_$df %>% select(cohort,rel_year,y_it_truth,year) %>% group_by(year) %>% summarise(truth = mean(y_it_truth))
+  
+  out <-
+    list(fit_twfe = fit_twfe,
+              fit_es = fit_es,
+              fit_etwfe = fit_etwfe,
+              fit_pols = fit_pols, ff_pols = ff_pols,
+              fit_re = fit_re, ff_re = ff_re,
+              fit_cs = est_cs,
+              fit_gard1 = fit_gard1,
+              fit_gard2 = fit_gard2,
+              fit_cdh = fit_cdh,
+              fit_sa = fit_sa,
+              fit_stacked_static_twfe = fit_stacked_static_twfe,
+              fit_stacked_dynamic_es = fit_stacked_dynamic_es,
+              fit_mc = fit_mc,
+              fit_imp = fit_imp,
+         truth_rel = truth_rel, 
+         truth_year = truth_year); out
+  return(out)
+}
+
+discriminate <- function(est) {
+  #with(est, {
+  
+    truth_rel <- est$truth_rel %>% rename(rel_time = rel_year)
+    truth_year <- est$truth_year
+    
+    coef_twfe <-
+      data.frame(twfe = summary(est$fit_twfe)$coefficients) %>%
+      rownames_to_column(var = "param") %>%
+      as_tibble(); coef_twfe
+
+    coef_es <-
+      data.frame(twfe_es = summary(est$fit_es)$coefficients) %>%
+      rownames_to_column(var = "param") %>%
+      as_tibble(); coef_es
+
+    coef_etwfe <-
+      data.frame(etwfe = summary(est$fit_etwfe)$coefficients) %>%
+      rownames_to_column(var = "param") %>%
+      as_tibble()
+
+    coef_pols <-
+      data.frame(summary(est$fit_pols)$coefficients) %>%
+      rownames_to_column(var = "param") %>%
+      as_tibble() %>%
+      clean_names() %>%
+      select(param, pols = estimate)
+
+    coef_re <-
+      est$fit_re %>% summary() %>% pluck("coefficients") %>%
+      data.frame() %>%
+      rownames_to_column() %>%
+      janitor::clean_names()  %>%
+      as_tibble() %>%
+      select(param = rowname, re = estimate)
+
+    coefs <-
+      coef_pols %>%
+      left_join(coef_etwfe,"param") %>%
+      left_join(coef_re,"param") %>%
+      filter(grepl("^I\\(d_",param)) %>%
+      mutate(param = gsub("I\\(|\\)","",param)) %>%
+      separate(param, into = c("cohort","year"),sep = " \\* ") %>%
+      mutate_at(vars(cohort,year), ~as.numeric(paste0(gsub("^d_|^f_","",.))))
+
+    out_es <-
+      coef_es %>%
+      filter(grepl("rel_year",param)) %>%
+      mutate(param = gsub("lag","-",param)) %>%
+      mutate(param = gsub("rel_year_","",param)) %>%
+      mutate(param = as.numeric(paste0(param))) %>%
+      rename(rel_time = param)
+
+    # Calloway-Sant'Anna (2021)
+    est_cs <-
+      est$fit_cs %>%
+      mutate(cohort = as.numeric(paste0(cohort))) %>%
+      mutate(rel_time = year - cohort) %>%
+      group_by(rel_time) %>%
+      summarise_at(vars(starts_with("cs_")),mean)
+
+    est_gard <-
+      est$fit_gard2 %>%
+      coef() %>%
+      data.frame() %>%
+      set_names("gard") %>%
+      rownames_to_column(var="rel_time") %>%
+      mutate(rel_time = gsub("rel_year::","",rel_time)) %>%
+      as_tibble() %>%
+      mutate(rel_time = as.numeric(paste0(rel_time)))
+
+    est_cdh <-
+      est$fit_cdh %>%
+      select(rel_time,cdh=estimate)
+
+    est_stacked_static <-
+      est$fit_stacked_static_twfe %>%
+      coef() %>%
+      data.frame() %>%
+      set_names("stacked_twfe") %>%
+      rownames_to_column(var="param")  %>%
+      filter(grepl("w_it",param))
+
+    est_stacked_dynamic <-
+      est$fit_stacked_dynamic_es  %>%
+      coef() %>%
+      data.frame() %>%
+      set_names("stacked_es") %>%
+      rownames_to_column(var="rel_time") %>%
+      filter(grepl("rel_year_",rel_time)) %>%
+      mutate(rel_time = gsub("rel_year_","",rel_time)) %>%
+      mutate(rel_time = gsub("lag","-",rel_time)) %>%
+      as_tibble() %>%
+      mutate(rel_time = as.numeric(paste0(rel_time)))
+
+    est_sa <-
+      est$fit_sa %>%
+      coefficients() %>%
+      data.frame() %>%
+      set_names("sunab") %>%
+      rownames_to_column(var="rel_time") %>%
+      mutate(rel_time = gsub("rel_year::","",rel_time)) %>%
+      as_tibble() %>%
+      mutate(rel_time = as.numeric(paste0(rel_time)))
+
+    est_imp <- 
+      est$fit_imp %>% 
+      select(rel_time = term, imputation=estimate) %>% 
+      mutate(rel_time = as.numeric(paste0(rel_time)))
+    
+    if (!is.null(est$fit_mc)) {
+      crossing(cohort = coefs$cohort,year = coefs$year) %>%
+      left_join(coefs,c("cohort","year")) %>%
+      mutate_at(vars(pols,etwfe,re),~ifelse(is.na(.),0,.)) %>%
+      mutate(rel_time = year - cohort) %>%
+      group_by(rel_time) %>%
+      summarise_at(vars(pols,etwfe,re),mean) %>%
+      filter(rel_time>=0) %>%
+      inner_join(out_es) %>%
+      mutate(twfe = coef_twfe %>% filter(param=="w_it") %>% pull(twfe)) %>%
+      mutate(stacked_twfe = est_stacked_static %>% pull(stacked_twfe)) %>%
+      select(rel_time, twfe, stacked_twfe, twfe_es,etwfe,pols,twm=re) %>%
+      left_join(est_cs) %>%
+      left_join(est_gard) %>%
+      left_join(est_cdh) %>%
+      left_join(est_sa) %>%
+      left_join(est_stacked_dynamic) %>% 
+      left_join(est_imp) %>% 
+      mutate(twfe_mc_static = est$fit_mc$att.avg) %>%
+      mutate(twfe_mc = est$fit_mc$att[paste0(rel_time+1)]) %>% 
+      left_join(truth_rel,"rel_time")
+    } else {
+      crossing(cohort = coefs$cohort,year = coefs$year) %>%
+      left_join(coefs,c("cohort","year")) %>%
+      mutate_at(vars(pols,etwfe,re),~ifelse(is.na(.),0,.)) %>%
+      mutate(rel_time = year - cohort) %>%
+      group_by(rel_time) %>%
+      summarise_at(vars(pols,etwfe,re),mean) %>%
+      #inner_join(truth,"rel_time") %>%
+      filter(rel_time>=0) %>%
+      inner_join(out_es) %>%
+      mutate(twfe = coef_twfe %>% filter(param=="w_it") %>% pull(twfe)) %>%
+      mutate(stacked_twfe = est_stacked_static %>% pull(stacked_twfe)) %>%
+      select(rel_time,twfe, stacked_twfe, twfe_es,etwfe,pols,twm=re) %>%
+      left_join(est_cs) %>%
+      left_join(est_gard) %>%
+      left_join(est_cdh) %>%
+      left_join(est_sa) %>%
+      left_join(est_stacked_dynamic) %>%
+      left_join(est_imp) %>% 
+      mutate(twfe_mc_static = est$fit_mc$att.avg) %>%
+      mutate(twfe_mc = est$fit_mc$att[paste0(rel_time+1)]) %>% 
+      left_join(truth_rel,"rel_time")
+    }
+    
+
+  #})
+}
+
+gen_est_disc <- function(M,params,start = 2008, stop = 2022, rho_t = 0.8, N = 500 ) {
+  p <- progressor(steps = length(M))
+
+  future_map(M, ~{
+    p()
+    Sys.sleep(.2)
+    suppressWarnings({
+      suppressMessages({
+
+        df_sim <- params %>% make_data(start = start, stop = stop, rho_t = rho_t, N = N)
+        est <- df_sim %>% pluck("df") %>% prepare(params = params) %>% estimate()
+        truth <- df_sim %>% pluck("truth")
+        est %>% discriminate()
+      })
+    })
+  })
+}
+
+params1 <- list(
+  descrip = "Common Treatment Time, Constant Treatment Effects",
+  mu = list("2014" = 2),
+  mu_t = list("2014" = 0),
+  tx = list("2014" = 1:25,
+            "NA" = 26:50),
+  bin = c(-5,5)
+)
+
+params2=  list(
+  descrip = "Common Treatment Time, Dynamic Treatment Effects",
+  mu = list("2014" = 0),
+  mu_t = list("2014" = 0.3),
+  tx = list("2014" = 1:25,
+            "NA" = 26:50),
+  bin = c(-5,5))
+
+
+params3=  list(
+  desc = "Multiple Treatment Periods and Constant Equal Treatment Effects",
+  mu = list("2010" = 3,
+            "2013" = 3,
+            "2017" = 3),
+  mu_t = list("2010" = 0,
+              "2013" = 0,
+              "2017" = 0),
+  tx = list("2010" = 1:17,
+            "2013" = 18:35,
+            "2017" = 36:50),
+  bin = c(-5,5))
+
+params4a =  list(
+  desc = "Multiple Treatment Periods and Constant Different Treatment Effects, All Groups Eventually Treated",
+  mu = list("2010" = 5,
+            "2013" = 3,
+            "2017" = 1),
+  mu_t = list("2010" = 0,
+              "2013" = 0,
+              "2017" = 0),
+  tx = list("2010" = 1:17,
+            "2013" = 18:35,
+            "2017" = 36:50),
+  bin = c(-5,5))
+
+params4b =  list(
+  desc = "Multiple Treatment Periods and Constant Different Treatment Effects, Never Treated Group", 
+  mu = list("2010" = 5,
+            "2013" = 3),
+  mu_t = list("2010" = 0,
+              "2013" = 0),
+  tx = list("2010" = 1:17,
+            "2013" = 18:35,
+            "NA" = 36:50),
+  bin = c(-5,5))
+
+params5=  list(
+  desc = "Multiple Treatment Periods and Constant Dynamic Treatment Effects",
+  mu = list("2010" = 0,
+            "2013" = 0,
+            "2017" = 0),
+  mu_t = list("2010" = 0.3,
+              "2013" = 0.3,
+              "2017" = 0.3),
+  tx = list("2010" = 1:17,
+            "2013" = 18:35,
+            "2017" = 36:50),
+  bin = c(-5,5))
+
+params6=  list(
+  desc = "Multiple Treatment Periods and Heterogeneous Dynamic Treatment Effects",
+  mu = list("2010" = 0,
+            "2013" = 0,
+            "2017" = 0),
+  mu_t = list("2010" = 0.5,
+              "2013" = 0.3,
+              "2017" = 0.1),
+  tx = list("2010" = 1:17,
+            "2013" = 18:35,
+            "2017" = 36:50),
+  bin = c(-5,5))
+
+
+params6b=  list(
+  desc = "Multiple Treatment Periods and Heterogeneous Dynamic Treatment Effects, Never Treated",
+  mu = list("2010" = 0,
+            "2013" = 0),
+  mu_t = list("2010" = 0.5,
+              "2013" = 0.3),
+  tx = list("2010" = 1:17,
+            "2013" = 18:35,
+            "NA" = 36:50),
+  bin = c(-5,5))
+
+params = params6b
+set.seed(23)
+sim <- params %>% make_data() 
+df <- sim$df %>% 
+  select(unit, year, y_it, d_it = w_it, x_i , x_it)
+```
+
+## Data Prep Step 0: Raw Data
+
+Let's start out with the simplest possible data structure.
+
+-   Units (e.g., patients, states, etc.) `unit`
+-   Time `year`
+-   Outcome `y_it`
+-   Time-varying (binary) treatment indicator `d_it`
+-   A unit-specific (time invariant) covariate `x_i`
+-   A unit- and time-specific covariate `x_it`
+
+We actually won't use `x_i` or `x_it` today, so we can ignore them for now.
+
+## Data Prep Step 0: Raw Data
+
+Let's take a look at the first few rows of our data:
+
+```{r}
+df %>% 
+  head() %>% 
+  kable(digits = 3) %>% 
+  kable_styling()
+```
+
+## Data Prep Step 1a: Identify Treatment Cohorts
+
+::: incremental
+-   Our next objective is to identify the various treatment cohorts in our data.
+
+-   To do this, we will ask "when is the first year this unit is treated"?
+
+-   Based on the answer to this question, we will be able to identify all of the cohorts based on the first year they are treated.
+
+:::
+
+## Data Prep Step 1a: Identify Treatment Cohorts {.smaller}
+
+-   Identify first year each unit was treated
+
+``` {.r code-line-numbers="3-8"}
+df_ <- 
+  df %>% 
+  #########
+  # Step 1a
+  #########
+  arrange(unit,year) %>% 
+  # What year is the unit first treated in?
+  mutate(first_treated = as.integer(lag(d_it==0) & d_it==1)) %>% 
+  group_by(unit) %>% 
+  # Is the unit never treated (i.e., d_it is never 1)
+  mutate(never_treated = as.integer(sum(d_it)==0))  %>% 
+  ungroup() %>% 
+  mutate(first_treated = year * first_treated) %>% 
+  group_by(unit) %>% 
+  # Treatment cohort 
+  mutate(treatment_cohort = max(first_treated)) %>% 
+  ungroup() 
+```
+
+## Data Prep Step 1a: Identify Treatment Cohorts {.smaller}
+
+-   Identify never-treated units (if any)
+
+``` {.r code-line-numbers="9-12"}
+df_ <- 
+  df %>% 
+  #########
+  # Step 1a
+  #########
+  arrange(unit,year) %>% 
+  # What year is the unit first treated in?
+  mutate(first_treated = as.integer(lag(d_it==0) & d_it==1)) %>% 
+  group_by(unit) %>% 
+  # Is the unit never treated (i.e., d_it is never 1)
+  mutate(never_treated = as.integer(sum(d_it)==0))  %>% 
+  ungroup() %>% 
+  mutate(first_treated = year * first_treated) %>% 
+  group_by(unit) %>% 
+  # Treatment cohort 
+  mutate(treatment_cohort = max(first_treated)) %>% 
+  ungroup() 
+```
+
+## Data Prep Step 1a: Identify Treatment Cohorts {.smaller}
+
+-   Treatment cohort names are the year of first treatment.
+-   Treatment cohort name is "0" for never treated units.
+
+``` {.r code-line-numbers="13-17"}
+df_ <- 
+  df %>% 
+  #########
+  # Step 1a
+  #########
+  arrange(unit,year) %>% 
+  # What year is the unit first treated in?
+  mutate(first_treated = as.integer(lag(d_it==0) & d_it==1)) %>% 
+  group_by(unit) %>% 
+  # Is the unit never treated (i.e., d_it is never 1)
+  mutate(never_treated = as.integer(sum(d_it)==0))  %>% 
+  ungroup() %>% 
+  mutate(first_treated = year * first_treated) %>% 
+  group_by(unit) %>% 
+  # Treatment cohort 
+  mutate(treatment_cohort = max(first_treated)) %>% 
+  ungroup() 
+```
+
+## Data Prep Step 1b: Trim Observations
+
+::: callout-important
+If all groups are eventually treated, you'll need to "trim" the data of all observations on or after the last treated cohort date.
+:::
+
+::: incremental
+-   There is no natural comparator for the last-treated group, since all other groups are already treated.
+-   This step alone can take care of a significant amount of the bias from "forbidden comparisons" in TWFE DID.
+:::
+
+## Data Prep Step 2: Define Relative Time and Calendar Time Indicators {.smaller}
+
+-   Set relative time to `-Inf` for never treated units.
+
+``` {.r code-line-numbers="10-12"}
+df_ <- 
+  df %>% 
+  #########
+  # Step 1a
+  #########
+  ... 
+  ##########
+  # Step 2
+  ##########
+  # Relative time variable
+  mutate(rel_time = year - treatment_cohort) %>% 
+  mutate(rel_time = ifelse(never_treated==1, -Inf, rel_time))  %>% 
+  # Create dummy indicators for treatment cohorts, years, and relative time. 
+  dummy_cols(c("treatment_cohort","year","rel_time"))  %>%  
+  # Rename to remove the minus sign
+  rename_at(vars(contains("rel_time_")),function(x) gsub("-","lag",x)) %>% 
+  # Never treated units should have values of 0 for all relative-time indicators. 
+  mutate_at(vars(contains("rel_time_")),function(x) ifelse(is.na(x),0,x)) 
+```
+
+## Data Prep Step 2: Define Relative Time and Calendar Time Indicators {.smaller}
+
+-   Can easily create dummy variable indicators using `FastDummies` package.
+-   Due to negative values, the `-` sign can complicate variable names, so we just replace with `lag`.
+
+``` {.r code-line-numbers="13-16"}
+df_ <- 
+  df %>% 
+  #########
+  # Step 1a
+  #########
+  ... 
+  ##########
+  # Step 2
+  ##########
+  # Relative time variable
+  mutate(rel_time = year - treatment_cohort) %>% 
+  mutate(rel_time = ifelse(never_treated==1, -Inf, rel_time))  %>% 
+  # Create dummy indicators for treatment cohorts, years, and relative time. 
+  dummy_cols(c("treatment_cohort","year","rel_time"))  %>%  
+  # Rename to remove the minus sign
+  rename_at(vars(contains("rel_time_")),function(x) gsub("-","lag",x)) %>% 
+  # Never treated units should have values of 0 for all relative-time indicators. 
+  mutate_at(vars(contains("rel_time_")),function(x) ifelse(is.na(x),0,x)) 
+```
+
+## Data Prep Step 2: Define Relative Time and Calendar Time Indicators {.smaller}
+
+-   Never treated units should have values of 0 for all relative-time indicators.
+
+``` {.r code-line-numbers="17-18"}
+df_ <- 
+  df %>% 
+  #########
+  # Step 1a
+  #########
+  ... 
+  ##########
+  # Step 2
+  ##########
+  # Relative time variable
+  mutate(rel_time = year - treatment_cohort) %>% 
+  mutate(rel_time = ifelse(never_treated==1, -Inf, rel_time))  %>% 
+  # Create dummy indicators for treatment cohorts, years, and relative time. 
+  dummy_cols(c("treatment_cohort","year","rel_time"))  %>%  
+  # Rename to remove the minus sign
+  rename_at(vars(contains("rel_time_")),function(x) gsub("-","lag",x)) %>% 
+  # Never treated units should have values of 0 for all relative-time indicators. 
+  mutate_at(vars(contains("rel_time_")),function(x) ifelse(is.na(x),0,x)) 
+```
+
+```{r }
+#| echo: false
+df_ <- 
+  df %>% 
+  arrange(unit,year) %>% 
+  # What year is the unit first treated in?
+  mutate(first_treated = as.integer(lag(d_it==0) & d_it==1)) %>% 
+  group_by(unit) %>% 
+  # Is the unit never treated (i.e., d_it is never 1)
+  mutate(never_treated = as.integer(sum(d_it)==0))  %>% 
+  ungroup() %>% 
+  mutate(first_treated = year * first_treated) %>% 
+  group_by(unit) %>% 
+  # Treatment cohort 
+  mutate(treatment_cohort = max(first_treated)) %>% 
+  ungroup() %>% 
+  # Relative time variable
+  mutate(rel_time = year - treatment_cohort) %>% 
+  mutate(rel_time = ifelse(never_treated==1, -Inf, rel_time))  %>% 
+  # Create dummy indicators for treatment cohorts, years, and relative time. 
+  dummy_cols(c("treatment_cohort","year","rel_time"))  %>%  
+  # Rename to remove the minus sign
+  rename_at(vars(contains("rel_time_")),function(x) gsub("-","lag",x)) %>% 
+  # Never treated units should have values of 0 for all relative-time indicators. 
+  mutate_at(vars(contains("rel_time_")),function(x) ifelse(is.na(x),0,x)) 
+```
+
+## Final Data
+
+Let's take a look at a few rows of our final data:
+
+```{r}
+df_ %>% 
+  filter(unit==1 & year %in% 2010:2015) %>% 
+  kable(digits = 3) %>% 
+  kable_styling()
+```
+
+## Learnr Exercise
+
+-   We'll now turn to the `learnr` exercise to fit the various DID estimators.
+-   [Link to exercise](https://graves-vanderbilt.shinyapps.io/NextGenDID/)
+
+## References
+
+::: {#refs}
+:::

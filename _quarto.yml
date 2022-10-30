@@ -21,12 +21,20 @@ website:
             href: slides/peer-review-assignment.qmd
           - text: Extending Difference-in-Differences
             href: slides/difference-in-differences.qmd
+          - text: NextGen Difference-in-Differences Estimators
+            href: slides/next-gen-DID.qmd
+          - text: Nonlinear Difference-in-Differences
+            href: slides/nonlinear-DID.qmd
+          - text: Inference for Policy Evaluation
+            href: slides/lec_inference.qmd
       - section: "Case Studies"
         contents:
           - text: 1. Simulation as a Guide for Study Design and Inference
             href: https://graves-vanderbilt.shinyapps.io/HPOL8539-Simulation/
           - text: 2. Panel Data Methods I - Fixed, Random and Correlated Random Effects
             href: https://graves-vanderbilt.shinyapps.io/HPOL8539-panel-data-1/
+          - text: 4. NextGen DID
+            href: https://graves-vanderbilt.shinyapps.io/NextGenDID/
       - text: "Blog"
         href: blog/index.qmd
       - section: "Useful Links"
@@ -47,6 +55,10 @@ website:
             href: https://github.com/Mixtape-Sessions
           - text: Stata2R Translator
             href: https://stata2r.github.io/
+          - text: Model vs. Desgin-Based Inference
+            href: https://www.mathematica.org/download-media?MediaItemId=%7B2BB0E26B-F979-469B-9571-C23FF42E80DA%7D
+          - text: Comparison of RCTs evaluated under model vs. design-based inference
+            href: https://ies.ed.gov/ncee/pubs/20174026/pdf/20174026.pdf
 
 format:
   html:

@@ -1,0 +1,1367 @@
+---
+title: "Nonlinear Difference-in-Differences"
+format: revealjs
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## Motivation
+
+-   These slides will cover approaches for nonlinear difference-in-differences study designs.
+-   Types of outcomes covered:
+
+::: incremental
+-   Binary outcomes
+-   Count (i.e., nonnegative) outcomes
+-   Categorical outcomes
+:::
+
+## What makes nonlinear DID different?
+
+::: incremental
+-   DID analyses often rely on linear regression to estimate treatment effects.
+-   These analyses often rely on a linear, additive parallel trends assumption:
+-   ![](images/paste-055877DE.png)
+:::
+
+## What makes nonlinear DID different?
+
+::: incremental
+-   However, for binary and categorical outcomes (i.e., those taking multiple discrete values such as self-reported health status, health insurance type, etc.), the ordinal or multinomial regression models that are common in other settings **are not well-suited to DID.**
+-   Similarly, for count outcomes and those with "corner" solutions (i.e., outcomes that take a large number of zeros, such as medical spending), the usual (additive, linear) parallel trends assumption may not hold.
+:::
+
+## What makes nonlinear DID different? {.smaller}
+
+::: columns
+::: column
+
+::: incremental
+-   Binary and count outcomes are bounded, so relying on an additive linear DID assumption of parallel trends can result in estimates that do not respect these bounds.
+-   Unless the two groups are already settled into an equilibrium (i.e., the proportions with each outcome value are constant over time) linear trends will yield outcome values with proportions below zero or above one.
+
+:::
+:::
+
+::: column
+```{r}
+#| fig-height: 12
+library(tidyverse)
+# Starting distribution of untreated group
+p.0 <- c(.585,.059,0.119,.238)
+
+# Multiplicative growth matrix
+R.grow <- matrix(c(.853,.057,.039,.051,
+                   .40,.442,.056,.102,
+                   .134,.035,.7,.131,
+                   .257,.134,.147,.462),4,4,byrow=T)
+
+# Linear growth 
+# (same as the marginal growth implied by 1 step of multiplicative growth)
+delta.grow <- (p.0%*%R.grow)-p.0
+
+## Multiplicative growth curves 
+mult <- rbind(p.0,
+              p.0%*%R.grow,
+              p.0%*%R.grow%*%R.grow,
+              p.0%*%R.grow%*%R.grow%*%R.grow,
+              p.0%*%R.grow%*%R.grow%*%R.grow%*%R.grow,
+              p.0%*%R.grow%*%R.grow%*%R.grow%*%R.grow%*%R.grow)
+colnames(mult) <- c('p1','p2','p3','p4')
+
+## Linear growth curves
+linear <- rbind(p.0,
+      p.0+(1*delta.grow),
+      p.0+(2*delta.grow),
+      p.0+(3*delta.grow),
+      p.0+(4*delta.grow),
+      p.0+(5*delta.grow))
+colnames(linear) <- c('p1','p2','p3','p4')
+
+
+ctrl.dat <- as_tibble(linear) %>% mutate(model='Additive',time=0:5) %>%
+  bind_rows(as_tibble(mult) %>% mutate(model='Multiplicative',time=0:5)) %>% 
+  pivot_longer(p1:p4)
+
+## Starting distribution of treated group
+p.1 <- c(0.639,.046,.133,.182)
+
+## Multiplicative growth curves 
+mult <- rbind(p.1,
+              p.1%*%R.grow,
+              p.1%*%R.grow%*%R.grow,
+              p.1%*%R.grow%*%R.grow%*%R.grow,
+              p.1%*%R.grow%*%R.grow%*%R.grow%*%R.grow,
+              p.1%*%R.grow%*%R.grow%*%R.grow%*%R.grow%*%R.grow)
+colnames(mult) <- c('p1','p2','p3','p4')
+
+## Linear growth curves
+linear <- rbind(p.1,
+                p.1+(1*delta.grow),
+                p.1+(2*delta.grow),
+                p.1+(3*delta.grow),
+                p.1+(4*delta.grow),
+                p.1+(5*delta.grow))
+colnames(linear) <- c('p1','p2','p3','p4')
+
+trt.dat <- as_tibble(linear) %>% mutate(model='Additive',time=0:5) %>%
+  bind_rows(as_tibble(mult) %>% mutate(model='Multiplicative',time=0:5)) %>% 
+  pivot_longer(p1:p4)
+
+## Combine the two groups
+combined.dat <- trt.dat %>% mutate(group='Intervention') %>% 
+  bind_rows(ctrl.dat %>% mutate(group='Comparison')) %>%
+  mutate(category=factor(name,levels=c('p1','p2','p3','p4'),
+                         labels=c('Employer','Private','Public','Uninsured')))
+
+ggplot(filter(combined.dat,name!="p1",model!="Logit linear" & model=="Additive"),aes(x=time,y=value)) + geom_line(aes(col=group,lty=group)) +
+  scale_y_continuous("Proportion") +
+  facet_grid(category~model,scale="free")  + 
+  theme(panel.grid.minor=element_blank(),legend.position="bottom") + scale_colour_manual(name = "", values = c("red","black")) + 
+  scale_linetype_manual(values=c("twodash", "solid"),name="") + labs(x = "Time", y = "Proportion")  +
+  theme_bw() + theme(legend.position = "top") + 
+  geom_hline(aes(yintercept = c(0)),colour = "darkgrey") #+ 
+  #ylim(c(-.25,0.3))
+
+```
+:::
+:::
+
+## What makes nonlinear DID different? {.smaller}
+
+::: columns
+::: column
+
+
+::: incremental
+
+-   We want to rely on identifying assumptions that make sense given the scale of our outcome.
+
+-   This means we need to be more flexible about the circumstances under which parallel trends holds:
+
+    -   PT holds in the ratio of means (binary, count outcomes); see [Wooldridge 2021](https://www.dropbox.com/sh/zj91darudf2fica/AAB55kYENSbkO_Uip-fjPDMua/nonlinear_did?dl=0&preview=nonlinear_did_20220805.pdf&subfolder_nav_tracking=1)
+    -   PT holds in the transition dynamics (categorical outcomes); see [Graves et al. 2022](https://onlinelibrary.wiley.com/doi/10.1111/1475-6773.13948)
+    -   See related work by [Athey and Imbens (2006)](https://www.jstor.org/stable/3598807#metadata_info_tab_contents) and [Roth and Sant'Anna (2021)](https://jonathandroth.github.io/assets/files/2010.04814.pdf)
+    
+:::
+:::
+
+::: column
+```{r}
+#| fig-height: 12
+ggplot(filter(combined.dat,name!="p1",model!="Logit linear" & model=="Multiplicative"),aes(x=time,y=value)) + geom_line(aes(col=group,lty=group)) +
+  scale_y_continuous("Proportion") +
+  facet_grid(category~model,scale="free")  + 
+  theme(panel.grid.minor=element_blank(),legend.position="bottom") + scale_colour_manual(name = "", values = c("red","black")) + 
+  scale_linetype_manual(values=c("twodash", "solid"),name="") + labs(x = "Time", y = "Proportion")  +
+  theme_bw() + theme(legend.position = "top") + 
+  geom_hline(aes(yintercept = c(0)),colour = "darkgrey") 
+```
+:::
+:::
+
+## What makes nonlinear DID different?
+
+-   For categorical outcomes, we may also be interested in *transitions* among outcome categories, not just overall changes in each category.
+
+::: incremental
+-   Transitions among employment status (e.g., unemployed vs. employed vs. looking for work)
+-   Transitions in health insurance types (e.g., private vs. public vs. uninsured)
+:::
+
+## What makes nonlinear DID different?
+
+-   For categorical outcomes, we may also be interested in *transitions* among outcome categories, not just overall changes in each category.
+
+-   We could separately estimate DID for the marginal (i.e., overall) change in each category, and for separate outcomes defined for the various transition types.
+
+-   However, this requires us to place parallel trends assumptions on two difference scales: the marginal scale and the transition scale.
+
+    -   See Graves et al. (2022) for more.
+
+## Plan for Today
+
+::: incremental
+-   Wooldridge (2021) "extended" DID framework as applied to nonlinear (binary, count) outcomes.
+-   Multinomial logit vs. transitions-based DID (Graves et al. 2022) for categorical outcomes.
+:::
+
+## Key Takeaways
+
+
+::: incremental
+-   Extended DID framework can be used for nonlinear DID.
+-   It is still useful to compare linear DID to nonlinear estimates to see how sensitive estimates are to scale & functional form considerations.
+
+:::
+
+## Extended DID for Binary Outcomes
+
+```{r}
+library(fastDummies)
+library(tidyverse)
+library(marginaleffects)
+library(RStata)
+library(broom)
+library(furrr)
+library(progressr)
+library(tictoc)
+library(margins)
+library(ggsci)
+library(ggthemes)
+library(here)
+library(glue)
+library(directlabels)
+library(kableExtra)
+options("RStata.StataPath" = "/Applications/Stata/StataSE.app/Contents/MacOS/stata-se")
+options("RStata.StataVersion" = 16)
+
+
+make_data <- function(nobs = 1000, tobs = 6) {
+   
+  indiv_ <-
+    crossing(id = 1:nobs, year = 1:tobs+2000) %>%
+    dummy_cols("year") %>% 
+    rename_at(vars(starts_with("year_")),function(x) gsub("year_20","f",x)) %>% 
+    rowwise() %>% 
+    mutate(x0 = rgamma(1,1)) %>% 
+    group_by(id) %>% 
+    mutate(x = mean(x0)) %>% 
+    ungroup() 
+   
+   
+ unit_ <- tibble(
+      id = 1:nobs
+    ) %>%
+    rowwise() %>%
+    mutate(c = sqrt(2) * rnorm(1,mean=0,sd=1)) %>%
+    left_join(indiv_ %>% select(id,x) %>% unique(),"id") %>% 
+    mutate(d = as.integer((-.5 + 2*(x-1) + rlogis(1,0,1)>0))); unit_
+
+  df <- indiv_ %>% 
+    select(-x) %>% 
+    left_join(unit_,"id") %>% 
+    rowwise() %>%
+    mutate(e0 = sqrt(2)*rnorm(1),
+           e1 = sqrt(2)*rnorm(1)) %>%
+    # True model is logit with unobserved effect:
+    ungroup() %>%
+    mutate(u0 = qlogis(pnorm((c+e0/2)))/sqrt(3),
+           u1 = qlogis(pnorm((c+e1/2)))/sqrt(3)) %>%
+    mutate(y0star = .4*f04 + .5*f05 + .6*f06 + (x - 1)/2 - 2*d + u0) %>% 
+    mutate(y1star = y0star) %>%
+    mutate(y1star = ifelse(year>=2004,  .4*f04 + .5*f05 + .6*f06 + (x - 1)/2 - 2*d 	+ .5 + .1*f05 + .2*f06 + u1 , y1star)) %>% 
+    mutate(y0 = as.integer(y0star > 0),
+           y1 = as.integer(y1star > 0)) %>%
+    ungroup() %>%
+    mutate(te_i = ifelse(year>=2004, y1 - y0,NA))  %>%
+    mutate(y = (1 - d) * y0 + d * y1) %>%
+    mutate(w = d * (f04 + f05 + f06)) 
+
+  return(df)
+
+}
+
+
+
+
+
+```
+
+## Binary Y, Common Treatment Timing
+
+::: {style="font-size: 0.7em"}
+| Method          | Estimation Formula                                                                                 |
+|-------------------|-----------------------------------------------------|
+| No Covariates   | `logit(y ~ I(w : d : f*) + factor(time) + d)`                                                      |
+| With Covariates | `logit(y ~ I(w : d : f*) + I(w : d : f* : x_dm) + factor(time) + I(factor(time)*x) + d + x + I(d*x))` |
+:::
+
+::: {style="font-size: 0.7em"}
+|                | Description                                      |
+|----------------|--------------------------------------------------|
+| `w`            | Time-varying treatment indicator                 |
+| `d`            | Treatment cohort indicator                       |
+| `f*`           | Binary indicators for post-treatment times.      |
+| `factor(time`) | Time period fixed effects (dummies)              |
+| `x`            | Covariate                                        |
+| `x_dm`         | Demeaned covariate (`x - mean(x|year>=tx_year)`) |
+:::
+
+## Binary Y, Staggered Treatment Timing
+
+::: {style="font-size: 0.7em"}
+| Method          | Estimation Formula                                                                                                |
+|-------------------|-----------------------------------------------------|
+| No Covariates   | `logit(y ~ I(w : d* : f*) + factor(time) + d*)`                                                                   |
+| With Covariates | `logit(y ~ I( w : d* : f*) + I(w : d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x) + d* + x + I(d* : x))` |
+:::
+
+::: {style="font-size: 0.7em"}
+|                | Description                                             |
+|----------------|---------------------------------------------------------|
+| `d*`           | Treatment cohort indicators                             |
+| `f*`           | Binary indicators for post-treatment times.             |
+| `factor(time`) | Time period fixed effects (dummies)                     |
+| `x`            | Covariate                                               |
+| `x_dm_d*`      | Demeaned covariate (`x - mean(x|year>=tx_cohort_year)`) |
+:::
+
+```{r, eval = FALSE}
+
+set.seed(12345)
+df_ <- make_data(nobs=1000) 
+df <- df_ %>% 
+  bind_cols(df_ %>% 
+             filter(d==1) %>% 
+              summarise(mean_x = mean(x))) %>% 
+  mutate(x_dm = x - mean_x)
+# df %>% 
+#   haven::write_dta("~/Desktop/foo.dta")
+df0 <- df
+
+df <- haven::read_dta(here(
+"ignore/nonlinear_did/did_common_6_binary.dta"))
+
+
+df %>% 
+  group_by(year,d) %>% 
+  summarise(y = mean(y)) %>% 
+  ggplot(aes(x = year, y = y, colour = factor(d))) + geom_point() + 
+  geom_line() +
+  theme_bw()
+                
+df0 %>% summarise_all(mean,na.rm=TRUE) %>% 
+  bind_rows(df %>% summarise_all(mean,na.rm=TRUE))
+
+stata_cmd <- "reg y c.d#c.f04 c.d#c.f05 c.d#c.f06 ///
+	c.d#c.f04#c.x_dm c.d#c.f05#c.x_dm c.d#c.f06#c.x_dm ///
+	f02 f03 f04 f05 f06 ///
+	c.f02#c.x c.f03#c.x c.f04#c.x c.f05#c.x c.f06#c.x /// 
+	d x c.d#c.x, vce(cluster id)"
+
+stata(stata_cmd,data.in=df)
+
+
+
+```
+
+## Binary Outcome, Common Timing
+
+```{r}
+#| fig-height: 6
+#| fig-align: center
+df <- haven::read_dta(here(
+"ignore/nonlinear_did/did_common_6_binary.dta"))
+
+#df <- haven::read_dta("~/Desktop/bin_common.dta")
+
+df %>% 
+  group_by(year,d) %>% 
+  summarise(y = mean(y)) %>% 
+  ggplot(aes(x = year, y = y, colour = factor(d))) + geom_point() + 
+  geom_line() +
+  theme_bw() +
+  geom_vline(aes(xintercept = 2004)) + 
+  theme(legend.position ="none") +
+  scale_color_aaas() +
+  geom_dl(method = list("last.points"),aes(label = factor(d,labels=c(" Cx"," Tx")))) +
+  labs(x = "Time", y = "Mean Y")
+```
+
+## Binary Y, Common Timing
+
+
+::: incremental
+-   Note that in this example, treatment status is a function of the covariate `x`.
+-   Thus we need to condition on the covariate in order to identify the treatment effect.
+
+:::
+
+
+## Binary Y, Common Timing
+
+
+::: incremental
+1.  Get mean of `x` for the treatment cohort (i.e., observations where `d=1`)
+2.  Define a demeaned version of `x` where we subtract that mean.
+:::
+
+``` r
+df_ <- make_data()
+df <- df_ %>% 
+  bind_cols(df_ %>% 
+             filter(d==1) %>% 
+              summarise(mean_x = mean(x))) %>% 
+  mutate(x_dm = x - mean_x)
+```
+
+## Binary Y, Common Timing
+
+Logit regression:
+
+``` r
+fit_logit <- 
+    glm(y ~ 
+      I(w *  d * f04) + I(w * d * f05) + I(w * d * f06) + 
+      I(w * d * f04 * x_dm) + I(w * d * f05 * x_dm) + I(w * d * f06 * x_dm) + 
+      f02 + f03 + f04 + f05 + f06 + 
+      I(f02 * x) + I(f03 * x) + I(f04 * x) + I(f05 * x) + I(f06 * x) +
+      d + 
+      x + 
+      I(d * x),
+      family = 'binomial',
+      data = df)"
+```
+
+## Binary Y, Common Timing
+
+::: {style="font-size: 0.5em"}
+```{r}
+ff_logit<- "y ~ I(w * d* f04) + I(w * d * f05) + I(w * d*  f06) + I(w * d *f04 * x_dm) + I(w * d *f05 * x_dm) + I(w * d * f06 * x_dm) + f02 + f03 + f04 + f05 + f06 + 
+I(f02 * x) + I(f03 * x) + I(f04 * x) + I(f05 * x) + I(f06 * x) + I(f06 * x) + d + x + I(d * x)"
+fit_logit <- glm(as.formula(ff_logit),family = "binomial",data = df)
+
+ff_lm <- "y ~ I(w *  f04) + I(w *  f05) + I(w *  f06) + I(w * f04 * x_dm) + I(w * f05 * x_dm) + I(w * f06 * x_dm) + f02 + f03 + f04 + f05 + f06 + 
+I(f02 * x) + I(f03 * x) + I(f04 * x) + I(f05 * x) + I(f06 * x) + I(f06 * x) + d + x + I(d * x)"
+fit_lm <- lm(as.formula(ff_logit),data = df)
+
+
+p04_w0 <- predict(fit_logit, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=0,f02 =0, f03=0, f04=1, f05=0, f06=0))
+p04_w1 <- predict(fit_logit, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=1,f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+p05_w0 <- predict(fit_logit, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=0,f02 =0, f03=0, f04=0, f05=1, f06=0))
+p05_w1 <- predict(fit_logit, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=1,f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+p06_w0 <- predict(fit_logit, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=0,f02 =0, f03=0, f04=0, f05=0, f06=1))
+p06_w1 <- predict(fit_logit, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=1,f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+truth04 <- df %>% filter(d==1 & f04==1) %>% summarise(m = mean(te_i))
+truth05 <- df %>% filter(d==1 & f05==1) %>% summarise(m = mean(te_i))
+truth06 <- df %>% filter(d==1 & f06==1) %>% summarise(m = mean(te_i))
+
+
+
+lmp04_w0 <- predict(fit_lm, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=0,f02 =0, f03=0, f04=1, f05=0, f06=0))
+lmp04_w1 <- predict(fit_lm, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=1,f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+lmp05_w0 <- predict(fit_lm, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=0,f02 =0, f03=0, f04=0, f05=1, f06=0))
+lmp05_w1 <- predict(fit_lm, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=1,f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+lmp06_w0 <- predict(fit_lm, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=0,f02 =0, f03=0, f04=0, f05=0, f06=1))
+lmp06_w1 <- predict(fit_lm, type ="response", 
+                    newdata = df %>% filter(d==1) %>% mutate(w=1,f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+
+tidy(fit_logit) %>% 
+  select(term,estimate) %>% 
+  kable(digits=3) %>% 
+  kable_styling()
+
+```
+:::
+
+## Binary Y, Common Timing
+
+
+::: incremental
+-   Goal: Average Treatment Effect on the Treated (ATT) by post-treatment year.
+-   To caluclate, get marginal outcomes using prediction or the `margins` command.
+
+:::
+
+``` r
+p04_w0 <- 
+  predict(fit_logit, type ="response", 
+    newdata = df %>% filter(d==1) %>% mutate(w=0,f02 =0, f03=0, f04=1, f05=0, f06=0))
+p04_w1 <- 
+  predict(fit_logit, type ="response", 
+    newdata = df %>% filter(d==1) %>% mutate(w=1,f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+att04 <- mean(p04_w1)- mean(p04_w0)
+```
+
+## Binary Y, Common Timing
+
+
+```{r, echo=TRUE}
+p04_w0 <- 
+  predict(fit_logit, type ="response", 
+    newdata = df %>% filter(d==1) %>% mutate(w=0,f02 =0, f03=0, f04=1, f05=0, f06=0))
+p04_w1 <- 
+  predict(fit_logit, type ="response", 
+    newdata = df %>% filter(d==1) %>% mutate(w=1, f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+att04 <- mean(p04_w1)- mean(p04_w0)
+att04
+
+
+library(marginaleffects)
+marginaleffects(fit_logit, 
+                newdata = datagrid(d=1,f02=0,f03=0,f04=1,f05=0,f06=0),
+                variables="w") %>% 
+  select(term,dydx)
+
+
+```
+
+
+## Binary Y, Common Timing
+
+| ATT  | Truth                | Logit Estimate                          | Linear Estimate                             |
+|------------------|------------------|------------------|------------------|
+| 2004 | `r round(truth04,3)` | `r round(mean(p04_w1)- mean(p04_w0),3)` | `r round(mean(lmp04_w1)- mean(lmp04_w0),3)` |
+| 2005 | `r round(truth05,3)` | `r round(mean(p05_w1)- mean(p05_w0),3)` | `r round(mean(lmp04_w1)- mean(lmp05_w0),3)` |
+| 2006 | `r round(truth06,3)` | `r round(mean(p06_w1)- mean(p06_w0),3)` | `r round(mean(lmp04_w1)- mean(lmp06_w0),3)` |
+
+## Count Y, Staggered Entry
+
+```{r}
+#| fig-height: 6
+#| fig-align: center
+df_st <- haven::read_dta(here(
+"ignore/nonlinear_did/did_staggered_6_corner.dta"))
+
+df_st <- haven::read_dta(here(
+"ignore/nonlinear_did/did_staggered_6_count.dta"))
+
+
+df_st %>% 
+  mutate(cohort = case_when(d4==1 ~ "2004",
+                            d5==1 ~ "2005",
+                            d6==1 ~ "2006",
+                            TRUE ~ "Never Treated")) %>% 
+  group_by(year,cohort) %>% 
+  summarise(y = mean(y)) %>% 
+  ggplot(aes(x = year, y = y, colour = factor(cohort))) + geom_point() + 
+  geom_line() +
+  theme_bw() +
+  geom_vline(xintercept = c(2004,2005,2006)) + 
+  theme(legend.position ="none") +
+  scale_color_aaas() +
+  geom_dl(method = list("last.points"),aes(label = cohort)) +
+  labs(x = "Time", y = "Mean Y")
+```
+
+## Count Y, Staggered Entry
+
+::: {style="font-size: 0.7em"}
+| Method          | Estimation Formula                                                                                                |
+|-------------------|-----------------------------------------------------|
+| No Covariates   | `logit(y ~ I(w* : d* : f*) + factor(time) + d*)`                                                                  |
+| With Covariates | `logit(y ~ I(w* : d* : f*) + I(w : d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x) + d* + x + I(d* : x))` |
+:::
+
+::: {style="font-size: 0.7em"}
+|                | Description                                             |
+|----------------|---------------------------------------------------------|
+| `w`            | Time-varying treatment indicator                        |
+| `d*`           | Treatment cohort indicators                             |
+| `f*`           | Binary indicators for post-treatment times.             |
+| `factor(time`) | Time period fixed effects (dummies)                     |
+| `x`            | Covariate                                               |
+| `x_dm_d*`      | Demeaned covariate (`x - mean(x|year>=tx_cohort_year)`) |
+:::
+
+## Count Y, Staggered Entry
+
+Poisson regression (no covariates):
+
+``` r
+fit_poisson <- 
+    glm(y ~ I(w *  d4 * f04) + I(w *  d4 * f05) + I(w * d4* f06) + 
+            I(w *  d5 * f05) + I(w * d5* f06) +
+            I(w *  d6 * f06) +
+            f02 + f03 + f04 + f05 + f06 + 
+            d4 + d5 + d6,
+      family = 'poisson',
+      data = df)"
+```
+
+## Count Y, Staggered Entry
+
+Poisson regression (with covariates):
+
+``` r
+fit_poisson <- 
+    glm(y ~  I(w *  d4 * f04) + I(w *  d4 * f05) + I(w * d4* f06) + 
+             I(w *  d5 * f05) + I(w * d5* f06) +
+             I(w *  d6 * f06) +
+             I(w *  d4 * f04 * x_dm4) + I(w *  d4 * f05 * x_dm4) + I(w * d4* f06 * x_dm4) + 
+             I(w *  d5 * f05 * x_dm5) + I(w * d5* f06 * x_dm5) +
+             I(w *  d6 * f06 * x_dm6) +
+             f02 + f03 + f04 + f05 + f06 + 
+             I(f02 * x) + I(f03 * x) + I(f04 * x) + I(f05 * x) + I(f06 * x) +
+             d4 + d5 + d6 +
+             x + 
+             I(d4*x) + I(d5*x) + I(d6*x),
+      family = 'poisson',
+      data = df)"
+```
+
+## 
+
+::: {style="font-size: 0.4em"}
+```{r}
+
+ff_linear_count <- "y ~ I(w *  d4 * f04) + I(w *  d4 * f05) + I(w * d4* f06) + 
+                   I(w *  d5 * f05) + I(w * d5* f06) +
+                   I(w *  d6 * f06) +
+                   f02 + f03 + f04 + f05 + f06 + 
+                   d4 + d5 + d6"
+
+ff_linear_count_x <- "y ~ I(w *  d4 * f04) + I(w *  d4 * f05) + I(w * d4* f06) + 
+                   I(w *  d5 * f05) + I(w * d5* f06) +
+                   I(w *  d6 * f06) +
+                   I(w *  d4 * f04 * x_dm4) + I(w *  d4 * f05 * x_dm4) + I(w * d4* f06 * x_dm4) + 
+                   I(w *  d5 * f05 * x_dm5) + I(w * d5* f06 * x_dm5) +
+                   I(w *  d6 * f06 * x_dm6) +
+                   f02 + f03 + f04 + f05 + f06 + 
+                   I(f02 * x) + I(f03 * x) + I(f04 * x) + I(f05 * x) + I(f06 * x) +
+                   d4 + d5 + d6 +
+                   x + 
+                   I(d4*x) + I(d5*x) + I(d6*x)"
+
+fit_linear_count <- lm(as.formula(ff_linear_count),data = df_st)
+fit_linear_count_x <- lm(as.formula(ff_linear_count_x),data = df_st)
+
+
+ff_poisson <- "y ~ I(w *  d4 * f04) + I(w *  d4 * f05) + I(w * d4* f06) + 
+                   I(w *  d5 * f05) + I(w * d5* f06) +
+                   I(w *  d6 * f06) +
+                   f02 + f03 + f04 + f05 + f06 + 
+                   d4 + d5 + d6"
+
+ff_poisson_x <- "y ~ I(w *  d4 * f04) + I(w *  d4 * f05) + I(w * d4* f06) + 
+                   I(w *  d5 * f05) + I(w * d5* f06) +
+                   I(w *  d6 * f06) +
+                   I(w *  d4 * f04 * x_dm4) + I(w *  d4 * f05 * x_dm4) + I(w * d4* f06 * x_dm4) + 
+                   I(w *  d5 * f05 * x_dm5) + I(w * d5* f06 * x_dm5) +
+                   I(w *  d6 * f06 * x_dm6) +
+                   f02 + f03 + f04 + f05 + f06 + 
+                   I(f02 * x) + I(f03 * x) + I(f04 * x) + I(f05 * x) + I(f06 * x) +
+                   d4 + d5 + d6 +
+                   x + 
+                   I(d4*x) + I(d5*x) + I(d6*x)"
+
+
+
+fit_poisson <- glm(as.formula(ff_poisson),family = "poisson",data = df_st)
+fit_poisson_x <- glm(as.formula(ff_poisson_x),family = "poisson",data = df_st)
+
+
+d04_f04_w0 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=0,d4=1, d5=0, d6=0, f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+d04_f04_w1 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=1, d4=1, d5=0, d6=0, f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+d04_f05_w0 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=0,d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+d04_f05_w1 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=1, d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+d04_f06_w0 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=0,d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+d04_f06_w1 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=1, d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+
+d05_f05_w0 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d5==1) %>% mutate(w=0,d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+d05_f05_w1 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d5==1) %>% mutate(w=1, d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+d05_f06_w0 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d5==1) %>% mutate(w=0,d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+d05_f06_w1 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d5==1) %>% mutate(w=1, d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+
+d06_f06_w0 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d6==1) %>% mutate(w=0,d4=0, d5=0, d6=1, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+d06_f06_w1 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d6==1) %>% mutate(w=1, d4=0, d5=0, d6=1, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+
+
+truthd04_f04 <- df_st %>% filter(d4==1 & f04==1) %>% mutate(te_4i = y4 - yinf) %>% summarise(m = mean(te_4i))
+truthd04_f05 <- df_st %>% filter(d4==1 & f05==1) %>% mutate(te_4i = y4 - yinf)%>% summarise(m = mean(te_4i))
+truthd04_f06 <- df_st %>% filter(d4==1 & f06==1) %>% mutate(te_4i = y4 - yinf)%>% summarise(m = mean(te_4i))
+
+truthd05_f05 <- df_st %>% filter(d5==1 & f05==1) %>% mutate(te_5i = y5 - yinf)%>% summarise(m = mean(te_5i))
+truthd05_f06 <- df_st %>% filter(d5==1 & f06==1) %>% mutate(te_5i = y5 - yinf)%>% summarise(m = mean(te_5i))
+
+truthd06_f06 <- df_st %>% filter(d6==1 & f06==1) %>% mutate(te_6i = y6 - yinf)%>% summarise(m = mean(te_6i))
+
+
+d04_f04_w0X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=0,d4=1, d5=0, d6=0, f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+d04_f04_w1X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=1, d4=1, d5=0, d6=0, f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+d04_f05_w0X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=0,d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+d04_f05_w1X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=1, d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+d04_f06_w0X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=0,d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+d04_f06_w1X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% mutate(w=1, d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+
+d05_f05_w0X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d5==1) %>% mutate(w=0,d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+d05_f05_w1X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d5==1) %>% mutate(w=1, d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+d05_f06_w0X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d5==1) %>% mutate(w=0,d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+d05_f06_w1X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d5==1) %>% mutate(w=1, d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+
+d06_f06_w0X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d6==1) %>% mutate(w=0,d4=0, d5=0, d6=1, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+d06_f06_w1X <- predict(fit_poisson_x, type ="response", 
+                    newdata = df_st %>% filter(d6==1) %>% mutate(w=1, d4=0, d5=0, d6=1, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+
+
+ld04_f04_w0X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d4==1) %>% mutate(w=0,d4=1, d5=0, d6=0, f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+ld04_f04_w1X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d4==1) %>% mutate(w=1, d4=1, d5=0, d6=0, f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+ld04_f05_w0X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d4==1) %>% mutate(w=0,d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+ld04_f05_w1X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d4==1) %>% mutate(w=1, d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+ld04_f06_w0X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d4==1) %>% mutate(w=0,d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+ld04_f06_w1X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d4==1) %>% mutate(w=1, d4=1, d5=0, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+
+ld05_f05_w0X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d5==1) %>% mutate(w=0,d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+ld05_f05_w1X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d5==1) %>% mutate(w=1, d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=1, f06=0))
+
+ld05_f06_w0X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d5==1) %>% mutate(w=0,d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+ld05_f06_w1X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d5==1) %>% mutate(w=1, d4=0, d5=1, d6=0, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+
+ld06_f06_w0X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d6==1) %>% mutate(w=0,d4=0, d5=0, d6=1, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+ld06_f06_w1X <- predict(fit_linear_count_x, type ="response", 
+                       newdata = df_st %>% filter(d6==1) %>% mutate(w=1, d4=0, d5=0, d6=1, f02 =0, f03=0, f04=0, f05=0, f06=1))
+
+
+
+tidy(fit_poisson) %>% 
+  select(term,no_x = estimate) %>% 
+    full_join(tidy(fit_poisson_x) %>% 
+    select(term,with_x = estimate),"term") %>%
+  mutate_at(vars(no_x,with_x),~ifelse(is.na(.),"",paste0(round(.,3)))) %>% 
+  kable(digits=3) %>% 
+  kable_styling()
+
+```
+:::
+
+## Count Y, Staggered Entry
+
+-   Goal: Average Treatment Effect on the Treated (ATT) by cohort and post-treatment year.
+-   To caluclate, get marginal outcomes using prediction or the `margins` command.
+
+``` r
+d04_f04_w0 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% 
+                    mutate(w=0,d4=1, d5=0, d6=0, f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+d04_f04_w1 <- predict(fit_poisson, type ="response", 
+                    newdata = df_st %>% filter(d4==1) %>% 
+                    mutate(w=1, d4=1, d5=0, d6=0, f02 =0, f03=0, f04=1, f05=0, f06=0))
+
+att04 <- mean(d04_f04_w1)- mean(d04_f04_w0)
+att04
+```
+
+```{r}
+mean(d04_f04_w1)- mean(d04_f04_w0)
+```
+
+## Count Y, Staggered Entry
+
+| Cohort | Year | Truth                     | Poisson No X                                    | Poisson w X                                       | Linear w X                                          |
+|------------|------------|------------|------------|------------|------------|
+| 2004   | 2004 | `r round(truthd04_f04,3)` | `r round(mean(d04_f04_w1)- mean(d04_f04_w0),3)` | `r round(mean(d04_f04_w1X)- mean(d04_f04_w0X),3)` | `r round(mean(ld04_f04_w1X)- mean(ld04_f04_w0X),3)` |
+| 2004   | 2005 | `r round(truthd04_f05,3)` | `r round(mean(d04_f05_w1)- mean(d04_f05_w0),3)` | `r round(mean(d04_f05_w1X)- mean(d04_f05_w0X),3)` | `r round(mean(ld04_f05_w1X)- mean(ld04_f05_w0X),3)` |
+| 2004   | 2006 | `r round(truthd04_f06,3)` | `r round(mean(d04_f06_w1)- mean(d04_f06_w0),3)` | `r round(mean(d04_f06_w1X)- mean(d04_f06_w0X),3)` | `r round(mean(ld04_f06_w1X)- mean(ld04_f06_w0X),3)` |
+| 2005   | 2005 | `r round(truthd05_f05,3)` | `r round(mean(d05_f05_w1)- mean(d05_f05_w0),3)` | `r round(mean(d05_f05_w1X)- mean(d05_f05_w0X),3)` | `r round(mean(ld05_f05_w1X)- mean(ld05_f05_w0X),3)` |
+| 2005   | 2006 | `r round(truthd05_f06,3)` | `r round(mean(d05_f06_w1)- mean(d05_f06_w0),3)` | `r round(mean(d05_f06_w1X)- mean(d05_f06_w0X),3)` | `r round(mean(ld05_f06_w1X)- mean(ld05_f06_w0X),3)` |
+| 2006   | 2006 | `r round(truthd06_f06,3)` | `r round(mean(d06_f06_w1)- mean(d06_f06_w0),3)` | `r round(mean(d06_f06_w1X)- mean(d06_f06_w0X),3)` | `r round(mean(ld06_f06_w1X)- mean(ld06_f06_w0X),3)` |
+
+## How Well Do the Estimators Perform?
+
+ATTs are time varying but do not vary with X:
+
+![](images/paste-EC34C97D.png)
+
+Source: [Wooldridge (2022) 'Simple Approaches to Nonlinear Difference-in-Differences with Panel Data'](https://www.dropbox.com/sh/zj91darudf2fica/AAB55kYENSbkO_Uip-fjPDMua/nonlinear_did?dl=0&preview=nonlinear_did_20220805.pdf&subfolder_nav_tracking=1)
+
+## How Well Do the Estimators Perform?
+
+ATTs time varying and increasing:
+
+![](images/paste-1B462793.png)
+
+Source: [Wooldridge (2022) 'Simple Approaches to Nonlinear Difference-in-Differences with Panel Data'](https://www.dropbox.com/sh/zj91darudf2fica/AAB55kYENSbkO_Uip-fjPDMua/nonlinear_did?dl=0&preview=nonlinear_did_20220805.pdf&subfolder_nav_tracking=1)
+
+## How Well Do the Estimators Perform?
+
+Count outcome with mass at 0:
+
+![](images/paste-81AB22E5.png)
+
+## Extended Nonlinear DID: Concluding Remarks
+
+- Extended DID applies well for nonlinear settings.
+- You can obtain a full set of ATTs indexed by cohort/calendar time. 
+- Alternatively, you can aggregate into some other quantity of interest (e.g., overall effect, relative time effects, etc.)
+
+## Extended Nonlinear DID: Concluding Remarks
+
+- Can use either an imputation approach (i.e., fit the nonlinear model on only comparison observations, then impute predicted missing potential outcomes for treated)
+
+- Often easier to use pooled estimation (as we did here) for conducting inference (e.g., standard errors)
+
+## Extended Nonlinear DID: Concluding Remarks
+
+- Nonlinear models have essentially no bias when the conditional mean is correctly specified. 
+  - They also work reasonably well under some misspecifications.
+
+- Easy to apply methods to settings where all units are eventually treated. 
+
+- Method can also handle staggered exit by including a richer set of cohort dummy variables. 
+
+
+## Extended Nonlinear DID: Concluding Remarks
+
+- Can also accomodate multiple (i.e., non-binary treatments) by replacing `w` with treatment-level indicators. 
+
+- Methods should extend to repeated cross sections, but details are still pending. 
+
+
+## End for today!
+
+
+## Categorical Outcomes
+
+```{r}
+
+library(expm)
+library(broom)
+library(gt)
+library(Matrix)
+library(nnet)
+
+category_names <- 
+  c("ESI","NG","PUB","UNIN")                        
+names(category_names) <-  
+  c("Employer Sponsored","Privately Purchased","Public","Uninsured")
+
+df_ex <- read_rds(here("slides/simulated-data-example-data.rds"))
+
+# This matrix will eventually summarize marginal effect estimtes across approaches
+marginal_att_summary <- matrix(nrow = length(category_names), ncol = 6)
+rownames(marginal_att_summary) <- category_names
+colnames(marginal_att_summary) <- c("1. PT-Nonparametric", "2. PT-LinearReg", "3. PT-MutinomLogit",
+                                    "4. TR-Nonparametric", "5. TR-LinearReg", "6. TR-MultinomLogit")
+
+```
+
+```{r}
+#---- 2. Linear Regression
+
+df_ <- 
+  df_ex %>% 
+  # Dichotomize the categorical outcome variable insurance_type
+  dummy_cols(select_columns = "insurance_type") 
+
+#### Run a series of J linear probability models. Note, however, the sum-to-zero
+#### constraint on the collection of J DID estimates means we really
+#### only need to run J-1 models to get the full set of DID estimates. 
+#### We include all so we can show the regression results across all 
+#### four outcome categories. 
+
+fit_meff_lpm_ESI  <- lm(insurance_type_ESI ~ post + z + post_z + X, data = df_)
+
+fit_meff_lpm_NG   <- lm(insurance_type_NG  ~ post + z + post_z + X, data = df_)
+
+fit_meff_lpm_PUB  <- lm(insurance_type_PUB ~ post + z + post_z + X, data = df_)
+
+fit_meff_lpm_UNIN <- lm(insurance_type_UNIN ~ post + z + post_z + X, data = df_)
+
+
+# Collect the regression models in a single list for processing output
+fit_meff_lpm <- list(ESI = fit_meff_lpm_ESI, 
+                     NG = fit_meff_lpm_NG,
+                     PUB = fit_meff_lpm_PUB,
+                     UNIN = fit_meff_lpm_UNIN)
+
+tbl_lpm <- 
+  fit_meff_lpm %>% 
+  map(~(
+    .x %>% 
+    tidy() 
+  )) %>% 
+  bind_rows(.id = "outcome") %>% 
+  mutate_at(vars(outcome,term),function(x) gsub("_|_\\$",".",x)) %>% 
+  select(outcome,term,estimate,std.error) %>% 
+  mutate_at(vars(estimate,std.error),function(x) round(x,4)) %>% 
+  mutate(term = gsub("\\(|\\)","",term)) %>% 
+  mutate(estimate = glue("{estimate} ({std.error})")) %>% 
+  select(-std.error) %>% 
+  spread(outcome,estimate) 
+
+tbl_lpm %>% 
+  gt() %>% 
+  tab_header(title = "Marginal Effect Model Coefficients (std. error) Based on Linear Probability Model")  %>% 
+  cols_label(term = "")
+
+marginal_att_summary[,("2. PT-LinearReg")] <- 
+  fit_meff_lpm %>% 
+  map(~(
+    .x %>% 
+      tidy() 
+  )) %>% 
+  bind_rows(.id = "outcome") %>% 
+  mutate_at(vars(outcome,term),function(x) gsub("_|_\\$",".",x)) %>% 
+  filter(term=="post.z") %>% 
+  pull(estimate)
+
+```
+
+## Categorical Outcomes
+
+```{r}
+#---- 3. Multinomial Logit
+
+# Setup the data frame
+df_ <- 
+  df_ex %>% 
+  mutate(insurance_type = factor(insurance_type, levels = c("ESI","NG","PUB","UNIN")))
+
+fit_meff_mltnm <- multinom(insurance_type ~ post + z + post_z + X, data = df_)
+
+tbl_multinom <- 
+  tidy(fit_meff_mltnm ) %>% 
+  rename(outcome = y.level) %>% 
+  mutate_at(vars(outcome,term),function(x) gsub("_|_\\$",".",x)) %>% 
+  select(outcome,term,estimate,std.error) %>% 
+  mutate_at(vars(estimate,std.error),function(x) round(x,4)) %>% 
+  mutate(term = gsub("\\(|\\)","",term)) %>% 
+  mutate(estimate = glue("{estimate} ({std.error})")) %>% 
+  select(-std.error) %>% 
+  spread(outcome,estimate) 
+
+tbl_multinom %>% 
+  gt() %>% 
+  tab_header(title = "Marginal Effect Model Coefficients Based on Multinomial Logit Model")  %>% 
+  cols_label(term = "")
+
+```
+
+## Categorical Outcomes
+
+```{r}
+# Obtain DID estimates of the ATT via the method of recycled predictions. 
+recpr_meff_mltnm <-
+  expand.grid(z = c(0,1) , post =c(0,1),X=0)  %>% 
+  as_tibble() %>% 
+  mutate(pr = map2(z,post,
+     ~(as_tibble(predict(fit_meff_mltnm,
+                         newdata = (df_ %>% filter(z==1) %>%  
+                                    mutate(z = .x , post = .y, post_z = .x * .y)),
+                 "probs"))))) %>% 
+  unnest(cols = c(pr)) %>% 
+  group_by(z,post) %>% 
+  summarise_at(vars(category_names),mean) %>% 
+  gather(category,value,-z,-post) %>% 
+  mutate(z = glue("z{z}"),
+         post = glue("t{post}")) %>% 
+  unite(group,z,post) %>% 
+  spread(group,value)  %>% 
+  mutate(att = (z1_t1 - z1_t0) - (z0_t1 - z0_t0))
+
+tbl_mltnm_recp <- 
+  recpr_meff_mltnm %>% 
+  select(coverage = category,ATT = att,everything())
+
+tbl_mltnm_recp  %>% 
+  gt() %>% 
+  cols_label(z0_t0 = "Pre-Intervention",
+             z0_t1 = "Post-Intervention",
+             z1_t0 = "Pre-Intervention",
+             z1_t1 = "Post-Intervention") %>% 
+  tab_spanner(columns = c(z0_t0,z0_t1),label = "Comparison Group") %>% 
+  tab_spanner(columns = c(z1_t0,z1_t1),label = "Intevention Group") %>% 
+  tab_spanner(columns = c(ATT), label = "DID Estimate") %>% 
+  cols_label(coverage = "") %>% 
+  fmt_number(columns = c(z0_t0,z0_t1,z1_t0,z1_t1,ATT), n_sigfig=3) %>% 
+  tab_header(title = "Marginal Effect Estimates Based on Recycled Predictions from a Multinomial Logit Model")
+
+marginal_att_summary[,c("3. PT-MutinomLogit")] <- tbl_mltnm_recp$ATT
+```
+
+## Categorical Outcomes
+
+```{r}
+#---- Tabulate the baseline distribution of the outcome in each group.
+p_0 <- 
+  df_ex %>% 
+  filter(post==0) %>% 
+  dummy_cols(select_columns = "insurance_type") %>% 
+  group_by(z) %>% 
+  summarise_at(vars(starts_with("insurance_type_")),mean) %>% 
+  rename_at(vars(starts_with("insurance_type_")),function(x) gsub("insurance_type_","",x))
+
+p_0z1 <- p_0 %>% filter(z==1) %>% select(c("ESI","NG","PUB","UNIN")) %>% as.matrix() 
+#p_0z1
+
+p_0z0 <- p_0 %>% filter(z==0) %>% select(c("ESI","NG","PUB","UNIN")) %>% as.matrix() 
+#p_0z0
+
+#---- 3. Nonparametric: Tabulation of Occupancy changes
+
+# Tabulate the pre-to-post transition matrix in each group. 
+R_np <- 
+  df_ex %>% 
+  filter(post==1 ) %>% 
+  count(insurance_type,pre,z) %>% 
+  group_by(pre,z) %>% 
+  mutate(n=n/sum(n)) %>% 
+  spread(insurance_type,n) %>% 
+  arrange(z,pre)
+
+R_0_np <- 
+  R_np %>% 
+  filter(z==0) %>% 
+  data.frame() %>% 
+  select(-z) %>% 
+  column_to_rownames(var = "pre") %>% 
+  as.matrix()
+R_0_np <- R_0_np[c("ESI","NG","PUB","UNIN"),c("ESI","NG","PUB","UNIN")]
+#R_0_np
+
+R_1_np <- 
+  R_np %>% 
+  filter(z==1) %>% 
+  data.frame() %>% 
+  select(-z) %>% 
+  column_to_rownames(var = "pre") %>% 
+  as.matrix()
+R_1_np <- R_1_np[c("ESI","NG","PUB","UNIN"),c("ESI","NG","PUB","UNIN")]
+#R_1_np
+
+R_DD_np = R_1_np - R_0_np
+#R_DD_np
+
+# Baseline occupancy in the treated group
+p_ <- p_0 %>% filter(z==1)  %>% select(-z) %>% gather(coverage,value)  %>% pull(value)
+
+# Marginal treatment effect estimate is p_0 %*% R_DD
+pi_ <- p_ %*% R_DD_np[category_names,category_names] %>% data.frame() %>%  gather(coverage,pi)
+
+tbl_pi_nonpara <-   
+  p_0 %>% 
+  filter(z==1) %>% 
+  select(-z) %>% 
+  gather(coverage,p) %>% 
+  left_join(
+    R_DD_np %>% 
+    data.frame() %>% 
+    rownames_to_column(var = "coverage"),"coverage") %>% 
+  left_join(pi_,"coverage") 
+  
+tbl_pi_nonpara %>% 
+  select(coverage,pi,p,ESI,NG,PUB,UNIN) %>% 
+  gt() %>% 
+  tab_header(title = "Summary of Marginal Effect Point Estimates Using Nonparametric Transitions Estimator")  %>% 
+  cols_label(coverage = "",pi ="ATT",p="p") %>% 
+  fmt_number(columns = c(p,ESI,NG,PUB,UNIN,pi),n_sigfig=3) %>% 
+  tab_spanner(columns = c(ESI,NG,PUB,UNIN),label = "R_DD")
+
+marginal_att_summary[,c( "4. TR-Nonparametric")] <- tbl_pi_nonpara$pi
+
+```
+
+## Categorical Outcomes
+
+```{r}
+#---- 5. Parametric: Linear Regression
+
+ref_cat<- "UNIN"
+
+# Define J-1 outcomes and structure the data with pre-period indicators
+  Y_ <- 
+    df_ex %>% 
+    dummy_cols(select_columns = "insurance_type") %>% 
+    rename_at(vars(starts_with("insurance_type_")),~gsub("insurance_type_","",.)) %>% 
+    filter(post == 1) %>% 
+    select_at(all_of(unname(category_names)[-grep(ref_cat,category_names)]))  %>% 
+    as.matrix()
+  
+  # Collection of pre-period outcome indicators
+  y_pre <- 
+    df_ex %>% 
+    dummy_cols(select_columns = "insurance_type") %>% 
+    rename_at(vars(starts_with("insurance_type_")),~gsub("insurance_type_","",.)) %>% 
+    filter(post == 0) %>% 
+    select_at(vars(idnumber,all_of(category_names)))
+  
+  # Interactions of pre-period outcome indicators with treatment variable. 
+  y_pre_z <- 
+    df_ex %>% 
+    filter(post == 0 ) %>% 
+    select(-post_z) %>% 
+    dummy_cols(select_columns = "insurance_type") %>% 
+    rename_at(vars(starts_with("insurance_type_")),~gsub("insurance_type_","",.))  %>% 
+    mutate_at(all_of(unname(category_names)),~as.integer((. * .data$z))) %>% 
+    rename_at(vars(all_of(unname(category_names))),~(paste0(.,"_z"))) %>% 
+    select(idnumber,ends_with("_z"))
+  
+  # Include covariate X
+  xx <- 
+    df_ex %>% 
+    filter(post ==0) %>% 
+    select(idnumber,X)
+  
+  # Combine them all together to ensure we maintain proper matching of elements by study unit. 
+  df_ <- 
+    y_pre %>% 
+    inner_join(y_pre_z,"idnumber")  %>% 
+    inner_join(xx,"idnumber") %>% 
+    select(-idnumber)
+  
+  fit_att_transitions <-
+    lm(Y_ ~ . - 1 , data = df_) 
+
+tidy(fit_att_transitions) %>% 
+  mutate_at(vars(response,term),function(x) gsub("_|_\\$",".",x)) %>% 
+  select(response,term,estimate,std.error) %>% 
+  mutate_at(vars(estimate,std.error),function(x) round(x,4)) %>% 
+  mutate(term = gsub("\\(|\\)","",term)) %>% 
+  mutate(term = gsub("\\(|\\)","",term)) %>% 
+  mutate(response = gsub("insurance.type.","",response)) %>% 
+  mutate(estimate = glue("{round(estimate,3)} ({round(std.error,3)})")) %>% 
+  select(-std.error) %>% 
+  spread(response,estimate) %>% 
+  gt() %>% 
+  tab_header("Linear Transition Regression Model Coefficients (SE)") %>% 
+  cols_label(term = "") %>% 
+  tab_spanner(columns = c(ESI,NG,PUB),label = "Outcome")
+```
+
+## Categorical Outcomes
+
+```{r}
+# Prepare a data frame for the recycled predictions.
+xx_ <- 
+    category_names %>% 
+    map_df(~({
+      data.frame(z = c(1,0)) %>% 
+        mutate(pre = .x) %>% 
+        mutate(X = 0)
+    })) %>% 
+    fastDummies::dummy_cols(select_columns = c("pre")) %>% 
+    rename_at(vars(starts_with("pre_")),~gsub("pre_","",.)) %>% 
+    mutate_at(vars(all_of(category_names)),list(z = ~(.data$z * .))) 
+
+predicted_values_m_transitions <- 
+  cbind(xx_[,c("z","pre")],predict(fit_att_transitions,newdata =xx_)) %>% 
+  left_join(p_0 %>% gather(pre,p,-z),c("pre","z")) %>% 
+  data.frame() %>% 
+  mutate(pre = factor(pre,levels = c(category_names))) %>% 
+  arrange(z,pre) %>% 
+  select(z,pre,p,everything())
+predicted_reference <- 
+  1-rowSums(predicted_values_m_transitions[,category_names[-which(category_names==ref_cat)]])
+predicted_values_m_transitions[[ref_cat]] <-  predicted_reference
+
+R_0_linreg <- 
+  predicted_values_m_transitions %>% 
+  ungroup() %>% 
+  filter(z == 0) %>% 
+  select(-z,-p) %>% 
+  column_to_rownames(var = "pre") %>% 
+  as.matrix()
+# Make sure all the categories line up in the same order ...
+R_0_linreg <- R_0_linreg[unname(category_names),unname(category_names)]
+
+R_1_linreg <- 
+  predicted_values_m_transitions %>% 
+  ungroup() %>% 
+  filter(z == 1) %>% 
+  select(-z,-p) %>% 
+  column_to_rownames(var = "pre") %>% 
+  as.matrix()
+# Make sure all the categories line up in the same order ...
+R_1_linreg <- R_1_linreg[unname(category_names),unname(category_names)]
+
+R_DD_linreg <- R_1_linreg - R_0_linreg
+
+pi_parametric_transitions <- p_ %*% R_DD_linreg[category_names,category_names] %>% data.frame() %>%  gather(coverage,pi)
+
+tbl_pi_regression <-   
+  p_0 %>% 
+  filter(z==1) %>% 
+  select(-z) %>% 
+  gather(coverage,p) %>% 
+  left_join(
+    R_DD_linreg %>% 
+    data.frame() %>% 
+    rownames_to_column(var = "coverage"),"coverage") %>% 
+  left_join(pi_parametric_transitions,"coverage") 
+  
+tbl_pi_regression %>% 
+  select(coverage,pi,p,ESI,NG,PUB,UNIN) %>% 
+  gt() %>% 
+  tab_header(title = "Summary of Marginal Effect Point Estimates Using Regression-Based Transitions Estimator")  %>% 
+  cols_label(coverage = "",pi ="ATT",p="p") %>% 
+  fmt_number(columns = c(p,ESI,NG,PUB,UNIN,pi),n_sigfig=3) %>% 
+  tab_spanner(columns = c(ESI,NG,PUB,UNIN),label = "R_DD")
+
+marginal_att_summary[,c("5. TR-LinearReg")] <- tbl_pi_regression$pi
+
+```
+
+## Categorical Outcomes
+
+```{r}
+#---- 6. Parametric: Multinomial Logit
+
+Y_ <- 
+  df_ex %>% 
+  filter(post ==1) %>% 
+  select(Y = insurance_type) %>% 
+  mutate(Y = factor(Y, levels = category_names)) %>% 
+  as.matrix()
+
+fit_att_transitions_multinom <-
+  multinom(Y_ ~ . - 1 , data = df_)
+
+tbl_multinom2 <- 
+  tidy(fit_att_transitions_multinom ) %>% 
+  rename(outcome = y.level) %>% 
+  mutate_at(vars(outcome,term),function(x) gsub("_|_\\$",".",x)) %>% 
+  select(outcome,term,estimate,std.error) %>% 
+  mutate_at(vars(estimate,std.error),function(x) round(x,4)) %>% 
+  mutate(term = gsub("\\(|\\)","",term)) %>% 
+  mutate(estimate = glue("{estimate} ({std.error})")) %>% 
+  select(-std.error) %>% 
+  spread(outcome,estimate) 
+
+tbl_multinom2 %>% 
+  gt() %>% 
+  tab_header(title = "Tansition Model Coefficients (std. error) Based on Multinomial Logit Model")  %>% 
+  cols_label(term = "")
+
+```
+
+## Categorical Outcomes
+
+```{r}
+
+predicted_values_m_transitions_multinom <- 
+  cbind(xx_[,c("z","pre")],predict(fit_att_transitions_multinom,newdata =xx_,"probs")) %>% 
+  left_join(p_0 %>% gather(pre,p,-z),c("pre","z")) %>% 
+  data.frame() %>% 
+  mutate(pre = factor(pre,levels = c(category_names))) %>% 
+  arrange(z,pre) %>% 
+  select(z,pre,p,everything())
+predicted_reference_multinom <- 
+  1-rowSums(predicted_values_m_transitions_multinom[,category_names[-which(category_names==ref_cat)]])
+predicted_values_m_transitions_multinom[[ref_cat]] <-  predicted_reference_multinom
+
+hat_R_0_multinom <- 
+  predicted_values_m_transitions_multinom %>% 
+  ungroup() %>% 
+  filter(z == 0) %>% 
+  select(-z,-p) %>% 
+  column_to_rownames(var = "pre") %>% 
+  as.matrix()
+# Make sure all the categories line up in the same order ...
+hat_R_0_multinom <- hat_R_0_multinom[category_names,category_names]
+
+R_1_multinom <- 
+  predicted_values_m_transitions_multinom %>% 
+  ungroup() %>% 
+  filter(z == 1) %>% 
+  select(-z,-p) %>% 
+  column_to_rownames(var = "pre") %>% 
+  as.matrix()
+# Make sure all the categories line up in the same order ...
+R_1_multinom <- R_1_multinom[category_names,category_names]
+
+R_DD_multinom <- R_1_multinom - hat_R_0_multinom
+
+pi_multinom_transitions <- p_ %*% R_DD_multinom[category_names,category_names] %>% data.frame() %>%  gather(coverage,pi)
+
+tbl_pi_multinom <-   
+  p_0 %>% 
+  filter(z==1) %>% 
+  select(-z) %>% 
+  gather(coverage,p) %>% 
+  left_join(
+    R_DD_multinom %>% 
+    data.frame() %>% 
+    rownames_to_column(var = "coverage"),"coverage") %>% 
+  left_join(pi_multinom_transitions,"coverage") 
+  
+tbl_pi_multinom %>% 
+  select(coverage,pi,p,ESI,NG,PUB,UNIN) %>% 
+  gt() %>% 
+  tab_header(title = "Summary of Marginal Effect Point Estimates Using Multinomial Regression-Based Transitions Estimator")  %>% 
+  cols_label(coverage = "",pi ="ATT",p="p") %>% 
+  fmt_number(columns = c(p,ESI,NG,PUB,UNIN,pi),n_sigfig=3) %>% 
+  tab_spanner(columns = c(ESI,NG,PUB,UNIN),label = "R_DD")
+
+marginal_att_summary[,c("6. TR-MultinomLogit")] <- tbl_pi_multinom$pi
+
+```

@@ -631,7 +631,7 @@ $$
 
 ::: {style="font-size: 0.9em"}
 | Treatment Group | Timing    | Heterogx | Tx Effect | TWFE                                           |
-|---------------|---------------|---------------|---------------|---------------|
+|-----------------|-----------|----------|-----------|------------------------------------------------|
 | Single          | Single    | No       | Constant  | Yes                                            |
 | Single          | Single    | No       | Dynamic   | Yes[^1]                                        |
 | Multiple        | Single    | No       | Constant  | Yes                                            |
@@ -668,7 +668,7 @@ $Y_{it} = \delta_i + \gamma_t + \gamma_k^{-K}D_{it}^{<-K} + \sum_{k=-K}^{-2}\gam
 
 ::: {style="font-size: 0.9em"}
 | Treatment Group | Timing    | Heterogx | Tx Effect | TWFE                                           | TWFE-ES                                        |
-|------------|------------|------------|------------|------------|------------|
+|-----------------|-----------|----------|-----------|------------------------------------------------|------------------------------------------------|
 | Single          | Single    | No       | Constant  | Yes                                            | Yes                                            |
 | Single          | Single    | No       | Dynamic   | Yes[^2]                                        | Yes                                            |
 | Multiple        | Single    | No       | Constant  | Yes                                            | Yes                                            |
@@ -809,7 +809,7 @@ DGP code adapted from Baker, Andrew C., David F. Larcker, and Charles CY Wang. "
 
 ::: {style="font-size: 0.6em"}
 | Method                | Estimation Formula                               | Fixed or Random Effect |
-|-------------------|-----------------------------------|-------------------|
+|-----------------------|--------------------------------------------------|------------------------|
 | Two-Way Fixed Effects | `feols(I(d* : f*) + factor(time)  | unit)`       | Unit Fixed Effect      |
 | Pooled OLS            | `lm(I(d* : f*) + factor(time) + d*)`             |                        |
 | Two-Way Mundlak       | `lmer(I(d* : f*) + factor(time) + d* + (1|unit)` | Unit Random Effect     |
@@ -821,7 +821,7 @@ See the course blog for how to demean the covariates so they can be included.
 
 ::: {style="font-size: 0.6em"}
 | Method                | Estimation Formula                                                                                                                | Fixed or Random Effect |
-|-------------------|-----------------------------------|-------------------|
+|-----------------------|-----------------------------------------------------------------------------------------------------------------------------------|------------------------|
 | Two-Way Fixed Effects | `feols(I(w : d* : f*) + I(w : d* : f* : x_dm_d*) + factor(time) + I(factor(time) * x_dm_d*) | unit)`                              | Unit Fixed Effect      |
 | Pooled OLS            | `lm(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* + x + I(d* : x_dm_d*))`              |                        |
 | Two-Way Mundlak       | `lmer(I(w : d* : f*) + I(w: d* : f* : x_dm_d*) + factor(time) + I(factor(time) : x_dm_d*) + d* +  x + I(d* : x_dm_d*) + (1|unit)` | Unit Random Effect     |
@@ -839,14 +839,14 @@ See the course blog for how to demean the covariates so they can be included.
 
 ## Results: Relative Time
 
-- You can also align each coefficient to its point in relative time.
-- For 1989 treated cohort, coefficient on `I(d_1989 * f_1989)` corresponds to `relative_time=0`.
-- For 1998 treated cohort, coefficient on `I(d_1998 * f_1998)` corresponds to `relative_time=0`.
+-   You can also align each coefficient to its point in relative time.
+-   For 1989 treated cohort, coefficient on `I(d_1989 * f_1989)` corresponds to `relative_time=0`.
+-   For 1998 treated cohort, coefficient on `I(d_1998 * f_1998)` corresponds to `relative_time=0`.
 
 ## Results: Relative Time
 
-- Once you get all treatment effect coefficients organized into relative time, you can take the average (across treated cohorts) at each time period. 
-- Can plot these effect estimates (analogous to the event study plot from earlier). 
+-   Once you get all treatment effect coefficients organized into relative time, you can take the average (across treated cohorts) at each time period.
+-   Can plot these effect estimates (analogous to the event study plot from earlier).
 
 ## Results: Relative Time
 
@@ -856,7 +856,7 @@ See the course blog for how to demean the covariates so they can be included.
 
 ::: {style="font-size: 0.9em"}
 | Treatment Group | Timing    | Heterogx | Tx Effect | TWFE                                           | TWFE-ES                                        | Ext-DID                        |
-|-----------|-----------|-----------|-----------|-----------|-----------|-----------|
+|-----------------|-----------|----------|-----------|------------------------------------------------|------------------------------------------------|--------------------------------|
 | Single          | Single    | No       | Constant  | Yes                                            | Yes                                            | [Yes]{.rn rn-type="highlight"} |
 | Single          | Single    | No       | Dynamic   | Yes[^3]                                        | Yes                                            | [Yes]{.rn rn-type="highlight"} |
 | Multiple        | Single    | No       | Constant  | Yes                                            | Yes                                            | [Yes]{.rn rn-type="highlight"} |
