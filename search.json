@@ -228,7 +228,7 @@
     "href": "blog/drafts/post1.html#power",
     "title": "Using Simulation to Calculate Power and Minimum Detectable Effects",
     "section": "Power",
-    "text": "Power\n\nB = 1000\npower =\n    seq(100,1000,100) %>%\n    map(~(mc_replicate(B,est_power(modifyList(params,list(beta = .1,n=.x))),mc.cores=10))) %>%\n    map_dbl(~(mean(.x)))  %>%\n    data.frame(row.names = seq(100,1000,100)) %>%\n    rownames_to_column(var = \"N\") %>%\n    set_names(c(\"N\",\"power\")) %>%\n    as_tibble() %>%\n    mutate(N = as.numeric(paste0(N)))\npower %>% knitr::kable()\n\n\n\n\nN\npower\n\n\n\n\n100\n0.164\n\n\n200\n0.296\n\n\n300\n0.382\n\n\n400\n0.492\n\n\n500\n0.602\n\n\n600\n0.711\n\n\n700\n0.756\n\n\n800\n0.804\n\n\n900\n0.854\n\n\n1000\n0.882\n\n\n\n\npower %>%\n    ggplot(aes(x = N , y = power)) + geom_line() +\n    ggthemes::theme_few()"
+    "text": "Power\n\nB = 1000\npower =\n    seq(100,1000,100) %>%\n    map(~(mc_replicate(B,est_power(modifyList(params,list(beta = .1,n=.x))),mc.cores=10))) %>%\n    map_dbl(~(mean(.x)))  %>%\n    data.frame(row.names = seq(100,1000,100)) %>%\n    rownames_to_column(var = \"N\") %>%\n    set_names(c(\"N\",\"power\")) %>%\n    as_tibble() %>%\n    mutate(N = as.numeric(paste0(N)))\npower %>% knitr::kable()\n\n\n\n\nN\npower\n\n\n\n\n100\n0.158\n\n\n200\n0.285\n\n\n300\n0.432\n\n\n400\n0.561\n\n\n500\n0.613\n\n\n600\n0.659\n\n\n700\n0.750\n\n\n800\n0.818\n\n\n900\n0.828\n\n\n1000\n0.888\n\n\n\n\npower %>%\n    ggplot(aes(x = N , y = power)) + geom_line() +\n    ggthemes::theme_few()"
   },
   {
     "objectID": "blog/drafts/twfe-twm-and-did.html",
@@ -1670,7 +1670,21 @@
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#motivation",
     "title": "Synthetic Control Methods",
     "section": "Motivation",
-    "text": "Motivation\n\n\n\n\n\n\n\n\n\nHypothetical gun law passed in a single state.\nThe plot shows the total firearm death rate, by year and state\nI have imposed a (simulated) treatment effect (\\(\\tau = -2\\)) that gradually manifests over 5 years.\n\n\n\n\n\n\n\nTotal Firearm Death Rate, by Year and State"
+    "text": "Motivation"
+  },
+  {
+    "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#motivation-1",
+    "href": "slides/lec_conditionalDID-and-synthetic-control.html#motivation-1",
+    "title": "Synthetic Control Methods",
+    "section": "Motivation",
+    "text": "Motivation\n\n\nHypothetical gun law passed in a single state (Pennsylvania) in 1989.\nThe plot shows the total firearm death rate, by year and state\nI have imposed a (simulated) immediately-acting treatment effect (\\(\\tau = -3\\)).\n\n\n\nData drawn from Schell et al. “Evaluating Methods to Estimate the Effect of State Laws on Firearm Deaths A Simulation Study”"
+  },
+  {
+    "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#firearm-death-rate-by-state-and-year",
+    "href": "slides/lec_conditionalDID-and-synthetic-control.html#firearm-death-rate-by-state-and-year",
+    "title": "Synthetic Control Methods",
+    "section": "Firearm Death Rate, by State and Year",
+    "text": "Firearm Death Rate, by State and Year\n\n\n\n\n\n\n\nWith Treatment\n\n\n\n\n\n\n\n\n\n\nWithout Treatment (True Counterfactual)"
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#how-would-you-evaluate-this-policy-change",
@@ -1733,21 +1747,21 @@
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#a-generalized-framework",
     "title": "Synthetic Control Methods",
     "section": "A Generalized Framework",
-    "text": "A Generalized Framework\n\n\\(N + 1\\) units observed for \\(T\\) periods, with a subset of treated units (for simplicity - unit 0) treated from \\(T0\\) onwards.\nTime-varying treatment indicator: \\(W_{i,t}\\)\nPotential outcomes for unit \\(0\\) define the treatment effect: \\(\\tau_{0,t} := Y_{0,t}(1) − Y_{0,t}(0)\\) for \\(t = T0 + 1, . . . , T\\)\n\n\nSource: Doudchenko and Imbens (2016) and Apoorva Lal"
+    "text": "A Generalized Framework\n\n\n\\(N + 1\\) units observed for \\(T\\) periods, with a subset of treated units (for simplicity - unit 0) treated from \\(T0\\) onwards.\nTime-varying treatment indicator: \\(W_{i,t}\\)\nPotential outcomes for unit \\(0\\) define the treatment effect: \\(\\tau_{0,t} := Y_{0,t}(1) − Y_{0,t}(0)\\) for \\(t = T0 + 1, . . . , T\\)\n\n\n\nSource: Doudchenko and Imbens (2016) and Apoorva Lal"
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#a-generalized-framework-1",
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#a-generalized-framework-1",
     "title": "Synthetic Control Methods",
     "section": "A Generalized Framework",
-    "text": "A Generalized Framework\n\nObserved outcome: \\(Y^{obs}_{i,t} = Y_{i,t}(W_{i,t})\\)\nTime-invariant characteristics \\(X_i := (X_{i,1}, . . . , X_{i,M} )^T\\) for each unit, which may include lagged outcomes Y^{obs}_{i,t} for \\(t ≤ T0\\).\n\n\nSource: Doudchenko and Imbens (2016) and Apoorva Lal"
+    "text": "A Generalized Framework\n\n\nObserved outcome: \\(Y^{obs}_{i,t} = Y_{i,t}(W_{i,t})\\)\nTime-invariant characteristics \\(X_i := (X_{i,1}, . . . , X_{i,M} )^T\\) for each unit, which may include lagged outcomes Y^{obs}_{i,t} for \\(t ≤ T0\\).\n\n\n\nSource: Doudchenko and Imbens (2016) and Apoorva Lal"
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#data-setup",
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#data-setup",
     "title": "Synthetic Control Methods",
     "section": "Data Setup",
-    "text": "Data Setup\n\n\n\n\n \n  \n    state \n    year \n    deaths \n    population \n    crude_rate \n    crude_rate_lag1 \n    crude_rate_lag2 \n    crude_rate_lag3 \n    year_cat \n    pc1 \n    pc2 \n    pc3 \n    pc4 \n    pc5 \n    pc6 \n    pc7 \n    pc8 \n    pc9 \n    pc10 \n    pc11 \n    pc12 \n    pc13 \n    pc14 \n    pc15 \n    pc16 \n    pc17 \n    pc18 \n    pc19 \n    pc20 \n    pc21 \n    pc22 \n    pc23 \n    pc24 \n    pc25 \n    pc26 \n    pc27 \n    pc28 \n    pc29 \n    pc30 \n    pc31 \n    pc32 \n    population_std \n    levels_coding \n    ch_levels_coding \n    cr_adj \n    deaths_adj \n    lag1 \n    log_y_adj \n  \n \n\n  \n    Alabama \n    1979 \n    856 \n    3873403 \n    22.10 \n    NA \n    NA \n    NA \n    1979 \n    -3.05 \n    3.15 \n    2.02 \n    -0.10 \n    -0.63 \n    -0.36 \n    -0.04 \n    0.13 \n    0.03 \n    0.19 \n    0.31 \n    -0.14 \n    0.36 \n    -0.24 \n    -0.64 \n    -0.85 \n    0.24 \n    -0.17 \n    0.15 \n    0.05 \n    -0.45 \n    -0.05 \n    0.11 \n    -0.17 \n    0.32 \n    0.10 \n    0.09 \n    -0.03 \n    0.05 \n    0.06 \n    -0.04 \n    -0.02 \n    0.72 \n    0 \n    0 \n    22.10 \n    856 \n    NA \n    3.10 \n  \n  \n    Alabama \n    1980 \n    938 \n    3898117 \n    24.06 \n    22.10 \n    NA \n    NA \n    1980 \n    -3.47 \n    3.49 \n    2.05 \n    -0.10 \n    -0.53 \n    -0.34 \n    0.26 \n    0.39 \n    -0.01 \n    0.61 \n    0.03 \n    0.11 \n    0.05 \n    -0.20 \n    -0.81 \n    -1.10 \n    0.38 \n    0.23 \n    0.00 \n    0.49 \n    -0.94 \n    0.05 \n    0.19 \n    -0.19 \n    0.01 \n    0.38 \n    -0.08 \n    -0.07 \n    -0.06 \n    0.20 \n    -0.05 \n    -0.07 \n    0.72 \n    0 \n    0 \n    24.06 \n    938 \n    22.10 \n    3.18 \n  \n  \n    Alabama \n    1981 \n    824 \n    3920097 \n    21.02 \n    24.06 \n    22.10 \n    NA \n    1981 \n    -3.42 \n    3.56 \n    2.27 \n    -0.50 \n    -0.50 \n    -0.70 \n    0.20 \n    0.33 \n    0.20 \n    0.39 \n    -0.01 \n    0.07 \n    0.18 \n    -0.63 \n    -0.85 \n    -0.69 \n    0.34 \n    0.27 \n    0.17 \n    0.49 \n    -0.43 \n    0.08 \n    0.16 \n    -0.28 \n    0.26 \n    0.28 \n    -0.12 \n    0.02 \n    -0.01 \n    0.14 \n    -0.03 \n    -0.04 \n    0.72 \n    0 \n    0 \n    21.02 \n    824 \n    24.06 \n    3.05 \n  \n  \n    Alabama \n    1982 \n    820 \n    3925924 \n    20.89 \n    21.02 \n    24.06 \n    22.10 \n    1982 \n    -3.23 \n    3.35 \n    2.07 \n    -0.45 \n    -0.53 \n    -1.09 \n    0.04 \n    0.50 \n    0.45 \n    0.26 \n    0.48 \n    0.11 \n    -0.04 \n    -0.57 \n    -0.12 \n    -0.24 \n    0.15 \n    -0.04 \n    0.22 \n    0.07 \n    -0.25 \n    0.38 \n    -0.06 \n    -0.38 \n    0.03 \n    -0.19 \n    0.00 \n    0.11 \n    0.06 \n    0.02 \n    0.06 \n    -0.02 \n    0.73 \n    0 \n    0 \n    20.89 \n    820 \n    21.02 \n    3.04 \n  \n  \n    Alabama \n    1983 \n    710 \n    3933838 \n    18.05 \n    20.89 \n    21.02 \n    24.06 \n    1983 \n    -3.06 \n    3.41 \n    1.92 \n    -0.49 \n    -0.37 \n    -0.75 \n    0.48 \n    0.43 \n    -0.10 \n    0.20 \n    0.29 \n    0.14 \n    0.00 \n    -1.14 \n    -0.73 \n    -0.26 \n    0.19 \n    0.17 \n    0.32 \n    0.11 \n    -0.18 \n    0.53 \n    0.01 \n    -0.22 \n    0.05 \n    0.10 \n    0.05 \n    0.27 \n    0.11 \n    -0.01 \n    0.04 \n    0.00 \n    0.73 \n    0 \n    0 \n    18.05 \n    710 \n    20.89 \n    2.89 \n  \n  \n    Alabama \n    1984 \n    750 \n    3952400 \n    18.98 \n    18.05 \n    20.89 \n    21.02 \n    1984 \n    -2.62 \n    3.24 \n    1.44 \n    -0.31 \n    -0.23 \n    -0.49 \n    0.79 \n    0.56 \n    -0.27 \n    0.41 \n    0.31 \n    0.12 \n    -0.21 \n    -1.26 \n    -0.69 \n    -0.09 \n    0.01 \n    -0.07 \n    0.13 \n    0.02 \n    -0.18 \n    0.44 \n    -0.16 \n    -0.34 \n    -0.02 \n    0.09 \n    -0.10 \n    0.23 \n    -0.02 \n    0.04 \n    0.14 \n    0.03 \n    0.73 \n    0 \n    0 \n    18.98 \n    750 \n    18.05 \n    2.94"
+    "text": "Data Setup\n\n\n\n\n \n  \n    state \n    year \n    deaths \n    population \n    crude_rate \n    crude_rate_lag1 \n    crude_rate_lag2 \n    crude_rate_lag3 \n    year_cat \n    pc1 \n    pc2 \n    pc3 \n    pc4 \n    pc5 \n    pc6 \n    pc7 \n    pc8 \n    pc9 \n    pc10 \n    pc11 \n    pc12 \n    pc13 \n    pc14 \n    pc15 \n    pc16 \n    pc17 \n    pc18 \n    pc19 \n    pc20 \n    pc21 \n    pc22 \n    pc23 \n    pc24 \n    pc25 \n    pc26 \n    pc27 \n    pc28 \n    pc29 \n    pc30 \n    pc31 \n    pc32 \n    population_std \n    levels_coding \n    ch_levels_coding \n    cr_adj \n    cr_adj_lag1 \n    lag1 \n  \n \n\n  \n    Alabama \n    1979 \n    856 \n    3873403 \n    22.10 \n    NA \n    NA \n    NA \n    1979 \n    -3.05 \n    3.15 \n    2.02 \n    -0.10 \n    -0.63 \n    -0.36 \n    -0.04 \n    0.13 \n    0.03 \n    0.19 \n    0.31 \n    -0.14 \n    0.36 \n    -0.24 \n    -0.64 \n    -0.85 \n    0.24 \n    -0.17 \n    0.15 \n    0.05 \n    -0.45 \n    -0.05 \n    0.11 \n    -0.17 \n    0.32 \n    0.10 \n    0.09 \n    -0.03 \n    0.05 \n    0.06 \n    -0.04 \n    -0.02 \n    0.72 \n    0 \n    0 \n    22.10 \n    NA \n    NA \n  \n  \n    Alabama \n    1980 \n    938 \n    3898117 \n    24.06 \n    22.10 \n    NA \n    NA \n    1980 \n    -3.47 \n    3.49 \n    2.05 \n    -0.10 \n    -0.53 \n    -0.34 \n    0.26 \n    0.39 \n    -0.01 \n    0.61 \n    0.03 \n    0.11 \n    0.05 \n    -0.20 \n    -0.81 \n    -1.10 \n    0.38 \n    0.23 \n    0.00 \n    0.49 \n    -0.94 \n    0.05 \n    0.19 \n    -0.19 \n    0.01 \n    0.38 \n    -0.08 \n    -0.07 \n    -0.06 \n    0.20 \n    -0.05 \n    -0.07 \n    0.72 \n    0 \n    0 \n    24.06 \n    22.10 \n    22.10 \n  \n  \n    Alabama \n    1981 \n    824 \n    3920097 \n    21.02 \n    24.06 \n    22.10 \n    NA \n    1981 \n    -3.42 \n    3.56 \n    2.27 \n    -0.50 \n    -0.50 \n    -0.70 \n    0.20 \n    0.33 \n    0.20 \n    0.39 \n    -0.01 \n    0.07 \n    0.18 \n    -0.63 \n    -0.85 \n    -0.69 \n    0.34 \n    0.27 \n    0.17 \n    0.49 \n    -0.43 \n    0.08 \n    0.16 \n    -0.28 \n    0.26 \n    0.28 \n    -0.12 \n    0.02 \n    -0.01 \n    0.14 \n    -0.03 \n    -0.04 \n    0.72 \n    0 \n    0 \n    21.02 \n    24.06 \n    24.06 \n  \n  \n    Alabama \n    1982 \n    820 \n    3925924 \n    20.89 \n    21.02 \n    24.06 \n    22.10 \n    1982 \n    -3.23 \n    3.35 \n    2.07 \n    -0.45 \n    -0.53 \n    -1.09 \n    0.04 \n    0.50 \n    0.45 \n    0.26 \n    0.48 \n    0.11 \n    -0.04 \n    -0.57 \n    -0.12 \n    -0.24 \n    0.15 \n    -0.04 \n    0.22 \n    0.07 \n    -0.25 \n    0.38 \n    -0.06 \n    -0.38 \n    0.03 \n    -0.19 \n    0.00 \n    0.11 \n    0.06 \n    0.02 \n    0.06 \n    -0.02 \n    0.73 \n    0 \n    0 \n    20.89 \n    21.02 \n    21.02 \n  \n  \n    Alabama \n    1983 \n    710 \n    3933838 \n    18.05 \n    20.89 \n    21.02 \n    24.06 \n    1983 \n    -3.06 \n    3.41 \n    1.92 \n    -0.49 \n    -0.37 \n    -0.75 \n    0.48 \n    0.43 \n    -0.10 \n    0.20 \n    0.29 \n    0.14 \n    0.00 \n    -1.14 \n    -0.73 \n    -0.26 \n    0.19 \n    0.17 \n    0.32 \n    0.11 \n    -0.18 \n    0.53 \n    0.01 \n    -0.22 \n    0.05 \n    0.10 \n    0.05 \n    0.27 \n    0.11 \n    -0.01 \n    0.04 \n    0.00 \n    0.73 \n    0 \n    0 \n    18.05 \n    20.89 \n    20.89 \n  \n  \n    Alabama \n    1984 \n    750 \n    3952400 \n    18.98 \n    18.05 \n    20.89 \n    21.02 \n    1984 \n    -2.62 \n    3.24 \n    1.44 \n    -0.31 \n    -0.23 \n    -0.49 \n    0.79 \n    0.56 \n    -0.27 \n    0.41 \n    0.31 \n    0.12 \n    -0.21 \n    -1.26 \n    -0.69 \n    -0.09 \n    0.01 \n    -0.07 \n    0.13 \n    0.02 \n    -0.18 \n    0.44 \n    -0.16 \n    -0.34 \n    -0.02 \n    0.09 \n    -0.10 \n    0.23 \n    -0.02 \n    0.04 \n    0.14 \n    0.03 \n    0.73 \n    0 \n    0 \n    18.98 \n    18.05 \n    18.05"
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#a-generalized-framework-2",
@@ -1768,21 +1782,21 @@
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#a-menu-of-constraints",
     "title": "Synthetic Control Methods",
     "section": "A Menu of Constraints",
-    "text": "A Menu of Constraints\n\nNo Intercept: \\(\\mu = 0\\)\nAdding Up: \\(\\sum_{i=1}^{n} \\omega_i = 1\\)\nNon-negativity: \\(\\omega_i >= 0\\) for all \\(i\\)\nConstant weights: \\(\\omega_i = \\bar \\omega\\) for all \\(i\\)."
+    "text": "A Menu of Constraints\n\n\nNo Intercept: \\(\\mu = 0\\)\nAdding Up: \\(\\sum_{i=1}^{n} \\omega_i = 1\\)\nNon-negativity: \\(\\omega_i >= 0\\) for all \\(i\\)\nConstant weights: \\(\\omega_i = \\bar \\omega\\) for all \\(i\\)."
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#no-intercept-mu-0",
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#no-intercept-mu-0",
     "title": "Synthetic Control Methods",
     "section": "1. No Intercept: \\(\\mu = 0\\)",
-    "text": "1. No Intercept: \\(\\mu = 0\\)\n\nRules out the possibility that the outcome for the treated unit is systematically different, by a constant amount, than the other units.\nA hallmark of difference-in-differences is that the outcome levels can vary by a fixed difference over time as long as parallel trends holds."
+    "text": "1. No Intercept: \\(\\mu = 0\\)\n\n\nRules out the possibility that the outcome for the treated unit is systematically different, by a constant amount, than the other units.\nA hallmark of difference-in-differences is that the outcome levels can vary by a fixed difference over time as long as parallel trends holds."
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#adding-up-sum_i1n-omega_i-1",
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#adding-up-sum_i1n-omega_i-1",
     "title": "Synthetic Control Methods",
     "section": "2. Adding Up: \\(\\sum_{i=1}^{n} \\omega_i = 1\\)",
-    "text": "2. Adding Up: \\(\\sum_{i=1}^{n} \\omega_i = 1\\)\n\nRequires that the weights sum up to one.\nCommon in matching strategies.\nImplausible if the treated unit is an outlier relative to other units.\nCombined with constraint #1, it may be difficult to obtain good predictions for extreme units."
+    "text": "2. Adding Up: \\(\\sum_{i=1}^{n} \\omega_i = 1\\)\n\n\nRequires that the weights sum up to one.\nCommon in matching strategies.\nImplausible if the treated unit is an outlier relative to other units.\nCombined with constraint #1, it may be difficult to obtain good predictions for extreme units."
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#adding-up-sum_i1n-omega_i-1-1",
@@ -1796,14 +1810,14 @@
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#non-negativity-omega_i-0-for-all-i",
     "title": "Synthetic Control Methods",
     "section": "3. Non-negativity: \\(\\omega_i >= 0\\) for all \\(i\\)",
-    "text": "3. Non-negativity: \\(\\omega_i >= 0\\) for all \\(i\\)\n\nIs an important restriction on standard synthetic control methods.\nHelps ensure that there is a unique solution for control unit weights.\nOften ensures that the weights are non-zero only for a small subset of the control units, making the weights easier to interpret."
+    "text": "3. Non-negativity: \\(\\omega_i >= 0\\) for all \\(i\\)\n\n\nIs an important restriction on standard synthetic control methods.\nHelps ensure that there is a unique solution for control unit weights.\nOften ensures that the weights are non-zero only for a small subset of the control units, making the weights easier to interpret."
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#constant-weights-omega_i-bar-omega-for-all-i.",
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#constant-weights-omega_i-bar-omega-for-all-i.",
     "title": "Synthetic Control Methods",
     "section": "4. Constant weights: \\(\\omega_i = \\bar \\omega\\) for all \\(i\\).",
-    "text": "4. Constant weights: \\(\\omega_i = \\bar \\omega\\) for all \\(i\\).\n\nStrengthens the nonnegativity condition by making the assumption that all control units are equally valid.\nCommon in DID (we’ll see this in a minute).\nIn conjuction to constraint 2 (Adding Up), implies that weights are all equal to 1/N, where N is number of control units."
+    "text": "4. Constant weights: \\(\\omega_i = \\bar \\omega\\) for all \\(i\\).\n\n\nStrengthens the nonnegativity condition by making the assumption that all control units are equally valid.\nCommon in DID (we’ll see this in a minute).\nIn conjuction to constraint 2 (Adding Up), implies that weights are all equal to 1/N, where N is number of control units."
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#difference-in-differences",
@@ -1824,7 +1838,7 @@
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#difference-in-differences-estimate",
     "title": "Synthetic Control Methods",
     "section": "Difference-in-Differences Estimate",
-    "text": "Difference-in-Differences Estimate\n\n\n\n\\(\\hat \\tau\\) = 1.248"
+    "text": "Difference-in-Differences Estimate\n\n\n\n\\(\\hat \\tau\\) = -0.261"
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#did-estimates-by-state",
@@ -1859,7 +1873,7 @@
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#synthetic-control-estimate",
     "title": "Synthetic Control Methods",
     "section": "Synthetic Control Estimate",
-    "text": "Synthetic Control Estimate\n\n\n\n\\(\\hat \\tau\\) = -0.294"
+    "text": "Synthetic Control Estimate\n\n\n\n\\(\\hat \\tau\\) = -1.201"
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#weights-synthetic-control",
@@ -1943,7 +1957,7 @@
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#inference-for-synthetic-control-1",
     "title": "Synthetic Control Methods",
     "section": "Inference for Synthetic Control",
-    "text": "Inference for Synthetic Control\n\nA standard approach: placebo treatments.\nApply the synthetic control method to each donor unit, and collect the treatment effect estimates.\nIdea: the distribution of placebo effects give you a sense of what could happen under the null of no treatment effect.\nCan construct a p-value by asking where your estimate lies within this distribution.\nAnalogous to randomization inference from last time."
+    "text": "Inference for Synthetic Control\n\n\nA standard approach: placebo treatments.\nApply the synthetic control method to each donor unit, and collect the treatment effect estimates.\nIdea: the distribution of placebo effects give you a sense of what could happen under the null of no treatment effect.\nCan construct a p-value by asking where your estimate lies within this distribution.\nAnalogous to randomization inference from last time."
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#synthetic-control-with-staggered-adoption",
@@ -1957,21 +1971,21 @@
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#synthetic-difference-in-differences",
     "title": "Synthetic Control Methods",
     "section": "Synthetic Difference-in-Differences",
-    "text": "Synthetic Difference-in-Differences\n\nArkhangelsky et al. (2019)\nSynthetic DID approach relaxes the parallel trends assumption.\nKey difference:\n\nPre-intervention trends do not have to match exactly (i.e., 1. \\(\\mu = 0\\) does not have to hold)\nWeighting is not equivalent across all time periods."
+    "text": "Synthetic Difference-in-Differences\n\n\nArkhangelsky et al. (2019)\nSynthetic DID approach relaxes the parallel trends assumption.\nKey difference:\n\nPre-intervention trends do not have to match exactly (i.e., 1. \\(\\mu = 0\\) does not have to hold)\nWeighting is not equivalent across all time periods."
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#synthetic-difference-in-differences-1",
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#synthetic-difference-in-differences-1",
     "title": "Synthetic Control Methods",
     "section": "Synthetic Difference-in-Differences",
-    "text": "Synthetic Difference-in-Differences\n\n\n\n\\(\\hat \\tau\\) = -0.572"
+    "text": "Synthetic Difference-in-Differences\n\n\n\n\\(\\hat \\tau\\) = -1.783"
   },
   {
     "objectID": "slides/lec_conditionalDID-and-synthetic-control.html#ensemble-methods",
     "href": "slides/lec_conditionalDID-and-synthetic-control.html#ensemble-methods",
     "title": "Synthetic Control Methods",
     "section": "Ensemble Methods",
-    "text": "Ensemble Methods\n\n\n\n\n\n\n\n\nBack to Website"
+    "text": "Ensemble Methods\n\n\n\n\n\n\n\n\n\nBack to Website"
   },
   {
     "objectID": "slides/lec_introduction.html#welcome-to-hpol8539",

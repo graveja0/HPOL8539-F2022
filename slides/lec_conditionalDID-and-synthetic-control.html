@@ -332,20 +332,41 @@
 <div class="cell">
 
 </div>
+</section>
+<section id="motivation-1" class="slide level2">
+<h2>Motivation</h2>
+<div>
+<ul>
+<li class="fragment">Hypothetical gun law passed in a single state (Pennsylvania) in 1989.</li>
+<li class="fragment">The plot shows the total firearm death rate, by year and state</li>
+<li class="fragment">I have imposed a (simulated) immediately-acting treatment effect (<span class="math inline">\(\tau = -3\)</span>).</li>
+</ul>
+</div>
+<div class="footer">
+<p>Data drawn from <a href="https://www.rand.org/pubs/research_reports/RR2685.html">Schell et al.</a> “Evaluating Methods to Estimate the Effect of State Laws on Firearm Deaths A Simulation Study”</p>
+</div>
+</section>
+<section id="firearm-death-rate-by-state-and-year" class="slide level2">
+<h2>Firearm Death Rate, by State and Year</h2>
 <div class="columns">
 <div class="column">
-<ul>
-<li>Hypothetical gun law passed in a single state.</li>
-<li>The plot shows the total firearm death rate, by year and state</li>
-<li>I have imposed a (simulated) treatment effect (<span class="math inline">\(\tau = -2\)</span>) that gradually manifests over 5 years.</li>
-</ul>
+<div class="cell fig-cap-location-top" data-layout-align="center">
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-2-1.png" width="672"></p>
+<p></p><figcaption>With Treatment</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
 </div><div class="column">
 <div class="cell fig-cap-location-top" data-layout-align="center">
 <div class="cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-2-1.png" width="960"></p>
-<p></p><figcaption>Total Firearm Death Rate, by Year and State</figcaption><p></p>
+<p><img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-3-1.png" width="672"></p>
+<p></p><figcaption>Without Treatment (True Counterfactual)</figcaption><p></p>
 </figure>
 </div>
 </div>
@@ -415,21 +436,25 @@
 </section>
 <section id="a-generalized-framework" class="slide level2">
 <h2>A Generalized Framework</h2>
+<div>
 <ul>
-<li><p><span class="math inline">\(N + 1\)</span> units observed for <span class="math inline">\(T\)</span> periods, with a subset of treated units (for simplicity - unit 0) treated from <span class="math inline">\(T0\)</span> onwards.</p></li>
-<li><p>Time-varying treatment indicator: <span class="math inline">\(W_{i,t}\)</span></p></li>
-<li><p>Potential outcomes for unit <span class="math inline">\(0\)</span> define the treatment effect: <span class="math inline">\(\tau_{0,t} := Y_{0,t}(1) − Y_{0,t}(0)\)</span> for <span class="math inline">\(t = T0 + 1, . . . , T\)</span></p></li>
+<li class="fragment"><p><span class="math inline">\(N + 1\)</span> units observed for <span class="math inline">\(T\)</span> periods, with a subset of treated units (for simplicity - unit 0) treated from <span class="math inline">\(T0\)</span> onwards.</p></li>
+<li class="fragment"><p>Time-varying treatment indicator: <span class="math inline">\(W_{i,t}\)</span></p></li>
+<li class="fragment"><p>Potential outcomes for unit <span class="math inline">\(0\)</span> define the treatment effect: <span class="math inline">\(\tau_{0,t} := Y_{0,t}(1) − Y_{0,t}(0)\)</span> for <span class="math inline">\(t = T0 + 1, . . . , T\)</span></p></li>
 </ul>
+</div>
 <div class="footer">
 <p>Source: Doudchenko and Imbens (2016) and <a href="https://apoorvalal.github.io/presentations/pdf/ImbensDoudchenko.pdf">Apoorva Lal</a></p>
 </div>
 </section>
 <section id="a-generalized-framework-1" class="slide level2">
 <h2>A Generalized Framework</h2>
+<div>
 <ul>
-<li><p>Observed outcome: <span class="math inline">\(Y^{obs}_{i,t} = Y_{i,t}(W_{i,t})\)</span></p></li>
-<li><p>Time-invariant characteristics <span class="math inline">\(X_i := (X_{i,1}, . . . , X_{i,M} )^T\)</span> for each unit, which may include lagged outcomes Y^{obs}_{i,t} for <span class="math inline">\(t ≤ T0\)</span>.</p></li>
+<li class="fragment"><p>Observed outcome: <span class="math inline">\(Y^{obs}_{i,t} = Y_{i,t}(W_{i,t})\)</span></p></li>
+<li class="fragment"><p>Time-invariant characteristics <span class="math inline">\(X_i := (X_{i,1}, . . . , X_{i,M} )^T\)</span> for each unit, which may include lagged outcomes Y^{obs}_{i,t} for <span class="math inline">\(t ≤ T0\)</span>.</p></li>
 </ul>
+</div>
 <div class="footer">
 <p>Source: Doudchenko and Imbens (2016) and <a href="https://apoorvalal.github.io/presentations/pdf/ImbensDoudchenko.pdf">Apoorva Lal</a></p>
 </div>
@@ -487,9 +512,8 @@
    <th style="text-align:right;"> levels_coding </th>
    <th style="text-align:right;"> ch_levels_coding </th>
    <th style="text-align:right;"> cr_adj </th>
-   <th style="text-align:right;"> deaths_adj </th>
+   <th style="text-align:right;"> cr_adj_lag1 </th>
    <th style="text-align:right;"> lag1 </th>
-   <th style="text-align:right;"> log_y_adj </th>
   </tr>
  </thead>
 <tbody>
@@ -539,9 +563,8 @@
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 22.10 </td>
-   <td style="text-align:right;"> 856 </td>
    <td style="text-align:right;"> NA </td>
-   <td style="text-align:right;"> 3.10 </td>
+   <td style="text-align:right;"> NA </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Alabama </td>
@@ -589,9 +612,8 @@
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 24.06 </td>
-   <td style="text-align:right;"> 938 </td>
    <td style="text-align:right;"> 22.10 </td>
-   <td style="text-align:right;"> 3.18 </td>
+   <td style="text-align:right;"> 22.10 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Alabama </td>
@@ -639,9 +661,8 @@
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 21.02 </td>
-   <td style="text-align:right;"> 824 </td>
    <td style="text-align:right;"> 24.06 </td>
-   <td style="text-align:right;"> 3.05 </td>
+   <td style="text-align:right;"> 24.06 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Alabama </td>
@@ -689,9 +710,8 @@
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 20.89 </td>
-   <td style="text-align:right;"> 820 </td>
    <td style="text-align:right;"> 21.02 </td>
-   <td style="text-align:right;"> 3.04 </td>
+   <td style="text-align:right;"> 21.02 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Alabama </td>
@@ -739,9 +759,8 @@
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 18.05 </td>
-   <td style="text-align:right;"> 710 </td>
    <td style="text-align:right;"> 20.89 </td>
-   <td style="text-align:right;"> 2.89 </td>
+   <td style="text-align:right;"> 20.89 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Alabama </td>
@@ -789,9 +808,8 @@
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 0 </td>
    <td style="text-align:right;"> 18.98 </td>
-   <td style="text-align:right;"> 750 </td>
    <td style="text-align:right;"> 18.05 </td>
-   <td style="text-align:right;"> 2.94 </td>
+   <td style="text-align:right;"> 18.05 </td>
   </tr>
 </tbody>
 </table>
@@ -819,28 +837,34 @@
 </section>
 <section id="a-menu-of-constraints" class="slide level2">
 <h2>A Menu of Constraints</h2>
+<div>
 <ol type="1">
-<li><strong>No Intercept</strong>: <span class="math inline">\(\mu = 0\)</span></li>
-<li><strong>Adding Up</strong>: <span class="math inline">\(\sum_{i=1}^{n} \omega_i = 1\)</span></li>
-<li><strong>Non-negativity</strong>: <span class="math inline">\(\omega_i &gt;= 0\)</span> for all <span class="math inline">\(i\)</span></li>
-<li><strong>Constant weights</strong>: <span class="math inline">\(\omega_i = \bar \omega\)</span> for all <span class="math inline">\(i\)</span>.</li>
+<li class="fragment"><strong>No Intercept</strong>: <span class="math inline">\(\mu = 0\)</span></li>
+<li class="fragment"><strong>Adding Up</strong>: <span class="math inline">\(\sum_{i=1}^{n} \omega_i = 1\)</span></li>
+<li class="fragment"><strong>Non-negativity</strong>: <span class="math inline">\(\omega_i &gt;= 0\)</span> for all <span class="math inline">\(i\)</span></li>
+<li class="fragment"><strong>Constant weights</strong>: <span class="math inline">\(\omega_i = \bar \omega\)</span> for all <span class="math inline">\(i\)</span>.</li>
 </ol>
+</div>
 </section>
 <section id="no-intercept-mu-0" class="slide level2">
 <h2>1. <strong>No Intercept</strong>: <span class="math inline">\(\mu = 0\)</span></h2>
+<div>
 <ul>
-<li>Rules out the possibility that the outcome for the treated unit is systematically different, by a constant amount, than the other units.</li>
-<li>A hallmark of difference-in-differences is that the outcome <em>levels</em> can vary by a fixed difference over time as long as parallel trends holds.</li>
+<li class="fragment">Rules out the possibility that the outcome for the treated unit is systematically different, by a constant amount, than the other units.</li>
+<li class="fragment">A hallmark of difference-in-differences is that the outcome <em>levels</em> can vary by a fixed difference over time as long as parallel trends holds.</li>
 </ul>
+</div>
 </section>
 <section id="adding-up-sum_i1n-omega_i-1" class="slide level2">
 <h2>2. <strong>Adding Up</strong>: <span class="math inline">\(\sum_{i=1}^{n} \omega_i = 1\)</span></h2>
+<div>
 <ul>
-<li>Requires that the weights sum up to one.</li>
-<li>Common in matching strategies.</li>
-<li>Implausible if the treated unit is an outlier relative to other units.</li>
-<li>Combined with constraint #1, it may be difficult to obtain good predictions for extreme units.</li>
+<li class="fragment">Requires that the weights sum up to one.</li>
+<li class="fragment">Common in matching strategies.</li>
+<li class="fragment">Implausible if the treated unit is an outlier relative to other units.</li>
+<li class="fragment">Combined with constraint #1, it may be difficult to obtain good predictions for extreme units.</li>
 </ul>
+</div>
 </section>
 <section id="adding-up-sum_i1n-omega_i-1-1" class="slide level2">
 <h2>2. <strong>Adding Up</strong>: <span class="math inline">\(\sum_{i=1}^{n} \omega_i = 1\)</span></h2>
@@ -848,19 +872,23 @@
 <img data-src="images/paste-FFB57C39.png" class="r-stretch quarto-figure-center"><p class="caption">Hollingsworth and Wing (2022)</p></section>
 <section id="non-negativity-omega_i-0-for-all-i" class="slide level2">
 <h2>3. <strong>Non-negativity</strong>: <span class="math inline">\(\omega_i &gt;= 0\)</span> for all <span class="math inline">\(i\)</span></h2>
+<div>
 <ul>
-<li>Is an important restriction on standard synthetic control methods.</li>
-<li>Helps ensure that there is a unique solution for control unit weights.</li>
-<li>Often ensures that the weights are non-zero only for a small subset of the control units, making the weights easier to interpret.</li>
+<li class="fragment">Is an important restriction on standard synthetic control methods.</li>
+<li class="fragment">Helps ensure that there is a unique solution for control unit weights.</li>
+<li class="fragment">Often ensures that the weights are non-zero only for a small subset of the control units, making the weights easier to interpret.</li>
 </ul>
+</div>
 </section>
 <section id="constant-weights-omega_i-bar-omega-for-all-i." class="slide level2">
 <h2>4. <strong>Constant weights</strong>: <span class="math inline">\(\omega_i = \bar \omega\)</span> for all <span class="math inline">\(i\)</span>.</h2>
+<div>
 <ul>
-<li>Strengthens the nonnegativity condition by making the assumption that all control units are equally valid.</li>
-<li>Common in DID (we’ll see this in a minute).</li>
-<li>In conjuction to constraint 2 (Adding Up), implies that weights are all equal to 1/N, where N is number of control units.</li>
+<li class="fragment">Strengthens the nonnegativity condition by making the assumption that all control units are equally valid.</li>
+<li class="fragment">Common in DID (we’ll see this in a minute).</li>
+<li class="fragment">In conjuction to constraint 2 (Adding Up), implies that weights are all equal to 1/N, where N is number of control units.</li>
 </ul>
+</div>
 </section>
 <section>
 <section id="difference-in-differences-did" class="title-slide slide level1 center">
@@ -879,15 +907,15 @@
 <section id="difference-in-differences-1" class="slide level2">
 <h2>Difference-in-Differences</h2>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-4-1.png" width="960" class="r-stretch quarto-figure-center"><p class="caption">Total Firearm Death Rate, by Year and State</p></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-5-1.png" width="960" class="r-stretch quarto-figure-center"><p class="caption">Total Firearm Death Rate, by Year and State</p></section>
 <section id="difference-in-differences-estimate" class="slide level2">
 <h2>Difference-in-Differences Estimate</h2>
 <div class="cell">
 
 </div>
-<p><span class="math inline">\(\hat \tau\)</span> = 1.248</p>
+<p><span class="math inline">\(\hat \tau\)</span> = -0.261</p>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-6-1.png" width="960" class="r-stretch"></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-7-1.png" width="960" class="r-stretch"></section>
 <section id="did-estimates-by-state" class="slide level2 smaller">
 <h2>DID Estimates by State</h2>
 <div class="columns">
@@ -901,7 +929,7 @@
 </div><div class="column">
 <div class="cell">
 <div class="cell-output-display">
-<p><img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-7-1.png" width="960"></p>
+<p><img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-8-1.png" width="960"></p>
 </div>
 </div>
 </div>
@@ -941,13 +969,13 @@
 <div class="cell">
 
 </div>
-<p><span class="math inline">\(\hat \tau\)</span> = -0.294</p>
+<p><span class="math inline">\(\hat \tau\)</span> = -1.201</p>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-9-1.png" width="960" class="r-stretch"></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-10-1.png" width="960" class="r-stretch"></section>
 <section id="weights-synthetic-control" class="slide level2">
 <h2>Weights: Synthetic Control</h2>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-10-1.png" width="960" class="r-stretch"></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-11-1.png" width="960" class="r-stretch"></section>
 <section id="synthetic-control-from-100000-feet" class="slide level2">
 <h2>Synthetic Control From 100,000 feet</h2>
 <ul>
@@ -970,12 +998,12 @@
 <h2>Abadie, Diamond and Heinmueller (2010)</h2>
 <p>Match on pre-intervention outcome only:</p>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-13-1.png" width="960" class="r-stretch"></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-14-1.png" width="960" class="r-stretch"></section>
 <section id="abadie-diamond-and-heinmueller-2010-1" class="slide level2">
 <h2>Abadie, Diamond and Heinmueller (2010)</h2>
 <p>Include state-level predictors:</p>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-14-1.png" width="960" class="r-stretch"></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-15-1.png" width="960" class="r-stretch"></section>
 <section id="elastic-net-synthetic-control" class="slide level2">
 <h2>Elastic Net Synthetic Control</h2>
 <p>Doudchenko and Imbens (2017)</p>
@@ -983,7 +1011,7 @@
 
 </div>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-16-1.png" width="960" class="r-stretch"></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-17-1.png" width="960" class="r-stretch"></section>
 <section id="augmented-synthetic-control" class="slide level2">
 <h2>Augmented Synthetic Control</h2>
 <p>Ben-Michael, Feller and Rothstein (2021)</p>
@@ -991,12 +1019,12 @@
 
 </div>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-18-1.png" width="960" class="r-stretch"></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-19-1.png" width="960" class="r-stretch"></section>
 <section id="augmented-synthetic-control-1" class="slide level2">
 <h2>Augmented Synthetic Control</h2>
 <p>Using covariates to improve synthetic match</p>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-19-1.png" width="960" class="r-stretch"></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-20-1.png" width="960" class="r-stretch"></section>
 
 <section id="gsynth-1" class="slide level2">
 <h2>GSYNTH</h2>
@@ -1009,7 +1037,7 @@
 <section id="gsynth-2" class="slide level2">
 <h2>GSYNTH</h2>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-21-1.png" width="960" class="r-stretch"></section></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-22-1.png" width="960" class="r-stretch"></section></section>
 <section>
 <section id="inference" class="title-slide slide level1 center">
 <h1>Inference</h1>
@@ -1026,13 +1054,15 @@
 </section>
 <section id="inference-for-synthetic-control-1" class="slide level2">
 <h2>Inference for Synthetic Control</h2>
+<div>
 <ul>
-<li>A standard approach: placebo treatments.</li>
-<li>Apply the synthetic control method to each donor unit, and collect the treatment effect estimates.</li>
-<li>Idea: the distribution of placebo effects give you a sense of what could happen under the null of no treatment effect.</li>
-<li>Can construct a p-value by asking where your estimate lies within this distribution.</li>
-<li>Analogous to randomization inference from last time.</li>
+<li class="fragment">A standard approach: placebo treatments.</li>
+<li class="fragment">Apply the synthetic control method to each donor unit, and collect the treatment effect estimates.</li>
+<li class="fragment">Idea: the distribution of placebo effects give you a sense of what could happen under the null of no treatment effect.</li>
+<li class="fragment">Can construct a p-value by asking where your estimate lies within this distribution.</li>
+<li class="fragment">Analogous to randomization inference from last time.</li>
 </ul>
+</div>
 </section></section>
 <section>
 <section id="extensions-of-synthetic-control" class="title-slide slide level1 center">
@@ -1048,34 +1078,37 @@
 </section>
 <section id="synthetic-difference-in-differences" class="slide level2">
 <h2>Synthetic Difference-in-Differences</h2>
+<div>
 <ul>
-<li>Arkhangelsky et al.&nbsp;(2019)</li>
-<li>Synthetic DID approach relaxes the parallel trends assumption.</li>
-<li>Key difference:
+<li class="fragment">Arkhangelsky et al.&nbsp;(2019)</li>
+<li class="fragment">Synthetic DID approach relaxes the parallel trends assumption.</li>
+<li class="fragment">Key difference:
 <ol type="1">
-<li>Pre-intervention trends do not have to match exactly (i.e., 1. <span class="math inline">\(\mu = 0\)</span> does not have to hold)</li>
-<li>Weighting is not equivalent across all time periods.</li>
+<li class="fragment">Pre-intervention trends do not have to match exactly (i.e., 1. <span class="math inline">\(\mu = 0\)</span> does not have to hold)</li>
+<li class="fragment">Weighting is not equivalent across all time periods.</li>
 </ol></li>
 </ul>
+</div>
 </section>
 <section id="synthetic-difference-in-differences-1" class="slide level2">
 <h2>Synthetic Difference-in-Differences</h2>
 <div class="cell">
 
 </div>
-<p><span class="math inline">\(\hat \tau\)</span> = -0.572</p>
+<p><span class="math inline">\(\hat \tau\)</span> = -1.783</p>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-23-1.png" width="960" class="r-stretch"></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-24-1.png" width="960" class="r-stretch"></section>
 <section id="section-1" class="slide level2">
 <h2></h2>
 <div class="cell">
 
 </div>
 
-<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-25-1.png" width="960" class="r-stretch"></section>
+<img data-src="lec_conditionalDID-and-synthetic-control_files/figure-revealjs/unnamed-chunk-26-1.png" width="960" class="r-stretch"></section>
 <section id="ensemble-methods" class="slide level2">
 <h2>Ensemble Methods</h2>
-<div class="cell">
+
+<img data-src="images/paste-C2A8BA9F.png" class="r-stretch"><div class="cell">
 
 </div>
 <div class="cell">

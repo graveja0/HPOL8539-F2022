@@ -10,7 +10,7 @@
 <atom:link href="https://graveja0.github.io/HPOL8539-F2022/blog/index.xml" rel="self" type="application/rss+xml"/>
 <description></description>
 <generator>quarto-1.0.36</generator>
-<lastBuildDate>Wed, 02 Nov 2022 01:57:09 GMT</lastBuildDate>
+<lastBuildDate>Wed, 02 Nov 2022 11:13:46 GMT</lastBuildDate>
 <item>
   <title>A Practical Guide to Extended Difference-in-Differences</title>
   <link>https://graveja0.github.io/HPOL8539-F2022/blog/posts/extended-difference-in-differences.html</link>
@@ -1687,7 +1687,7 @@
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/extended-difference-in-differences.html</guid>
-  <pubDate>Wed, 02 Nov 2022 01:57:09 GMT</pubDate>
+  <pubDate>Wed, 02 Nov 2022 11:13:46 GMT</pubDate>
 </item>
 <item>
   <title>Fourteen Difference-in-Difference Estimators Walk Into a Bar …</title>
@@ -1765,7 +1765,7 @@
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/a-comparison-of-difference-in-difference-estimators.html</guid>
-  <pubDate>Wed, 02 Nov 2022 01:57:09 GMT</pubDate>
+  <pubDate>Wed, 02 Nov 2022 11:13:46 GMT</pubDate>
 </item>
 <item>
   <title>Quasi-Demeaning: The Relationship Between Fixed and Random Effects</title>
@@ -2216,7 +2216,7 @@ F-statistic:   130 on 1 and 3998 DF,  p-value: &lt; 2.2e-16</code></pre>
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/quasi-demeaning.html</guid>
-  <pubDate>Wed, 02 Nov 2022 01:57:09 GMT</pubDate>
+  <pubDate>Wed, 02 Nov 2022 11:13:46 GMT</pubDate>
 </item>
 </channel>
 </rss>
