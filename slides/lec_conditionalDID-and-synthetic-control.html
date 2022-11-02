@@ -337,7 +337,7 @@
 <h2>Motivation</h2>
 <div>
 <ul>
-<li class="fragment">Hypothetical gun law passed in a single state (Pennsylvania) in 1989.</li>
+<li class="fragment">Hypothetical gun law passed in a single state (Pennsylvania) in 2002.</li>
 <li class="fragment">The plot shows the total firearm death rate, by year and state</li>
 <li class="fragment">I have imposed a (simulated) immediately-acting treatment effect (<span class="math inline">\(\tau = -3\)</span>).</li>
 </ul>
@@ -952,17 +952,18 @@
 <section id="synthetic-controls" class="slide level2">
 <h2>Synthetic Controls</h2>
 <ul>
-<li><p>Motivation: limit extrapolation bias that can occur when units with different pre-treatment characteristics are combined using a traditional adjustment, such as a linear regression (Kellogg et al.&nbsp;2021).</p></li>
-<li><p>Part of a suite of methods that use pre-treatment characteristics to “weight”</p></li>
+<li>Motivation: limit extrapolation bias that can occur when units with different pre-treatment characteristics are combined using a traditional adjustment, such as a linear regression (Kellogg et al.&nbsp;2021).</li>
 </ul>
 </section>
 <section id="synthetic-control-2" class="slide level2">
 <h2>Synthetic Control</h2>
+<div>
 <ul>
-<li>Imposing these constraints allows you to create a counterfactual whose outcome trajectory is within the support (“convex hull”) of donor units (i.e., other states)</li>
-<li>The counterfactual treated unit is simply a weighted sum of a subset of donors, with weights calculated to minimize the pre-intervention “distance” between the the treated unit and its synthetic counterfactual.</li>
-<li>Can use both lagged outcome and covariates to construct the weights.</li>
+<li class="fragment">Imposing these constraints allows you to create a counterfactual whose outcome trajectory is within the support (“convex hull”) of donor units (i.e., other states)</li>
+<li class="fragment">The counterfactual treated unit is simply a weighted sum of a subset of donors, with weights calculated to minimize the pre-intervention “distance” between the the treated unit and its synthetic counterfactual.</li>
+<li class="fragment">Can use both lagged outcome and covariates to construct the weights.</li>
 </ul>
+</div>
 </section>
 <section id="synthetic-control-estimate" class="slide level2">
 <h2>Synthetic Control Estimate</h2>
