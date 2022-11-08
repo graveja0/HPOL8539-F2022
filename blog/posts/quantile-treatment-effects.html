@@ -1,0 +1,2992 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.0.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Advanced Program and Policy Evaluation">
+
+<title>Advanced Program and Policy Evaluation (HPOL8539) - Quantile Treatment Effects</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit"
+  }
+}</script>
+
+<script src="../../site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="../../site_libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-sidebar floating slimcontent">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+    <div class="container-fluid d-flex justify-content-between">
+      <h1 class="quarto-secondary-nav-title">Quantile Treatment Effects</h1>
+      <button type="button" class="quarto-btn-toggle btn" aria-label="Show secondary navigation">
+        <i class="bi bi-chevron-right"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../../">Advanced Program and Policy Evaluation (HPOL8539)</a> 
+    </div>
+      </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../index.html" class="sidebar-item-text sidebar-link">Advanced Program and Policy Evaluation</a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">Slides</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/lec_introduction.html" class="sidebar-item-text sidebar-link">Course Introduction</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/peer-review-assignment.html" class="sidebar-item-text sidebar-link">Peer Review Assignment</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/difference-in-differences.html" class="sidebar-item-text sidebar-link">Extending Difference-in-Differences</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/next-gen-DID.html" class="sidebar-item-text sidebar-link">NextGen Difference-in-Differences Estimators</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/nonlinear-DID.html" class="sidebar-item-text sidebar-link">Nonlinear Difference-in-Differences</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/lec_inference.html" class="sidebar-item-text sidebar-link">Inference for Policy Evaluation</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../slides/lec_conditionalDID-and-synthetic-control.html" class="sidebar-item-text sidebar-link">Synthetic Control Methods</a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">Case Studies</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://graves-vanderbilt.shinyapps.io/HPOL8539-Simulation/" class="sidebar-item-text sidebar-link">1. Simulation as a Guide for Study Design and Inference</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://graves-vanderbilt.shinyapps.io/HPOL8539-panel-data-1/" class="sidebar-item-text sidebar-link">2. Panel Data Methods I - Fixed, Random and Correlated Random Effects</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://graves-vanderbilt.shinyapps.io/NextGenDID/" class="sidebar-item-text sidebar-link">4. NextGen DID</a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../blog/index.html" class="sidebar-item-text sidebar-link">Blog</a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">Useful Links</a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="false">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://github.com/graveja0/HPOL8539-F2022/raw/main/current-syllabus.pdf" class="sidebar-item-text sidebar-link">Current Syllabus</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://mixtape.scunning.com/" class="sidebar-item-text sidebar-link">Causal Inference - The Mixtape (Cunningham)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://theeffectbook.net/" class="sidebar-item-text sidebar-link">The Effect (Huntington-Klein)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://diff.healthpolicydatascience.org/" class="sidebar-item-text sidebar-link">Comprehensive Discussion of Difference-in-Differences</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://asjadnaqvi.github.io/DiD/" class="sidebar-item-text sidebar-link">Difference-in-Differences Respository (code, packages, etc.)</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://kylebutts.com/did2s/articles/event_study.html" class="sidebar-item-text sidebar-link">Resources on multiple nextGen DID estimators</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://github.com/Mixtape-Sessions" class="sidebar-item-text sidebar-link">Mixtape Sessions</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://stata2r.github.io/" class="sidebar-item-text sidebar-link">Stata2R Translator</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://www.mathematica.org/download-media?MediaItemId=%7B2BB0E26B-F979-469B-9571-C23FF42E80DA%7D" class="sidebar-item-text sidebar-link">Model vs.&nbsp;Desgin-Based Inference</a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="https://ies.ed.gov/ncee/pubs/20174026/pdf/20174026.pdf" class="sidebar-item-text sidebar-link">Comparison of RCTs evaluated under model vs.&nbsp;design-based inference</a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#description-of-data" id="toc-description-of-data" class="nav-link active" data-scroll-target="#description-of-data">Description of Data</a></li>
+  <li><a href="#explore-data" id="toc-explore-data" class="nav-link" data-scroll-target="#explore-data">Explore Data</a>
+  <ul class="collapse">
+  <li><a href="#experimental-data" id="toc-experimental-data" class="nav-link" data-scroll-target="#experimental-data">Experimental Data</a></li>
+  <li><a href="#observational-panel-data-from-the-panel-survey-of-income-dynamics" id="toc-observational-panel-data-from-the-panel-survey-of-income-dynamics" class="nav-link" data-scroll-target="#observational-panel-data-from-the-panel-survey-of-income-dynamics">Observational (Panel) Data from the Panel Survey of Income Dynamics</a></li>
+  </ul></li>
+  <li><a href="#evaluate-the-job-training-program" id="toc-evaluate-the-job-training-program" class="nav-link" data-scroll-target="#evaluate-the-job-training-program">Evaluate the Job Training Program</a>
+  <ul class="collapse">
+  <li><a href="#quantile-treatment-effect-estimation-in-experimental-data" id="toc-quantile-treatment-effect-estimation-in-experimental-data" class="nav-link" data-scroll-target="#quantile-treatment-effect-estimation-in-experimental-data">Quantile Treatment Effect Estimation in Experimental Data</a>
+  <ul class="collapse">
+  <li><a href="#estimating-quantile-treatment-effects" id="toc-estimating-quantile-treatment-effects" class="nav-link" data-scroll-target="#estimating-quantile-treatment-effects">Estimating Quantile Treatment Effects</a></li>
+  </ul></li>
+  <li><a href="#quantile-treatment-effect-estimation-in-observational-data" id="toc-quantile-treatment-effect-estimation-in-observational-data" class="nav-link" data-scroll-target="#quantile-treatment-effect-estimation-in-observational-data">Quantile Treatment Effect Estimation in Observational Data</a>
+  <ul class="collapse">
+  <li><a href="#intuition-for-qdid-and-cic" id="toc-intuition-for-qdid-and-cic" class="nav-link" data-scroll-target="#intuition-for-qdid-and-cic">Intuition for qDID and CiC</a></li>
+  <li><a href="#estimating-qdid-and-cic" id="toc-estimating-qdid-and-cic" class="nav-link" data-scroll-target="#estimating-qdid-and-cic">Estimating qDID and CiC</a></li>
+  </ul></li>
+  </ul></li>
+  </ul>
+</nav>
+    <div class="quarto-margin-footer"><div class="margin-footer-item">
+<p><img src="vu-logo.png" class="img-fluid"></p>
+</div></div></div>
+<!-- main -->
+<main class="content page-columns page-full" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title d-none d-lg-block">Quantile Treatment Effects</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Advanced Program and Policy Evaluation </p>
+          </div>
+  </div>
+    
+    
+  </div>
+  
+
+</header>
+
+<div class="cell">
+
+</div>
+<p>The objective of this workbook is to work through estimation of quantile treatment effects using the Lalonde experimental and observational data.</p>
+<section id="description-of-data" class="level2">
+<h2 class="anchored" data-anchor-id="description-of-data">Description of Data</h2>
+<p>Our example data will be drawn from the infamous Lalonde study:</p>
+<ul>
+<li>Robert Lalonde, “Evaluating the Econometric Evaluations of Training Programs”, American Economic Review, Vol. 76, pp.&nbsp;604-620</li>
+</ul>
+<p>From <a href="https://www.jstor.org/stable/2669919">Dehejia and Wahba (1999)</a>:</p>
+<blockquote class="blockquote">
+<p>Lalonde estimated the impact of the National Supported Work (NSW) Demonstration, a labor training program, on postintervention income levels. He used data from a randomized evaluation of the program and examined the extent to which nonexperimental estimators can replicate the unbiased experimental estimate of the treatment impact when applied to a composite dataset of experimental treatment units and nonexperimental comparison units.</p>
+</blockquote>
+</section>
+<section id="explore-data" class="level1">
+<h1>Explore Data</h1>
+<section id="experimental-data" class="level2">
+<h2 class="anchored" data-anchor-id="experimental-data">Experimental Data</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>lalonde.exp <span class="sc">%&gt;%</span> </span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(treat) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">skim</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<table style="width: auto;" class="table table-condensed">
+<caption>
+Data summary
+</caption>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Name
+</td>
+<td style="text-align:left;">
+Piped data
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of rows
+</td>
+<td style="text-align:left;">
+445
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of columns
+</td>
+<td style="text-align:left;">
+13
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+_______________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Column type frequency:
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+numeric
+</td>
+<td style="text-align:left;">
+12
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+________________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Group variables
+</td>
+<td style="text-align:left;">
+treat
+</td>
+</tr>
+</tbody>
+
+</table>
+<p><strong>Variable type: numeric</strong></p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+treat
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+p0
+</th>
+<th style="text-align:right;">
+p25
+</th>
+<th style="text-align:right;">
+p50
+</th>
+<th style="text-align:right;">
+p75
+</th>
+<th style="text-align:right;">
+p100
+</th>
+<th style="text-align:left;">
+hist
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+age
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+25.05
+</td>
+<td style="text-align:right;">
+7.06
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+19.00
+</td>
+<td style="text-align:right;">
+24.0
+</td>
+<td style="text-align:right;">
+28.00
+</td>
+<td style="text-align:right;">
+55
+</td>
+<td style="text-align:left;">
+▇▅▂▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+age
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+25.82
+</td>
+<td style="text-align:right;">
+7.16
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+20.00
+</td>
+<td style="text-align:right;">
+25.0
+</td>
+<td style="text-align:right;">
+29.00
+</td>
+<td style="text-align:right;">
+48
+</td>
+<td style="text-align:left;">
+▇▇▂▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+education
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+10.09
+</td>
+<td style="text-align:right;">
+1.61
+</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+9.00
+</td>
+<td style="text-align:right;">
+10.0
+</td>
+<td style="text-align:right;">
+11.00
+</td>
+<td style="text-align:right;">
+14
+</td>
+<td style="text-align:left;">
+▁▁▃▇▂
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+education
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+10.35
+</td>
+<td style="text-align:right;">
+2.01
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+9.00
+</td>
+<td style="text-align:right;">
+11.0
+</td>
+<td style="text-align:right;">
+12.00
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:left;">
+▁▂▇▃▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.83
+</td>
+<td style="text-align:right;">
+0.38
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▂▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.84
+</td>
+<td style="text-align:right;">
+0.36
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▂▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hispanic
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.11
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hispanic
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.06
+</td>
+<td style="text-align:right;">
+0.24
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+married
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.15
+</td>
+<td style="text-align:right;">
+0.36
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▇▁▁▁▂
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+married
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.19
+</td>
+<td style="text-align:right;">
+0.39
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▇▁▁▁▂
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nodegree
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.83
+</td>
+<td style="text-align:right;">
+0.37
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▂▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nodegree
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.71
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▃▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+re74
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2107.03
+</td>
+<td style="text-align:right;">
+5687.91
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+139.42
+</td>
+<td style="text-align:right;">
+39571
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+re74
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2095.57
+</td>
+<td style="text-align:right;">
+4886.62
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1291.47
+</td>
+<td style="text-align:right;">
+35040
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+re75
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1266.91
+</td>
+<td style="text-align:right;">
+3102.98
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+650.10
+</td>
+<td style="text-align:right;">
+23032
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+re75
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1532.06
+</td>
+<td style="text-align:right;">
+3219.25
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1817.28
+</td>
+<td style="text-align:right;">
+25142
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+re78
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+4554.80
+</td>
+<td style="text-align:right;">
+5483.84
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+3138.8
+</td>
+<td style="text-align:right;">
+7288.42
+</td>
+<td style="text-align:right;">
+39484
+</td>
+<td style="text-align:left;">
+▇▂▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+re78
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+6349.15
+</td>
+<td style="text-align:right;">
+7867.40
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+485.23
+</td>
+<td style="text-align:right;">
+4232.3
+</td>
+<td style="text-align:right;">
+9643.00
+</td>
+<td style="text-align:right;">
+60308
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+u74
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.75
+</td>
+<td style="text-align:right;">
+0.43
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.75
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▂▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+u74
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.71
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▃▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+u75
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.68
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▃▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+u75
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.60
+</td>
+<td style="text-align:right;">
+0.49
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▅▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+id
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+315.50
+</td>
+<td style="text-align:right;">
+75.20
+</td>
+<td style="text-align:right;">
+186
+</td>
+<td style="text-align:right;">
+250.75
+</td>
+<td style="text-align:right;">
+315.5
+</td>
+<td style="text-align:right;">
+380.25
+</td>
+<td style="text-align:right;">
+445
+</td>
+<td style="text-align:left;">
+▇▇▇▇▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+id
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+93.00
+</td>
+<td style="text-align:right;">
+53.55
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+47.00
+</td>
+<td style="text-align:right;">
+93.0
+</td>
+<td style="text-align:right;">
+139.00
+</td>
+<td style="text-align:right;">
+185
+</td>
+<td style="text-align:left;">
+▇▇▇▇▇
+</td>
+</tr>
+</tbody>
+
+</table>
+</div>
+</div>
+</section>
+<section id="observational-panel-data-from-the-panel-survey-of-income-dynamics" class="level2">
+<h2 class="anchored" data-anchor-id="observational-panel-data-from-the-panel-survey-of-income-dynamics">Observational (Panel) Data from the Panel Survey of Income Dynamics</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>lalonde.psid.panel <span class="sc">%&gt;%</span> </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(treat) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">skim</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<table style="width: auto;" class="table table-condensed">
+<caption>
+Data summary
+</caption>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Name
+</td>
+<td style="text-align:left;">
+Piped data
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of rows
+</td>
+<td style="text-align:left;">
+8025
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Number of columns
+</td>
+<td style="text-align:left;">
+13
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+_______________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Column type frequency:
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+character
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+numeric
+</td>
+<td style="text-align:left;">
+11
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+________________________
+</td>
+<td style="text-align:left;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Group variables
+</td>
+<td style="text-align:left;">
+treat
+</td>
+</tr>
+</tbody>
+
+</table>
+<p><strong>Variable type: character</strong></p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+treat
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+empty
+</th>
+<th style="text-align:right;">
+n_unique
+</th>
+<th style="text-align:right;">
+whitespace
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+uniqueid
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+7470
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+uniqueid
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+555
+</td>
+<td style="text-align:right;">
+0
+</td>
+</tr>
+</tbody>
+
+</table>
+<p><strong>Variable type: numeric</strong></p>
+
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+skim_variable
+</th>
+<th style="text-align:right;">
+treat
+</th>
+<th style="text-align:right;">
+n_missing
+</th>
+<th style="text-align:right;">
+complete_rate
+</th>
+<th style="text-align:right;">
+mean
+</th>
+<th style="text-align:right;">
+sd
+</th>
+<th style="text-align:right;">
+p0
+</th>
+<th style="text-align:right;">
+p25
+</th>
+<th style="text-align:right;">
+p50
+</th>
+<th style="text-align:right;">
+p75
+</th>
+<th style="text-align:right;">
+p100
+</th>
+<th style="text-align:left;">
+hist
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+year
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1975.67
+</td>
+<td style="text-align:right;">
+1.70
+</td>
+<td style="text-align:right;">
+1974
+</td>
+<td style="text-align:right;">
+1974
+</td>
+<td style="text-align:right;">
+1975.0
+</td>
+<td style="text-align:right;">
+1978.0
+</td>
+<td style="text-align:right;">
+1978
+</td>
+<td style="text-align:left;">
+▇▇▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+year
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1975.67
+</td>
+<td style="text-align:right;">
+1.70
+</td>
+<td style="text-align:right;">
+1974
+</td>
+<td style="text-align:right;">
+1974
+</td>
+<td style="text-align:right;">
+1975.0
+</td>
+<td style="text-align:right;">
+1978.0
+</td>
+<td style="text-align:right;">
+1978
+</td>
+<td style="text-align:left;">
+▇▇▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+id
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+2035.05
+</td>
+<td style="text-align:right;">
+2876.75
+</td>
+<td style="text-align:right;">
+186
+</td>
+<td style="text-align:right;">
+808
+</td>
+<td style="text-align:right;">
+1430.5
+</td>
+<td style="text-align:right;">
+2053.0
+</td>
+<td style="text-align:right;">
+23100
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+id
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+93.00
+</td>
+<td style="text-align:right;">
+53.45
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+47
+</td>
+<td style="text-align:right;">
+93.0
+</td>
+<td style="text-align:right;">
+139.0
+</td>
+<td style="text-align:right;">
+185
+</td>
+<td style="text-align:left;">
+▇▇▇▇▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+re
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+20015.33
+</td>
+<td style="text-align:right;">
+14260.04
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+10742
+</td>
+<td style="text-align:right;">
+19210.5
+</td>
+<td style="text-align:right;">
+27337.9
+</td>
+<td style="text-align:right;">
+156653
+</td>
+<td style="text-align:left;">
+▇▂▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+re
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+3325.59
+</td>
+<td style="text-align:right;">
+6046.71
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+4574.5
+</td>
+<td style="text-align:right;">
+60308
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+age
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+34.85
+</td>
+<td style="text-align:right;">
+10.44
+</td>
+<td style="text-align:right;">
+18
+</td>
+<td style="text-align:right;">
+26
+</td>
+<td style="text-align:right;">
+33.0
+</td>
+<td style="text-align:right;">
+44.0
+</td>
+<td style="text-align:right;">
+55
+</td>
+<td style="text-align:left;">
+▇▇▆▅▅
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+age
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+25.82
+</td>
+<td style="text-align:right;">
+7.14
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:right;">
+20
+</td>
+<td style="text-align:right;">
+25.0
+</td>
+<td style="text-align:right;">
+29.0
+</td>
+<td style="text-align:right;">
+48
+</td>
+<td style="text-align:left;">
+▇▇▂▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+education
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+12.12
+</td>
+<td style="text-align:right;">
+3.08
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:right;">
+12.0
+</td>
+<td style="text-align:right;">
+14.0
+</td>
+<td style="text-align:right;">
+17
+</td>
+<td style="text-align:left;">
+▁▁▃▇▅
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+education
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+10.35
+</td>
+<td style="text-align:right;">
+2.01
+</td>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+11.0
+</td>
+<td style="text-align:right;">
+12.0
+</td>
+<td style="text-align:right;">
+16
+</td>
+<td style="text-align:left;">
+▁▂▇▃▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.25
+</td>
+<td style="text-align:right;">
+0.43
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▇▁▁▁▃
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+black
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.84
+</td>
+<td style="text-align:right;">
+0.36
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▂▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hispanic
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+<td style="text-align:right;">
+0.18
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+hispanic
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.06
+</td>
+<td style="text-align:right;">
+0.24
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+married
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.87
+</td>
+<td style="text-align:right;">
+0.34
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▁▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+married
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.19
+</td>
+<td style="text-align:right;">
+0.39
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▇▁▁▁▂
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nodegree
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.31
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▇▁▁▁▃
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+nodegree
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.71
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▃▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+u74
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.09
+</td>
+<td style="text-align:right;">
+0.28
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+u74
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.71
+</td>
+<td style="text-align:right;">
+0.46
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▃▁▁▁▇
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+u75
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.10
+</td>
+<td style="text-align:right;">
+0.30
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▇▁▁▁▁
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+u75
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+0.60
+</td>
+<td style="text-align:right;">
+0.49
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1.0
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+▅▁▁▁▇
+</td>
+</tr>
+</tbody>
+
+</table>
+</div>
+</div>
+<p>A key takeaway is that the experimental data is reasonably balanced across treated and control units (not surprisingly) but the observational data is not.</p>
+</section>
+</section>
+<section id="evaluate-the-job-training-program" class="level1 page-columns page-full">
+<h1>Evaluate the Job Training Program</h1>
+<section id="quantile-treatment-effect-estimation-in-experimental-data" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="quantile-treatment-effect-estimation-in-experimental-data">Quantile Treatment Effect Estimation in Experimental Data</h2>
+<p>Our first exercise will evaluate the effect of the training program using the experimental data. Because we have a randomized experiment, we can simply compare the treated and untreated outcomes in the post-treatment period.</p>
+<p>Let’s first take a look at the distribution of outcomes by group:</p>
+<div class="column-body-outset">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-histogram-exp" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="quantile-treatment-effects_files/figure-html/fig-histogram-exp-1.png" class="img-fluid figure-img" width="960"></p>
+<p></p><figcaption class="figure-caption">Figure 1: Histogram of Earnings Outcome in Experimental Data, by Treatment Status and Year</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>We next take a difference in means to obtain an estimate of the average treatment effect on the treated:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>lalonde.exp <span class="sc">%&gt;%</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(treat) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="at">mean_outcome =</span> <span class="fu">mean</span>(re78)) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">att =</span> mean_outcome <span class="sc">-</span> <span class="fu">lag</span>(mean_outcome)) <span class="sc">%&gt;%</span> </span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(<span class="at">digits =</span> <span class="dv">2</span>) <span class="sc">%&gt;%</span> <span class="fu">kable_styling</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:right;"> treat </th>
+   <th style="text-align:right;"> mean_outcome </th>
+   <th style="text-align:right;"> att </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:right;"> 0 </td>
+   <td style="text-align:right;"> 4554.8 </td>
+   <td style="text-align:right;"> NA </td>
+  </tr>
+  <tr>
+   <td style="text-align:right;"> 1 </td>
+   <td style="text-align:right;"> 6349.1 </td>
+   <td style="text-align:right;"> 1794.3 </td>
+  </tr>
+</tbody>
+</table>
+
+</div>
+</div>
+<p>Suppose we wanted to estimate treatment effects at different quantiles of the outcome distribution. To get a sense of where these effects may occur, we can plot the <strong>empirical cumulative distribution function (eCDF)</strong> for each group:</p>
+<div class="column-body-outset">
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-cdf-exp" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="quantile-treatment-effects_files/figure-html/fig-cdf-exp-1.png" class="img-fluid figure-img" width="960"></p>
+<p></p><figcaption class="figure-caption">Figure 2: Empirical CDF of Outcome in Experimental Data, by Treatment Status and Year</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>We see here that the two distributions have separated a bit, though there are regions where they essentially overlap. Just shy of the 25th percentile, for example, the two distributions overlap at around $0 in income; there doesn’t appear to be any change in earnings for treated individuals within the bottom quarter of the income distribution.</p>
+<section id="estimating-quantile-treatment-effects" class="level3 page-columns page-full">
+<h3 class="anchored" data-anchor-id="estimating-quantile-treatment-effects">Estimating Quantile Treatment Effects</h3>
+<p>Suppose we wanted to estimate the difference at some quantile of interest (e.g., the 25th percentile or the 75th percentile). How would we go about doing this? Essentially, for a selected quantile (e.g., 75th percentile), we need to measure the horizontal distance between the two curves in <a href="#fig-cdf-exp">Figure&nbsp;2</a>.</p>
+<p>To build up an estimator that we can apply in our data, we first need to introduce some notation.</p>
+<p>Define <span class="math inline">\(F_{Y(W)wt}(y)\)</span> as the potential outcome distribution function for an individual receiving treatment <span class="math inline">\(W \in 0,1\)</span>, and who is observed to be in treatment group <span class="math inline">\(w\)</span> at time <span class="math inline">\(t\)</span>.</p>
+<p>For example:</p>
+<ul>
+<li><span class="math inline">\(F_{Y(1)11}(y)\)</span> is the distribution function for the outcome distribution under treatment for treated individuals in the post-treatment period.</li>
+<li><span class="math inline">\(F_{Y(0)01}(y)\)</span> is the distribution function for the outcome distribution under non-treatment for non-treated individuals in the post-treatment period.</li>
+</ul>
+<p>We can supply each of these distribution functions a value of the outcome <span class="math inline">\(y\)</span>, and it will tell us at what quantile <span class="math inline">\(\tau\)</span> in the distribution that value of <span class="math inline">\(y\)</span> maps to. For example, plugging in a value of $2,000 might tell us that this value is at the 50th percentile (median) of a given outcome distribution.</p>
+<p>Stepping back from the notation a bit, note that these two functions are essentially what we already plotted in <a href="#fig-cdf-exp">Figure&nbsp;2</a> above. How do we calculate these functions in R?</p>
+<p>Fortunately, base R has a defined function (<code>ecdf()</code>) that allows us to do this easily. Let’s define empirical distribution functions for the treated and untreated groups in the experimental Lalonde data:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>y11 <span class="ot">&lt;-</span> lalonde.exp <span class="sc">%&gt;%</span> <span class="fu">filter</span>(treat<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(re78)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>y01 <span class="ot">&lt;-</span> lalonde.exp <span class="sc">%&gt;%</span> <span class="fu">filter</span>(treat<span class="sc">==</span><span class="dv">0</span>) <span class="sc">%&gt;%</span> <span class="fu">pull</span>(re78)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>eF11 <span class="ot">&lt;-</span> <span class="fu">ecdf</span>(y11)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>eF01 <span class="ot">&lt;-</span> <span class="fu">ecdf</span>(y01)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>             </span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">eF11</span>(<span class="dv">2000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.38919</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">eF01</span>(<span class="dv">2000</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.45</code></pre>
+</div>
+</div>
+<p>We see in the calculations above that earnings of $2,000 would place you at the 39th percentile of the treated group’s post-intervention outcome distribution, and at the 45th percentile of the untreated groups distribution.</p>
+<p>We next need to go one step further, however, and define the <em>inverse</em> of the above. That is, we need a function that, provided a quantile value <span class="math inline">\(\tau\)</span>, returns the outcome value that maps to that quantile in the distribution. This is fundamentally what we’ll be working with to estimate treatment effects because we want to know what the effect of the program is at the 75th percentile, not for someone with $2,000 in earnings.</p>
+<p>The concept described above is known as the <strong>inverse distribution function</strong>, and in our notation will be defined as <span class="math inline">\(F^{-1}_{Y(W)wt}(\tau)\)</span>. That is, we supply this function with a quantile <span class="math inline">\(\tau\)</span>, and it returns the value associated with the outcome distribution at that particular quantile.</p>
+<p>From a practical sense, calculating the inverse CDF in R is straightforward, however there is not a base function like <code>ecdf()</code> we can draw from. Fortunately, the package <code>edfun</code> provides us with an easy way to calculate it.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>invF11 <span class="ot">&lt;-</span> edfun<span class="sc">::</span><span class="fu">edfun</span>(y11)<span class="sc">$</span>qfun</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>invF01 <span class="ot">&lt;-</span> edfun<span class="sc">::</span><span class="fu">edfun</span>(y01)<span class="sc">$</span>qfun</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="fu">invF11</span>(<span class="fl">0.75</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9631.9</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">invF01</span>(<span class="fl">0.75</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 7284.4</code></pre>
+</div>
+</div>
+<p>In the calculated values above, an earnings value of 9632 would place you at the 75th percentile of the treated group’s post-intervention outcome distribution. Similarly, an earnings value of 7284 would place you at the 75th percentile of the untreated group’s post-intervention outcome distribution.</p>
+<p>We’re now ready to estimate quantile treatment effects. Formally, the <strong>quantile treatment effect on the treated (QTT)</strong> at <span class="math inline">\(\tau\)</span> is obtained as the difference in the inverse distribution function for the treated group in the post period under treatment and under non-treatment:</p>
+<p><span class="math display">\[
+\Delta_{\tau} = F^{-1}_{Y(1)11}(\tau) - F^{-1}_{Y(0)11}(\tau)
+\]</span></p>
+<p>However, as usual the second quantity is an unobserved counterfactual. Given random assignment, we can estimate QTTs using the inverse distribution function from the untreated group.</p>
+<p><span class="math display">\[
+\Delta_{\tau} = F^{-1}_{Y(1)11}(\tau) - F^{-1}_{Y(0)01}(\tau)
+\]</span></p>
+<p>So what is QTT(0.75) in the Lalonde experimental data?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">invF11</span>(<span class="fl">0.75</span>) <span class="sc">-</span> <span class="fu">invF01</span>(<span class="fl">0.75</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2347.5</code></pre>
+</div>
+</div>
+<p>There it is; we’ve calculated a quantile treatment effect in our experimental data!</p>
+<p>In practice we do not need to go through the above process by hand each time. We can actually just plug our data into the <code>qte</code> package’s functions to obtain estimates and standard errors:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>att_experimental <span class="ot">&lt;-</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ci.qtet</span>(re78 <span class="sc">~</span> treat, </span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">data=</span>lalonde.exp, </span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">probs=</span><span class="fu">c</span>(<span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>), </span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">se=</span>T, </span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">iters=</span><span class="dv">10</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>res_att_experimental <span class="ot">&lt;-</span> <span class="fu">summary</span>(att_experimental)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>Note that the <code>qte</code> package computes standard errors via a bootstrap method.</p>
+</div></div><p>You’ll see in <a href="#fig-qte-exp">Figure&nbsp;3</a> that the estimated QTT for the 75th percentile is exactly the same as we calculated above.</p>
+<div class="cell">
+<div id="fig-qte-exp" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+Percentile
+</th>
+<th style="text-align:right;">
+Treatment Effect
+</th>
+<th style="text-align:right;">
+Standard Error
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Avg
+</td>
+<td style="text-align:right;">
+1794.3
+</td>
+<td style="text-align:right;">
+538.7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+75%
+</td>
+<td style="text-align:right;">
+2347.5
+</td>
+<td style="text-align:right;">
+850.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+50%
+</td>
+<td style="text-align:right;">
+1123.5
+</td>
+<td style="text-align:right;">
+556.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+25%
+</td>
+<td style="text-align:right;">
+338.6
+</td>
+<td style="text-align:right;">
+349.2
+</td>
+</tr>
+</tbody>
+
+</table>
+<p></p><figcaption class="figure-caption">Figure 3: Average and Quantile Treatment Effects for the Experimental Lalonde Data</figcaption><p></p>
+</figure>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-ggqte-exp" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure">
+<p><img src="quantile-treatment-effects_files/figure-html/fig-ggqte-exp-1.png" class="img-fluid figure-img" width="672"></p>
+<p></p><figcaption class="figure-caption">Figure 4: Plot of Quantile Treatment Effects as Estimated Using qte Package</figcaption><p></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="quantile-treatment-effect-estimation-in-observational-data" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="quantile-treatment-effect-estimation-in-observational-data">Quantile Treatment Effect Estimation in Observational Data</h2>
+<p>Now suppose we do not have the luxury of experimental data, but instead have a treated group and untreated group drawn from observational data. How can we identify and estimate quantile treatment effects?</p>
+<p>There are a number of approaches we can take here:</p>
+<ol type="1">
+<li>Estimate bounds on the quantile treatment effect distribution.</li>
+<li>Estimate QTTs under an assumption of conditional independence, i.e., unconfoudnendess.</li>
+<li>Estimate QTTs using a quantile difference-in-differences (qDID) estimator.</li>
+<li>Estimate QTTs using a changes-in-changes (CiC) estimator (Athey and Imbens 2006).</li>
+</ol>
+<p>Partial identification via estimating bounds (#1) will be a focus of our class next week, so we’ll set it aside for now – though note that the <code>qte</code> package can estimate bounds based on the method in Fan and Yu (2012).</p>
+<p>Similarly, if we think we have enough measured data satisfy an unconfoundedness assumption (analogous to what we do with propensity scores ore matching) we can also estimate (#2) using the <code>qte</code> package.</p>
+<p>Our focus for today will be on approaches (#3) and especially (#4). We’ll also discuss how we can incorporate covariates to improve identifcation of quantile treatment effects.</p>
+<section id="intuition-for-qdid-and-cic" class="level3">
+<h3 class="anchored" data-anchor-id="intuition-for-qdid-and-cic">Intuition for qDID and CiC</h3>
+<p>Essentially, we’re going to lean on similar intuition for identifying QTTs as we do for identifying average treatment effects on the treated using difference-in-differences. In the case of quantile effects, however, we will be thinking in terms of how the distribution functions change in an untreated comparison group. We’ll then use these changes as a “stand-in” for the counterfactual change that would have occurred in the treated group absent the treatment.</p>
+<p>The difference between qDID and CiC essentially boils down to how we think about the counterfactual. Let’s envision two scenarios with observational data for a job training program under which the treatment group is selected predominantly among unemployed individuals with low earnings:</p>
+<ol type="1">
+<li><p>The pre-intervention earnings at the 50th percentile in the treatment group are $0, and at the 50th percentile of the untreated group, pre-intervention earnings are $5,000. In the post-intervention period, the untreated group’s earnings increase to $6,000 at the 50th percentile, while the treated group’s earnings rise to $3000 at the 50th percentile.</p></li>
+<li><p>The pre-intervention earnings at the 50th percentile in the treatment group are $0, and $0 in earnings corresponds to the 10th percentile of the untreated group’s pre-intervention earnings distribution. In the post period, the untreated group’s earnings remain at $0 at the 10th percentile, while earnings at the 50th percentile in the treated group rise to $3,000.</p></li>
+</ol>
+<p>What counterfactual should we use for the treated group? The $1,000 rise in earnings observed at the 50th percentile in the untreated group, even though the baseline value at the 50th percentile was very different than the treated group’s median value? Or, is a better estimate of the counterfactual the experience of $0 earners at the 10th percentile in the untreated group? <strong>In short, the former assumption is used for qDID, while the latter assumption is used for CiC.</strong></p>
+</section>
+<section id="estimating-qdid-and-cic" class="level3 page-columns page-full">
+<h3 class="anchored" data-anchor-id="estimating-qdid-and-cic">Estimating qDID and CiC</h3>
+<p>With the intuition for both approaches solidified, let’s now construct quantile treatment effect estimates in the observational Lalonde data using each.</p>
+<p>First, let’s pull out the outcome values for treated and control groups in the pre (1975) and post-intervention (1978) periods:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>y00 <span class="ot">&lt;-</span> lalonde.psid <span class="sc">%&gt;%</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(treat<span class="sc">==</span><span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(re75)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>y10 <span class="ot">&lt;-</span> lalonde.psid <span class="sc">%&gt;%</span> </span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(treat<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(re75)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>y01 <span class="ot">&lt;-</span> lalonde.psid <span class="sc">%&gt;%</span> </span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(treat<span class="sc">==</span><span class="dv">0</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(re78)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>y11 <span class="ot">&lt;-</span> lalonde.psid <span class="sc">%&gt;%</span> </span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(treat<span class="sc">==</span><span class="dv">1</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(re78)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We’ll next define eCDFs and inverse eCDFs for each:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>eF00 <span class="ot">&lt;-</span> <span class="fu">ecdf</span>(y00)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>invF00 <span class="ot">&lt;-</span> edfun<span class="sc">::</span><span class="fu">edfun</span>(y00)<span class="sc">$</span>qfun</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>eF10 <span class="ot">&lt;-</span> <span class="fu">ecdf</span>(y10)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>invF10 <span class="ot">&lt;-</span> edfun<span class="sc">::</span><span class="fu">edfun</span>(y10)<span class="sc">$</span>qfun</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>eF01 <span class="ot">&lt;-</span> <span class="fu">ecdf</span>(y01)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>invF01 <span class="ot">&lt;-</span> edfun<span class="sc">::</span><span class="fu">edfun</span>(y01)<span class="sc">$</span>qfun</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>eF11 <span class="ot">&lt;-</span> <span class="fu">ecdf</span>(y11)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>invF11 <span class="ot">&lt;-</span> edfun<span class="sc">::</span><span class="fu">edfun</span>(y11)<span class="sc">$</span>qfun</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The next thing we need to do is to define a quantile of interest. Let’s estimate for the 75th percentile.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>q <span class="ot">=</span> <span class="fl">0.75</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Next, let’s estimate the observed change in the treated group at the 75th percentile:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">invF11</span>(q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9631.9</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">invF10</span>(q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1809</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>change_treated <span class="ot">&lt;-</span> <span class="fu">invF11</span>(q) <span class="sc">-</span> <span class="fu">invF10</span>(q)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>change_treated</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 7822.9</code></pre>
+</div>
+</div>
+<p>So we observe earnings going up by 7823. But what would have happened counterfactually? For this we will appeal to the untreated group’s experience.</p>
+<p>First, let’s estimate what change happens at the 75th percentile of the untreated group’s earnings distribution:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">invF01</span>(q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 29510</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">invF00</span>(q)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 26470</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>cfx_untreated_q75 <span class="ot">&lt;-</span> <span class="fu">invF01</span>(q) <span class="sc">-</span> <span class="fu">invF00</span>(q)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>cfx_untreated_q75 </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3040.2</code></pre>
+</div>
+</div>
+<p>To construct a qDID estimate, we’d simply net out this counterfactual from the observed change in the treated group:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>qtt_qDID <span class="ot">&lt;-</span> change_treated <span class="sc">-</span> cfx_untreated_q75 </span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>qtt_qDID </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 4782.7</code></pre>
+</div>
+</div>
+<p>Using qDID, we would estimate that the job trainings program increased earnings by $4783.</p>
+<p>Notice, however, that there is a <em>huge</em> difference in earnings at the 75th percentile of the treated group’s pre-intervention earnings distribution ($1809), and the untreated group’s ($26470).</p>
+<p>As an alternative, we can adopt a Changes-in-Changes model. Recall from above that this model requires an additional step: we must map the earnings value of the treated group at the 75th percentile to the corresponding quantile in the untreated groups pre-intervention earnings distribution. We then use the change in earnings <em>at this different quantile</em> as an estimate of the counterfactual:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Earnings at the qth quantile of the treated group</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>y_q <span class="ot">&lt;-</span> <span class="fu">invF10</span>(q)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>y_q</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1809</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Find what quantile this maps to in the untreated group's distribution. </span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>q_star <span class="ot">&lt;-</span> <span class="fu">eF00</span>(y_q)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>q_star</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.11365</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>cfx_CiC <span class="ot">&lt;-</span> <span class="fu">invF01</span>(q_star) <span class="sc">-</span> y_q</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>cfx_CiC</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -1809</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>change_treated <span class="ot">&lt;-</span> <span class="fu">invF11</span>(q) <span class="sc">-</span> <span class="fu">invF10</span>(q)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>change_treated</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 7822.9</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>qtt_CiC <span class="ot">&lt;-</span> change_treated <span class="sc">-</span> cfx_CiC</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>qtt_CiC</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9631.9</code></pre>
+</div>
+</div>
+<p>While the above exercises went through estimating a changes-in-changes value by hand, the formal estimator is a bit simpler due to some cancelling out of terms. Specifically, the counterfactual CDF is given by</p>
+<p><span class="math display">\[
+\hat F_{Y(0),11}(y) = F_{y,01}(F_{y,00}^{-1}(F_{y,10}(y)))
+\]</span></p>
+<p>where F_{y,00} is the observed CDF for the untreated group in the pre-period, F_{y,10} is the observed CDF for the treated group in the pre period, etc.</p>
+<p>Equivalently, we can estimate the inverse CDF of the counterfactual as:</p>
+<p><span class="math display">\[
+\hat F_{Y(0),11}^{-1}(\tau) = F_{y,01}^{-1}(F_{y,00}(F^{-1}_{y,10}(\tau)))
+\]</span></p>
+<p>And the treatement effect estimate is given by:</p>
+<p><span class="math display">\[
+\Delta_{\tau}^{CiC} = F_{Y(1),11}^{-1}(\tau)- \hat F_{Y(0),11}^{-1}(\tau)
+\]</span></p>
+<p>Implemented for our example, the QTT for the 75th percentile is</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="fu">invF11</span>(q) <span class="sc">-</span> <span class="fu">invF01</span>(<span class="fu">eF00</span>(<span class="fu">invF10</span>(q)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 9631.9</code></pre>
+</div>
+</div>
+<p>which is identical to the “by hand” estimate we calculated above.</p>
+<p>Again, the <code>qte</code> package in R will calculate changes-in-changes estimates for you, along with standard errors. The estimates are slightly different here, owing to some “lumpiness” in the eCDFs and slight differnces in calculating the values at quantiles in the data. However, the QTTs are quite close to what we estimated above:<br>
+</p>
+
+<div class="no-row-height column-margin column-container"><div class="">
+<p>There is also a Stata implementation of the Changes-in-Changes estimator, which can be found <a href="https://sites.google.com/site/blaisemelly/home/computer-programs/cic_stata">here</a>.</p>
+</div></div><div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> </span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  lalonde.psid <span class="sc">%&gt;%</span> </span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(id,re75,re78,treat) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">gather</span>(year,y,<span class="sc">-</span>id,<span class="sc">-</span>treat) <span class="sc">%&gt;%</span> </span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">year =</span> <span class="fu">ifelse</span>(year<span class="sc">==</span><span class="st">"re75"</span>,<span class="dv">1975</span>,<span class="dv">1978</span>))</span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>est_CiC <span class="ot">&lt;-</span> <span class="fu">CiC</span>(y <span class="sc">~</span> treat, <span class="at">t =</span> <span class="dv">1978</span>, <span class="at">tmin1=</span><span class="dv">1975</span>, </span>
+<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>               <span class="at">tname =</span> <span class="st">"year"</span>, <span class="at">idname =</span> <span class="st">"id"</span>,</span>
+<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>               <span class="at">data =</span> df, <span class="at">probs =</span> <span class="fu">c</span>(q), </span>
+<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>               <span class="at">se =</span> <span class="cn">TRUE</span>, <span class="at">panel =</span> F)</span>
+<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(est_CiC)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Quantile Treatment Effect:
+        
+tau QTE Std. Error
+0.75    9643.00 1059.12
+
+Average Treatment Effect:   5089.64
+     Std. Error:        770.72</code></pre>
+</div>
+</div>
+
+
+</section>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    target: function(trigger) {
+      return trigger.previousElementSibling;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    setTimeout(function() {
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      let href = ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const cites = ref.parentNode.getAttribute('data-cites').split(' ');
+    tippyHover(ref, function() {
+      var popup = window.document.createElement('div');
+      cites.forEach(function(cite) {
+        var citeDiv = window.document.createElement('div');
+        citeDiv.classList.add('hanging-indent');
+        citeDiv.classList.add('csl-entry');
+        var biblioDiv = window.document.getElementById('ref-' + cite);
+        if (biblioDiv) {
+          citeDiv.innerHTML = biblioDiv.innerHTML;
+        }
+        popup.appendChild(citeDiv);
+      });
+      return popup.innerHTML;
+    });
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
