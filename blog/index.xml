@@ -10,7 +10,7 @@
 <atom:link href="https://graveja0.github.io/HPOL8539-F2022/blog/index.xml" rel="self" type="application/rss+xml"/>
 <description></description>
 <generator>quarto-1.0.36</generator>
-<lastBuildDate>Tue, 08 Nov 2022 21:58:42 GMT</lastBuildDate>
+<lastBuildDate>Wed, 09 Nov 2022 11:57:11 GMT</lastBuildDate>
 <item>
   <title>A Practical Guide to Extended Difference-in-Differences</title>
   <link>https://graveja0.github.io/HPOL8539-F2022/blog/posts/extended-difference-in-differences.html</link>
@@ -1687,7 +1687,7 @@
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/extended-difference-in-differences.html</guid>
-  <pubDate>Tue, 08 Nov 2022 21:58:42 GMT</pubDate>
+  <pubDate>Wed, 09 Nov 2022 11:57:11 GMT</pubDate>
 </item>
 <item>
   <title>Quantile Treatment Effects</title>
@@ -3987,7 +3987,7 @@ Avg
 1794.3
 </td>
 <td style="text-align:right;">
-538.7
+504.7
 </td>
 </tr>
 <tr>
@@ -3998,7 +3998,7 @@ Avg
 2347.5
 </td>
 <td style="text-align:right;">
-850.0
+736.6
 </td>
 </tr>
 <tr>
@@ -4009,7 +4009,7 @@ Avg
 1123.5
 </td>
 <td style="text-align:right;">
-556.5
+824.2
 </td>
 </tr>
 <tr>
@@ -4020,7 +4020,7 @@ Avg
 338.6
 </td>
 <td style="text-align:right;">
-349.2
+231.2
 </td>
 </tr>
 </tbody>
@@ -4215,21 +4215,166 @@ Avg
 Quantile Treatment Effect:
         
 tau QTE Std. Error
-0.75    9643.00 1059.12
+0.75    9643.00 1030.48
 
 Average Treatment Effect:   5089.64
-     Std. Error:        770.72</code></pre>
+     Std. Error:        685.15</code></pre>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="changes-in-changes-with-covariates" class="level1">
+<h1>Changes-in-Changes with Covariates</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><span class="co" style="color: #5E5E5E;"># Note that this code is simply adapted from the underlying CiC formula to show </span></span>
+<span id="cb46-2"><span class="co" style="color: #5E5E5E;"># what is going on behind the curtain. Code source: Calloway's qte package. </span></span>
+<span id="cb46-3"></span>
+<span id="cb46-4"><span class="fu" style="color: #4758AB;">library</span>(quantreg)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: SparseM</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'SparseM'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:base':
+
+    backsolve</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb50" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><span class="co" style="color: #5E5E5E;"># Quantiles to estimate over</span></span>
+<span id="cb50-2">u <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">seq</span>(<span class="fl" style="color: #AD0000;">0.01</span>, <span class="fl" style="color: #AD0000;">0.99</span>, <span class="fl" style="color: #AD0000;">0.01</span>)</span>
+<span id="cb50-3"></span>
+<span id="cb50-4"><span class="co" style="color: #5E5E5E;"># Extract out various subsets of the data based on treatment and time </span></span>
+<span id="cb50-5">df00 <span class="ot" style="color: #003B4F;">=</span> lalonde.psid.panel <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb50-6">  <span class="fu" style="color: #4758AB;">filter</span>(treat<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">0</span> <span class="sc" style="color: #5E5E5E;">&amp;</span> year<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">1975</span>)</span>
+<span id="cb50-7"></span>
+<span id="cb50-8">df10 <span class="ot" style="color: #003B4F;">=</span> lalonde.psid.panel <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb50-9">  <span class="fu" style="color: #4758AB;">filter</span>(treat<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">1</span> <span class="sc" style="color: #5E5E5E;">&amp;</span> year<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">1975</span>)</span>
+<span id="cb50-10"></span>
+<span id="cb50-11">df01 <span class="ot" style="color: #003B4F;">=</span> lalonde.psid.panel <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb50-12">  <span class="fu" style="color: #4758AB;">filter</span>(treat<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">0</span> <span class="sc" style="color: #5E5E5E;">&amp;</span> year<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">1978</span>)</span>
+<span id="cb50-13"></span>
+<span id="cb50-14">df11 <span class="ot" style="color: #003B4F;">=</span> lalonde.psid.panel <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb50-15">  <span class="fu" style="color: #4758AB;">filter</span>(treat<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">1</span> <span class="sc" style="color: #5E5E5E;">&amp;</span> year<span class="sc" style="color: #5E5E5E;">==</span><span class="dv" style="color: #AD0000;">1978</span>)</span>
+<span id="cb50-16"></span>
+<span id="cb50-17"><span class="co" style="color: #5E5E5E;"># Obtain sample sizes for each subset</span></span>
+<span id="cb50-18">n1t <span class="ot" style="color: #003B4F;">&lt;-</span> df11  <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb50-19">  <span class="fu" style="color: #4758AB;">nrow</span>()</span>
+<span id="cb50-20">n1tmin1 <span class="ot" style="color: #003B4F;">&lt;-</span>df10  <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb50-21">  <span class="fu" style="color: #4758AB;">nrow</span>()</span>
+<span id="cb50-22">n0t <span class="ot" style="color: #003B4F;">&lt;-</span> df01 <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb50-23">  <span class="fu" style="color: #4758AB;">nrow</span>()</span>
+<span id="cb50-24">n0tmin1 <span class="ot" style="color: #003B4F;">&lt;-</span> df00 <span class="sc" style="color: #5E5E5E;">%&gt;%</span></span>
+<span id="cb50-25">  <span class="fu" style="color: #4758AB;">nrow</span>()</span>
+<span id="cb50-26"></span>
+<span id="cb50-27"><span class="co" style="color: #5E5E5E;"># Quantile regressions of the outcome on covariates</span></span>
+<span id="cb50-28">yformla <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="st" style="color: #20794D;">"re ~ age + I(age^2) + education + black + hispanic + married + nodegree"</span></span>
+<span id="cb50-29">QR0t <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rq</span>(yformla, <span class="at" style="color: #657422;">data =</span> df01 , <span class="at" style="color: #657422;">tau =</span> u)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in rq.fit.br(x, y, tau = tau, ...): Solution may be nonunique</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb52" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1">QR0tmin1 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rq</span>(yformla, <span class="at" style="color: #657422;">data =</span> df00, <span class="at" style="color: #657422;">tau =</span> u)</span>
+<span id="cb52-2">QR1t <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">rq</span>(yformla, <span class="at" style="color: #657422;">data =</span> df11, <span class="at" style="color: #657422;">tau =</span> u)</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in rq.fit.br(x, y, tau = tau, ...): Solution may be nonunique
+
+Warning in rq.fit.br(x, y, tau = tau, ...): Solution may be nonunique</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb54" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><span class="co" style="color: #5E5E5E;"># Obtain predictions of the conditional distribution function given each </span></span>
+<span id="cb54-2"><span class="co" style="color: #5E5E5E;"># sample individual's covariate </span></span>
+<span id="cb54-3"><span class="co" style="color: #5E5E5E;"># This is for the pre-period in the control group </span></span>
+<span id="cb54-4">QR0tmin1F <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">predict</span>(QR0tmin1, <span class="at" style="color: #657422;">newdata =</span> df10,</span>
+<span id="cb54-5">                     <span class="at" style="color: #657422;">type =</span> <span class="st" style="color: #20794D;">"Fhat"</span>, <span class="at" style="color: #657422;">stepfun =</span> <span class="cn" style="color: #8f5902;">TRUE</span>)</span>
+<span id="cb54-6"><span class="co" style="color: #5E5E5E;"># Now map the observed outcome into the quantile of the conditional distribution function </span></span>
+<span id="cb54-7"><span class="co" style="color: #5E5E5E;"># for each sample individual</span></span>
+<span id="cb54-8">F0tmin1 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">sapply</span>(<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span>n1tmin1, <span class="cf" style="color: #003B4F;">function</span>(i) QR0tmin1F[[i]](df10<span class="sc" style="color: #5E5E5E;">$</span>re[i]))</span>
+<span id="cb54-9"></span>
+<span id="cb54-10">QR0tQ <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">predict</span>(QR0t, <span class="at" style="color: #657422;">newdata =</span> df10, <span class="at" style="color: #657422;">type =</span> <span class="st" style="color: #20794D;">"Qhat"</span>,</span>
+<span id="cb54-11">                 <span class="at" style="color: #657422;">stepfun =</span> <span class="cn" style="color: #8f5902;">TRUE</span>)</span>
+<span id="cb54-12">y0t <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">sapply</span>(<span class="dv" style="color: #AD0000;">1</span><span class="sc" style="color: #5E5E5E;">:</span>n1tmin1, <span class="cf" style="color: #003B4F;">function</span>(i) QR0tQ[[i]](F0tmin1[i]))</span>
+<span id="cb54-13">F.treatedcf.t <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">ecdf</span>(y0t)</span>
+<span id="cb54-14">att <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">mean</span>(df11[, <span class="st" style="color: #20794D;">"re"</span>]) <span class="sc" style="color: #5E5E5E;">-</span> <span class="fu" style="color: #4758AB;">mean</span>(y0t)</span>
+<span id="cb54-15"></span>
+<span id="cb54-16">q1 <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">quantile</span>(df11[, <span class="st" style="color: #20794D;">"re"</span>], <span class="at" style="color: #657422;">probs =</span> u, <span class="at" style="color: #657422;">type =</span> <span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb54-17">q0 <span class="ot" style="color: #003B4F;">=</span> <span class="fu" style="color: #4758AB;">quantile</span>(F.treatedcf.t, <span class="at" style="color: #657422;">probs =</span> u, <span class="at" style="color: #657422;">type =</span> <span class="dv" style="color: #AD0000;">1</span>)</span>
+<span id="cb54-18">qte <span class="ot" style="color: #003B4F;">=</span> (q1 <span class="sc" style="color: #5E5E5E;">-</span> q0); qte</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      1%       2%       3%       4%       5%       6%       7%       8% 
+    0.00     0.00     0.00     0.00     0.00     0.00     0.00     0.00 
+      9%      10%      11%      12%      13%      14%      15%      16% 
+    0.00     0.00     0.00     0.00     0.00     0.00     0.00     0.00 
+     17%      18%      19%      20%      21%      22%      23%      24% 
+    0.00     0.00     0.00     0.00     0.00     0.00     0.00     0.00 
+     25%      26%      27%      28%      29%      30%      31%      32% 
+  485.23   559.44   590.78   671.33   743.67   929.88  1048.43  1085.44 
+     33%      34%      35%      36%      37%      38%      39%      40% 
+ 1294.41  1358.64  1460.36  1652.64  1773.42  1953.27  2164.02  2321.11 
+     41%      42%      43%      44%      45%      46%      47%      48% 
+ 2456.15  2787.96  3094.16  3196.57  3462.56  3786.63  3881.28  4032.71 
+     49%      50%      51%      52%      53%      54%      55%      56% 
+ 4146.60  4232.31  4321.71  4666.24  4843.18  4849.56  5010.34  5149.50 
+     57%      58%      59%      60%      61%      62%      63%      64% 
+ 5522.79  5615.19  6167.68  6181.88  6281.43  6456.70  6788.46  7284.99 
+     65%      66%      67%      68%      69%      70%      71%      72% 
+ 7458.11  7506.15  7535.94  8048.60  7461.02  7508.97  7746.03  7953.09 
+     73%      74%      75%      76%      77%      78%      79%      80% 
+ 8138.60  8211.33  8210.84  8347.53  8189.37  7911.28  8298.11  8332.69 
+     81%      82%      83%      84%      85%      86%      87%      88% 
+ 8164.24  8030.49  7746.49  8426.08  8515.98  8293.94  8147.08  8148.86 
+     89%      90%      91%      92%      93%      94%      95%      96% 
+ 8307.59  8822.00  9450.88  9370.33  9691.94  9955.40  8273.74 11024.51 
+     97%      98%      99% 
+10944.14 12467.26 17466.10 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb56" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1">c1 <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">CiC</span>(re <span class="sc" style="color: #5E5E5E;">~</span> treat, <span class="at" style="color: #657422;">t=</span><span class="dv" style="color: #AD0000;">1978</span>, <span class="at" style="color: #657422;">tmin1=</span><span class="dv" style="color: #AD0000;">1975</span>, <span class="at" style="color: #657422;">tname=</span><span class="st" style="color: #20794D;">"year"</span>,</span>
+<span id="cb56-2">          <span class="at" style="color: #657422;">xformla=</span><span class="sc" style="color: #5E5E5E;">~</span>age <span class="sc" style="color: #5E5E5E;">+</span> <span class="fu" style="color: #4758AB;">I</span>(age<span class="sc" style="color: #5E5E5E;">^</span><span class="dv" style="color: #AD0000;">2</span>) <span class="sc" style="color: #5E5E5E;">+</span> education <span class="sc" style="color: #5E5E5E;">+</span> black <span class="sc" style="color: #5E5E5E;">+</span> hispanic <span class="sc" style="color: #5E5E5E;">+</span> married <span class="sc" style="color: #5E5E5E;">+</span> nodegree,</span>
+<span id="cb56-3">          <span class="at" style="color: #657422;">data=</span>lalonde.psid.panel, <span class="at" style="color: #657422;">idname=</span><span class="st" style="color: #20794D;">"id"</span>, <span class="at" style="color: #657422;">se=</span><span class="cn" style="color: #8f5902;">FALSE</span>,</span>
+<span id="cb56-4">          <span class="at" style="color: #657422;">probs=</span><span class="fu" style="color: #4758AB;">seq</span>(<span class="fl" style="color: #AD0000;">0.05</span>, <span class="fl" style="color: #AD0000;">0.95</span>, <span class="fl" style="color: #AD0000;">0.05</span>))</span></code></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in rq.fit.br(x, y, tau = tau, ...): Solution may be nonunique
+
+Warning in rq.fit.br(x, y, tau = tau, ...): Solution may be nonunique
+
+Warning in rq.fit.br(x, y, tau = tau, ...): Solution may be nonunique</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb58" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><span class="fu" style="color: #4758AB;">summary</span>(c1)</span></code></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Quantile Treatment Effect:
+        
+tau QTE
+0.05       0.00
+0.1    0.00
+0.15       0.00
+0.2    0.00
+0.25     485.23
+0.3  929.88
+0.35    1460.36
+0.4 2321.11
+0.45    3462.56
+0.5 4232.31
+0.55    5010.34
+0.6 6210.67
+0.65    7458.11
+0.7 7508.97
+0.75    8210.84
+0.8 8332.69
+0.85    8515.98
+0.9 8822.00
+0.95    8273.74
+
+Average Treatment Effect:   4629.24</code></pre>
 </div>
 </div>
 
 
-</section>
-</section>
 </section>
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/quantile-treatment-effects.html</guid>
-  <pubDate>Tue, 08 Nov 2022 21:58:42 GMT</pubDate>
+  <pubDate>Wed, 09 Nov 2022 11:57:11 GMT</pubDate>
 </item>
 <item>
   <title>Fourteen Difference-in-Difference Estimators Walk Into a Bar …</title>
@@ -4307,7 +4452,7 @@ Average Treatment Effect:   5089.64
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/a-comparison-of-difference-in-difference-estimators.html</guid>
-  <pubDate>Tue, 08 Nov 2022 21:58:42 GMT</pubDate>
+  <pubDate>Wed, 09 Nov 2022 11:57:11 GMT</pubDate>
 </item>
 <item>
   <title>Quasi-Demeaning: The Relationship Between Fixed and Random Effects</title>
@@ -4758,7 +4903,7 @@ F-statistic:   130 on 1 and 3998 DF,  p-value: &lt; 2.2e-16</code></pre>
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/quasi-demeaning.html</guid>
-  <pubDate>Tue, 08 Nov 2022 21:58:42 GMT</pubDate>
+  <pubDate>Wed, 09 Nov 2022 11:57:11 GMT</pubDate>
 </item>
 </channel>
 </rss>
