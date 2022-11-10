@@ -10,7 +10,7 @@
 <atom:link href="https://graveja0.github.io/HPOL8539-F2022/blog/index.xml" rel="self" type="application/rss+xml"/>
 <description></description>
 <generator>quarto-1.0.36</generator>
-<lastBuildDate>Wed, 09 Nov 2022 11:57:11 GMT</lastBuildDate>
+<lastBuildDate>Thu, 10 Nov 2022 15:39:35 GMT</lastBuildDate>
 <item>
   <title>A Practical Guide to Extended Difference-in-Differences</title>
   <link>https://graveja0.github.io/HPOL8539-F2022/blog/posts/extended-difference-in-differences.html</link>
@@ -1687,7 +1687,7 @@
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/extended-difference-in-differences.html</guid>
-  <pubDate>Wed, 09 Nov 2022 11:57:11 GMT</pubDate>
+  <pubDate>Thu, 10 Nov 2022 15:39:35 GMT</pubDate>
 </item>
 <item>
   <title>Quantile Treatment Effects</title>
@@ -3951,7 +3951,7 @@ u75
 <div class="sourceCode cell-code" id="cb14" style="background: #f1f3f5;"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1">att_experimental <span class="ot" style="color: #003B4F;">&lt;-</span> </span>
 <span id="cb14-2">  <span class="fu" style="color: #4758AB;">ci.qtet</span>(re78 <span class="sc" style="color: #5E5E5E;">~</span> treat, </span>
 <span id="cb14-3">    <span class="at" style="color: #657422;">data=</span>lalonde.exp, </span>
-<span id="cb14-4">    <span class="at" style="color: #657422;">probs=</span><span class="fu" style="color: #4758AB;">c</span>(<span class="fl" style="color: #AD0000;">0.25</span>, <span class="fl" style="color: #AD0000;">0.5</span>, <span class="fl" style="color: #AD0000;">0.75</span>), </span>
+<span id="cb14-4">    <span class="at" style="color: #657422;">probs=</span><span class="fu" style="color: #4758AB;">seq</span>(<span class="fl" style="color: #AD0000;">0.05</span>,<span class="fl" style="color: #AD0000;">0.95</span>,<span class="fl" style="color: #AD0000;">0.05</span>), </span>
 <span id="cb14-5">    <span class="at" style="color: #657422;">se=</span>T, </span>
 <span id="cb14-6">    <span class="at" style="color: #657422;">iters=</span><span class="dv" style="color: #AD0000;">10</span>)</span>
 <span id="cb14-7">res_att_experimental <span class="ot" style="color: #003B4F;">&lt;-</span> <span class="fu" style="color: #4758AB;">summary</span>(att_experimental)</span></code></pre></div>
@@ -3987,7 +3987,51 @@ Avg
 1794.3
 </td>
 <td style="text-align:right;">
-504.7
+630.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+95%
+</td>
+<td style="text-align:right;">
+3979.6
+</td>
+<td style="text-align:right;">
+2177.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+90%
+</td>
+<td style="text-align:right;">
+3239.6
+</td>
+<td style="text-align:right;">
+1932.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+85%
+</td>
+<td style="text-align:right;">
+2178.3
+</td>
+<td style="text-align:right;">
+1262.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+80%
+</td>
+<td style="text-align:right;">
+2278.1
+</td>
+<td style="text-align:right;">
+1101.5
 </td>
 </tr>
 <tr>
@@ -3998,7 +4042,51 @@ Avg
 2347.5
 </td>
 <td style="text-align:right;">
-736.6
+680.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+70%
+</td>
+<td style="text-align:right;">
+1795.1
+</td>
+<td style="text-align:right;">
+832.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+65%
+</td>
+<td style="text-align:right;">
+2115.0
+</td>
+<td style="text-align:right;">
+836.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+60%
+</td>
+<td style="text-align:right;">
+1466.5
+</td>
+<td style="text-align:right;">
+737.9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+55%
+</td>
+<td style="text-align:right;">
+1181.5
+</td>
+<td style="text-align:right;">
+740.2
 </td>
 </tr>
 <tr>
@@ -4009,7 +4097,51 @@ Avg
 1123.5
 </td>
 <td style="text-align:right;">
-824.2
+984.5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+45%
+</td>
+<td style="text-align:right;">
+1396.1
+</td>
+<td style="text-align:right;">
+1005.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+40%
+</td>
+<td style="text-align:right;">
+1177.7
+</td>
+<td style="text-align:right;">
+1306.6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+35%
+</td>
+<td style="text-align:right;">
+1451.5
+</td>
+<td style="text-align:right;">
+992.3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+30%
+</td>
+<td style="text-align:right;">
+846.4
+</td>
+<td style="text-align:right;">
+558.3
 </td>
 </tr>
 <tr>
@@ -4020,7 +4152,51 @@ Avg
 338.6
 </td>
 <td style="text-align:right;">
-231.2
+338.2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+20%
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+176.4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+15%
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+10%
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+5%
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+0.0
 </td>
 </tr>
 </tbody>
@@ -4215,10 +4391,10 @@ Avg
 Quantile Treatment Effect:
         
 tau QTE Std. Error
-0.75    9643.00 1030.48
+0.75    9643.00  973.09
 
 Average Treatment Effect:   5089.64
-     Std. Error:        685.15</code></pre>
+     Std. Error:        664.74</code></pre>
 </div>
 </div>
 </section>
@@ -4374,7 +4550,7 @@ Average Treatment Effect:   4629.24</code></pre>
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/quantile-treatment-effects.html</guid>
-  <pubDate>Wed, 09 Nov 2022 11:57:11 GMT</pubDate>
+  <pubDate>Thu, 10 Nov 2022 15:39:35 GMT</pubDate>
 </item>
 <item>
   <title>Fourteen Difference-in-Difference Estimators Walk Into a Bar …</title>
@@ -4452,7 +4628,7 @@ Average Treatment Effect:   4629.24</code></pre>
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/a-comparison-of-difference-in-difference-estimators.html</guid>
-  <pubDate>Wed, 09 Nov 2022 11:57:11 GMT</pubDate>
+  <pubDate>Thu, 10 Nov 2022 15:39:35 GMT</pubDate>
 </item>
 <item>
   <title>Quasi-Demeaning: The Relationship Between Fixed and Random Effects</title>
@@ -4903,7 +5079,7 @@ F-statistic:   130 on 1 and 3998 DF,  p-value: &lt; 2.2e-16</code></pre>
 
  ]]></description>
   <guid>https://graveja0.github.io/HPOL8539-F2022/blog/posts/quasi-demeaning.html</guid>
-  <pubDate>Wed, 09 Nov 2022 11:57:11 GMT</pubDate>
+  <pubDate>Thu, 10 Nov 2022 15:39:35 GMT</pubDate>
 </item>
 </channel>
 </rss>
