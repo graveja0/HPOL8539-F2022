@@ -1,0 +1,98 @@
+---
+title: "Changes-in-Changes"
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#https://gsb-faculty.stanford.edu/susan-athey/files/2022/04/cicsupp.pdf
+library(tidyverse)
+library(here)
+library(glue)
+
+df <- read.table(here("ignore/cicprograms/mvd.dat")) %>% 
+  rename(fips = V19) %>% 
+  filter(fips == 16) %>% 
+  rename(y = V1,
+         head = V10,
+         neck = V11, 
+         upper_extr = V12,
+         trunk = V13,
+         low_back = V14,
+         lower_extr = V15,
+         occ_dis = V16, 
+         male = V5,
+         marital = V6,
+         age = V20,
+         manu = V8,
+         constr = V9,
+         prev_earn = V21) %>% 
+         mutate(ind = as.integer((age<99) & (marital<8) & (male<9) & (manu<8) & (constr<8) & (V18<9))) %>% 
+   #filter(ind ==1) %>% 
+   rename(
+          after = V3, 
+          high = V4) %>% 
+  mutate(y = y + 0.25 *as.integer(y==0)) %>% 
+  mutate(ly = log(y)) %>% 
+  mutate(y = log(y))
+
+y00 <- df %>% 
+  filter(after==0 & high==0); dim(y00)
+y01 <- df %>% 
+  filter(after==1 & high ==0); dim(y01)
+y10 <- df %>% 
+  filter(after==0 & high==1); dim(y10)
+y11 <- df %>% 
+  filter(after==1 & high == 1); dim(y11)
+
+df %>% 
+  group_by(after,high) %>% 
+  summarise_at(vars(y,ly),list(mean=~mean(.,na.rm=TRUE),sd=~sd(.),q25=~quantile(.,0.25),q50=~quantile(.,0.5),q75=~quantile(.,.75),q90=~quantile(.,0.9))) %>% 
+  arrange(high,after)
+
+# Untreated, Pre
+F00_ <- y00 %>% pull(y) %>% sort()
+eF00 <- ecdf(F00_)
+F00 <- 1:length(F00_) / length(F00_)
+
+# Treated, Pre
+F10_ <- y10 %>% pull(y) %>% sort()
+eF10 <- ecdf(F10_)
+F10 <- 1:length(F10_) / length(F10_)
+
+# Untreated, Post
+F01_ <- y01 %>% pull(y) %>% sort()
+eF01_ <- ecdf(F01_)
+F01 <- 1:length(F01_) / length(F01_)
+
+F11_ <- y11 %>% pull(y) %>% sort()
+eF11_ <- ecdf(F11_)
+F11 <- 1:length(F11_) / length(F11_)
+
+
+cic <- function(q) {
+  x1 <- F10_[which(F10 >= q)[1]]; x1
+  x2 <- eF00(x1); x2
+  x3 <- F01_[which(F01 >= x2)[1]]; x3
+
+  F11_[which(F11 >= q)[1]] - x3
+}
+c(0.25,0.5,0.75,0.9) %>% map_dbl(~cic(.x))
+
+
+
+
+# y00=y((after==0)&(high==0),1)
+# y01=y((after==1)&(high==0),1)
+# y10=y((after==0)&(high==1),1)
+# y11=y((after==1)&(high==1),1)
+# ly00=ly((after==0)&(high==0),1)
+# ly01=ly((after==1)&(high==0),1)
+# ly10=ly((after==0)&(high==1),1)
+# ly11=ly((after==1)&(high==1),1)
+
+```
+
+
+

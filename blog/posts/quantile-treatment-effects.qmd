@@ -1,0 +1,530 @@
+---
+title: "Quantile Treatment Effects"
+author: Advanced Program and Policy Evaluation
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup}
+#| echo: false
+#| warning: false
+#| 
+
+library(tidyverse)
+library(data.table)
+#library(gganimate)
+library(here)
+library(glue)
+library(qte)
+library(knitr)
+library(kableExtra)
+library(skimr)
+library(ggsci)
+library(directlabels)
+library(edfun) # devtools::install_github('talgalili/edfun')
+
+options("scipen" = 100, "digits" = 5)
+
+theme_tufte_revised <- function(base_size = 11, base_family = "Gill Sans", ticks = TRUE) {
+
+  ret <- ggplot2::theme_bw(base_family = base_family, base_size = base_size) +
+    ggplot2::theme(
+      axis.line = ggplot2::element_line(color = 'black'),
+      axis.title.x = ggplot2::element_text(vjust = -0.3),
+      axis.title.y = ggplot2::element_text(vjust = 0.8),
+      legend.background = ggplot2::element_blank(),
+      legend.key = ggplot2::element_blank(),
+      legend.title = ggplot2::element_text(face="plain"),
+      panel.background = ggplot2::element_blank(),
+      panel.border = ggplot2::element_blank(),
+      panel.grid = ggplot2::element_blank(),
+      plot.background = ggplot2::element_blank(),
+      strip.background = ggplot2::element_blank()
+    )
+
+  if (!ticks) {
+    ret <- ret + ggplot2::theme(axis.ticks = ggplot2::element_blank())
+  }
+
+  ret
+}
+
+ggplot2::theme_set(theme_tufte_revised())
+
+```
+
+The objective of this workbook is to work through estimation of quantile treatment effects using the Lalonde experimental and observational data. 
+
+## Description of Data
+
+Our example data will be drawn from the infamous Lalonde study:
+
+- Robert Lalonde, "Evaluating the Econometric Evaluations of Training Programs", American Economic Review, Vol. 76, pp. 604-620
+
+From [Dehejia and Wahba (1999)](https://www.jstor.org/stable/2669919):
+
+> Lalonde estimated the impact of the National Supported Work (NSW) Demonstration, a labor training program, on postintervention income levels. He used data from a randomized evaluation of the program and examined the extent to which nonexperimental estimators can replicate the unbiased experimental estimate of the treatment impact when applied to a composite dataset of experimental treatment units and nonexperimental comparison units. 
+
+# Explore Data
+
+## Experimental Data
+
+```{r}
+lalonde.exp %>% 
+  group_by(treat) %>% 
+  skim()
+```
+
+## Observational (Panel) Data from the Panel Survey of Income Dynamics
+
+```{r}
+lalonde.psid.panel %>% 
+  group_by(treat) %>% 
+  skim()
+```
+
+A key takeaway is that the experimental data is reasonably balanced across treated and control units (not surprisingly) but the observational data is not.
+
+# Evaluate the Job Training Program
+
+## Quantile Treatment Effect Estimation in Experimental Data
+
+Our first exercise will evaluate the effect of the training program using the experimental data. Because we have a randomized experiment, we can simply compare the treated and untreated outcomes in the post-treatment period. 
+
+Let's first take a look at the distribution of outcomes by group:
+
+::: {.column-body-outset}
+
+```{r}
+#| warning: false
+#| message: false
+#| fig.cap: 
+#| echo: false
+#| fig-width: 10
+#| fig-align: center
+#| label: fig-histogram-exp
+#| fig-cap: Histogram of Earnings Outcome in Experimental Data, by Treatment Status and Year
+
+p <-  lalonde.exp %>% 
+  select(treat,re78) %>% 
+  mutate(treat = factor(treat,levels = c(0,1), labels = c("Untreated","Treated"))) %>% 
+  ggplot(aes(x = re78,  fill = treat)) + 
+  geom_histogram() + 
+  scale_fill_aaas()  + 
+  scale_colour_aaas() +
+  labs(x = "Earnings", y = "Count")
+direct.label(p,list("top.bumptwice",hjust=0))
+```
+:::
+
+We next take a difference in means to obtain an estimate of the average treatment effect on the treated:
+
+```{r}
+lalonde.exp %>% 
+  group_by(treat) %>% 
+  summarise(mean_outcome = mean(re78)) %>% 
+  mutate(att = mean_outcome - lag(mean_outcome)) %>% 
+  kable(digits = 2) %>% kable_styling()
+
+```
+
+Suppose we wanted to estimate treatment effects at different quantiles of the outcome distribution. To get a sense of where these effects may occur, we can plot the **empirical cumulative distribution function (eCDF)** for each group: 
+
+::: {.column-body-outset}
+```{r}
+#| warning: false
+#| message: false
+#| echo: false
+#| fig-width: 10
+#| fig-align: center
+#| label: fig-cdf-exp 
+#| fig-cap: Empirical CDF of Outcome in Experimental Data, by Treatment Status and Year
+
+p_cdf <- lalonde.exp %>% 
+  select(treat,re78) %>% 
+  mutate(treat = factor(treat,levels = c(0,1), labels = c("Untreated","Treated"))) %>% 
+  ggplot(aes(x = re78,  colour = treat)) + 
+  stat_ecdf() + 
+  scale_fill_aaas()  + 
+  scale_colour_aaas() +
+  scale_x_continuous(expand = expansion(mult = 0.25, add = 0)) +
+  labs(x = "Earnings", y = "Quantile")
+direct.label(p_cdf,list("top.bumptwice",hjust=0))
+```
+:::
+
+We see here that the two distributions have separated a bit, though there are regions where they essentially overlap. Just shy of the 25th percentile, for example, the two distributions overlap at around \$0 in income; there doesn't appear to be any change in earnings for treated individuals within the bottom quarter of the income distribution. 
+
+### Estimating Quantile Treatment Effects
+
+Suppose we wanted to estimate the difference at some quantile of interest (e.g., the 25th percentile or the 75th percentile). How would we go about doing this?  Essentially, for a selected quantile (e.g., 75th percentile), we need to measure the horizontal distance between the two curves in @fig-cdf-exp.  
+
+To build up an estimator that we can apply in our data, we first need to introduce some notation. 
+
+Define $F_{Y(W)wt}(y)$ as the potential outcome distribution function for an individual receiving treatment $W \in 0,1$, and who is observed to be in treatment group $w$ at time $t$. 
+
+For example:
+
+- $F_{Y(1)11}(y)$ is the distribution function for the outcome distribution under treatment for treated individuals in the post-treatment period.
+- $F_{Y(0)01}(y)$ is the distribution function for the outcome distribution under non-treatment for non-treated individuals in the post-treatment period.
+
+We can supply each of these distribution functions a value of the outcome $y$, and it will tell us at what quantile $\tau$ in the distribution that value of $y$ maps to.  For example, plugging in a value of $2,000 might tell us that this value is at the 50th percentile (median) of a given outcome distribution. 
+
+Stepping back from the notation a bit, note that these two functions are essentially what we already plotted in @fig-cdf-exp above. How do we calculate these functions in R? 
+
+Fortunately, base R has a defined function (`ecdf()`) that allows us to do this easily. Let's define empirical distribution functions for the treated and untreated groups in the experimental Lalonde data:
+
+```{r}
+#| message: false
+#| warning: false
+#| 
+y11 <- lalonde.exp %>% filter(treat==1) %>% pull(re78)
+y01 <- lalonde.exp %>% filter(treat==0) %>% pull(re78)
+
+eF11 <- ecdf(y11)
+eF01 <- ecdf(y01)
+             
+eF11(2000)
+eF01(2000)
+
+```
+
+We see in the calculations above that earnings of \$2,000 would place you at the 39th percentile of the treated group's post-intervention outcome distribution, and at the 45th percentile of the untreated groups distribution. 
+
+
+We next need to go one step further, however, and define the *inverse* of the above. That is, we need a function that, provided a quantile value $\tau$, returns the outcome value that maps to that quantile in the distribution. This is fundamentally what we'll be working with to estimate treatment effects because we want to know what the effect of the program is at the 75th percentile, not for someone with \$2,000 in earnings. 
+
+The concept described above is known as the **inverse distribution function**, and in our notation will be defined as $F^{-1}_{Y(W)wt}(\tau)$. That is, we supply this function with a quantile $\tau$, and it returns the value associated with the outcome distribution at that particular quantile. 
+
+From a practical sense, calculating the inverse CDF in R is straightforward, however there is not a base function like `ecdf()` we can draw from. Fortunately, the package `edfun` provides us with an easy way to calculate it. 
+
+```{r}
+#| warning: false
+#| message: false
+
+invF11 <- edfun::edfun(y11)$qfun
+invF01 <- edfun::edfun(y01)$qfun
+
+invF11(0.75)
+invF01(0.75)
+```
+
+In the calculated values above, an earnings value of `r round(invF11(0.75))` would place you at the 75th percentile of the treated group's post-intervention outcome distribution. Similarly, an earnings value of `r round(invF01(0.75))` would place you at the 75th percentile of the untreated group's post-intervention outcome distribution.
+
+We're now ready to estimate quantile treatment effects. Formally, the **quantile treatment effect on the treated (QTT)** at $\tau$ is obtained as the difference in the inverse distribution function for the treated group in the post period under treatment and under non-treatment:
+
+$$
+\Delta_{\tau} = F^{-1}_{Y(1)11}(\tau) - F^{-1}_{Y(0)11}(\tau)
+$$
+
+However, as usual the second quantity is an unobserved counterfactual. Given random assignment, we can estimate QTTs using the inverse distribution function from the untreated group. 
+
+$$
+\Delta_{\tau} = F^{-1}_{Y(1)11}(\tau) - F^{-1}_{Y(0)01}(\tau)
+$$
+So what is QTT(0.75) in the Lalonde experimental data? 
+
+```{r}
+invF11(0.75) - invF01(0.75)
+```
+
+There it is; we've calculated a quantile treatment effect in our experimental data!  
+
+In practice we do not need to go through the above process by hand each time. We can actually just plug our data into the `qte` package's functions to obtain estimates and standard errors: 
+
+```{r}
+#| message: false
+#| warning: false
+
+att_experimental <- 
+  ci.qtet(re78 ~ treat, 
+    data=lalonde.exp, 
+    probs=seq(0.05,0.95,0.05), 
+    se=T, 
+    iters=10)
+res_att_experimental <- summary(att_experimental)
+
+```
+
+::: column-margin
+Note that the `qte` package computes standard errors via a bootstrap method. 
+:::
+
+You'll see in @fig-qte-exp that the estimated QTT for the 75th percentile is exactly the same as we calculated above. 
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-cap: Average and Quantile Treatment Effects for the Experimental Lalonde Data 
+#| label: fig-qte-exp
+
+data.frame(res_att_experimental$qte) %>% 
+  rownames_to_column(var = "Percentile") %>% 
+  bind_cols(res_att_experimental$qte.se) %>% 
+  set_names(c("percentile","qte","se")) %>% 
+  bind_rows(tibble(percentile = "Avg",qte = res_att_experimental$ate, se = res_att_experimental$ate.se)) %>% 
+  arrange(desc(percentile)) %>% 
+  kable(digits = 1,col.names = c("Percentile","Treatment Effect","Standard Error")) %>% kable_styling()
+```
+
+```{r}
+#| fig-cap: Plot of Quantile Treatment Effects as Estimated Using qte Package
+#| label: fig-ggqte-exp
+#| echo: false
+#| warning: false
+
+qte::ggqte(att_experimental)
+```
+
+## Quantile Treatment Effect Estimation in Observational Data
+
+Now suppose we do not have the luxury of experimental data, but instead have a treated group and untreated group drawn from observational data. How can we identify and estimate quantile treatment effects? 
+
+There are a number of approaches we can take here:
+
+1. Estimate bounds on the quantile treatment effect distribution.
+2. Estimate QTTs under an assumption of conditional independence, i.e., unconfoudnendess. 
+3. Estimate QTTs using a quantile difference-in-differences (qDID) estimator.
+4. Estimate QTTs using a changes-in-changes (CiC) estimator (Athey and Imbens 2006). 
+
+Partial identification via estimating bounds (#1) will be a focus of our class next week, so we'll set it aside for now -- though note that the `qte` package can estimate bounds based on the method in Fan and Yu (2012). 
+
+Similarly, if we think we have enough measured data satisfy an unconfoundedness assumption (analogous to what we do with propensity scores ore matching) we can also estimate (#2) using the `qte` package. 
+
+Our focus for today will be on approaches (#3) and especially (#4). We'll also discuss how we can incorporate covariates to improve identifcation of quantile treatment effects. 
+
+### Intuition for qDID and CiC
+
+Essentially, we're going to lean on similar intuition for identifying QTTs as we do for identifying average treatment effects on the treated using difference-in-differences. In the case of quantile effects, however, we will be thinking in terms of how the distribution functions change in an untreated comparison group. We'll then use these changes as a "stand-in" for the counterfactual change that would have occurred in the treated group absent the treatment. 
+
+The difference between qDID and CiC essentially boils down to how we think about the counterfactual. Let's envision two scenarios with observational data for a job training program under which the treatment group is selected predominantly among unemployed individuals with low earnings:
+
+1.  The pre-intervention earnings at the 50th percentile in the treatment group are \$0, and at the 50th percentile of the untreated group, pre-intervention earnings are \$5,000. In the post-intervention period, the untreated group's earnings increase to $6,000 at the 50th percentile, while the treated group's earnings rise to \$3000 at the 50th percentile. 
+
+2. The pre-intervention earnings at the 50th percentile in the treatment group are \$0, and \$0 in earnings corresponds to the 10th percentile of the untreated group's pre-intervention earnings distribution. In the post period, the untreated group's earnings remain at \$0 at the 10th percentile, while earnings at the 50th percentile in the treated group rise to $3,000. 
+
+What counterfactual should we use for the treated group? The \$1,000 rise in earnings observed at the 50th percentile in the untreated group, even though the baseline value at the 50th percentile was very different than the treated group's median value? Or, is a better estimate of the counterfactual the experience of \$0 earners at the 10th percentile in the untreated group? **In short, the former assumption is used for qDID, while the latter assumption is used for CiC.** 
+
+
+### Estimating qDID and CiC
+
+With the intuition for both approaches solidified, let's now construct quantile treatment effect estimates in the observational Lalonde data using each. 
+
+First, let's pull out the outcome values for treated and control groups in the pre (1975) and post-intervention (1978) periods:
+
+```{r}
+y00 <- lalonde.psid %>% 
+  filter(treat==0) %>% 
+  pull(re75)
+
+y10 <- lalonde.psid %>% 
+  filter(treat==1) %>% 
+  pull(re75)
+
+y01 <- lalonde.psid %>% 
+  filter(treat==0) %>% 
+  pull(re78)
+
+y11 <- lalonde.psid %>% 
+  filter(treat==1) %>% 
+  pull(re78)
+```
+
+We'll next define eCDFs and inverse eCDFs for each:
+
+```{r}
+#| warning: false
+#| message: false
+#| 
+eF00 <- ecdf(y00)
+invF00 <- edfun::edfun(y00)$qfun
+
+eF10 <- ecdf(y10)
+invF10 <- edfun::edfun(y10)$qfun
+
+eF01 <- ecdf(y01)
+invF01 <- edfun::edfun(y01)$qfun
+
+eF11 <- ecdf(y11)
+invF11 <- edfun::edfun(y11)$qfun
+```
+
+The next thing we need to do is to define a quantile of interest. Let's estimate for the 75th percentile.
+
+```{r}
+q = 0.75
+```
+
+Next, let's estimate the observed change in the treated group at the 75th percentile:
+
+```{r}
+invF11(q)
+invF10(q)
+change_treated <- invF11(q) - invF10(q)
+change_treated
+```
+
+So we observe earnings going up by `r round(change_treated)`. But what would have happened counterfactually? For this we will appeal to the untreated group's experience.
+
+First, let's estimate what change happens at the 75th percentile of the untreated group's earnings distribution:
+
+```{r}
+invF01(q)
+invF00(q)
+cfx_untreated_q75 <- invF01(q) - invF00(q)
+cfx_untreated_q75 
+```
+
+To construct a qDID estimate, we'd simply net out this counterfactual from the observed change in the treated group:
+
+```{r}
+qtt_qDID <- change_treated - cfx_untreated_q75 
+qtt_qDID 
+```
+
+Using qDID, we would estimate that the job trainings program increased earnings by \$`r round(qtt_qDID)`. 
+
+Notice, however, that there is a *huge* difference in earnings at the 75th percentile of the treated group's pre-intervention earnings distribution (\$`r round(invF10(q))`), and the untreated group's (\$`r round(invF00(q))`). 
+
+As an alternative, we can adopt a Changes-in-Changes model. Recall from above that this model requires an additional step: we must map the earnings value of the treated group at the 75th percentile to the corresponding quantile in the untreated groups pre-intervention earnings distribution. We then use the change in earnings *at this different quantile* as an estimate of the counterfactual:
+
+```{r}
+# Earnings at the qth quantile of the treated group
+y_q <- invF10(q)
+y_q
+
+# Find what quantile this maps to in the untreated group's distribution. 
+q_star <- eF00(y_q)
+q_star
+
+cfx_CiC <- invF01(q_star) - y_q
+cfx_CiC
+
+change_treated <- invF11(q) - invF10(q)
+change_treated
+
+qtt_CiC <- change_treated - cfx_CiC
+qtt_CiC
+```
+
+While the above exercises went through estimating a changes-in-changes value by hand, the formal estimator is a bit simpler due to some cancelling out of terms. Specifically, the counterfactual CDF is given by 
+
+$$
+\hat F_{Y(0),11}(y) = F_{y,01}(F_{y,00}^{-1}(F_{y,10}(y)))
+$$
+where F_{y,00} is the observed CDF for the untreated group in the pre-period, F_{y,10} is the observed CDF for the treated group in the pre period, etc. 
+
+Equivalently, we can estimate the inverse CDF of the counterfactual as: 
+
+$$
+\hat F_{Y(0),11}^{-1}(\tau) = F_{y,01}^{-1}(F_{y,00}(F^{-1}_{y,10}(\tau)))
+$$
+And the treatement effect estimate is given by:
+
+$$
+\Delta_{\tau}^{CiC} = F_{Y(1),11}^{-1}(\tau)- \hat F_{Y(0),11}^{-1}(\tau)
+$$
+Implemented for our example, the QTT for the 75th percentile is
+
+```{r}
+invF11(q) - invF01(eF00(invF10(q)))
+```
+
+which is identical to the "by hand" estimate we calculated above. 
+
+Again, the `qte` package in R will calculate changes-in-changes estimates for you, along with standard errors. The estimates are slightly different here, owing to some "lumpiness" in the eCDFs and slight differnces in calculating the values at quantiles in the data. However, the QTTs are quite close to what we estimated above:\
+
+::: column-margin
+There is also a Stata implementation of the Changes-in-Changes estimator, which can be found [here](https://sites.google.com/site/blaisemelly/home/computer-programs/cic_stata).
+:::
+
+```{r cic}
+df <- 
+  lalonde.psid %>% 
+  select(id,re75,re78,treat) %>% 
+  gather(year,y,-id,-treat) %>% 
+  tibble() %>% 
+  mutate(year = ifelse(year=="re75",1975,1978))
+
+est_CiC <- CiC(y ~ treat, t = 1978, tmin1=1975, 
+               tname = "year", idname = "id",
+               data = df, probs = c(q), 
+               se = TRUE, panel = F)
+summary(est_CiC)
+```
+
+
+# Changes-in-Changes with Covariates
+
+```{r}
+# Note that this code is simply adapted from the underlying CiC formula to show 
+# what is going on behind the curtain. Code source: Calloway's qte package. 
+
+library(quantreg)
+
+# Quantiles to estimate over
+u <- seq(0.01, 0.99, 0.01)
+
+# Extract out various subsets of the data based on treatment and time 
+df00 = lalonde.psid.panel %>%
+  filter(treat==0 & year==1975)
+
+df10 = lalonde.psid.panel %>%
+  filter(treat==1 & year==1975)
+
+df01 = lalonde.psid.panel %>%
+  filter(treat==0 & year==1978)
+
+df11 = lalonde.psid.panel %>%
+  filter(treat==1 & year==1978)
+
+# Obtain sample sizes for each subset
+n1t <- df11  %>%
+  nrow()
+n1tmin1 <-df10  %>%
+  nrow()
+n0t <- df01 %>%
+  nrow()
+n0tmin1 <- df00 %>%
+  nrow()
+
+# Quantile regressions of the outcome on covariates
+yformla <- "re ~ age + I(age^2) + education + black + hispanic + married + nodegree"
+QR0t <- rq(yformla, data = df01 , tau = u)
+QR0tmin1 <- rq(yformla, data = df00, tau = u)
+QR1t <- rq(yformla, data = df11, tau = u)
+
+# Obtain predictions of the conditional distribution function given each 
+# sample individual's covariate 
+# This is for the pre-period in the control group 
+QR0tmin1F <- predict(QR0tmin1, newdata = df10,
+                     type = "Fhat", stepfun = TRUE)
+# Now map the observed outcome into the quantile of the conditional distribution function 
+# for each sample individual
+F0tmin1 <- sapply(1:n1tmin1, function(i) QR0tmin1F[[i]](df10$re[i]))
+
+QR0tQ <- predict(QR0t, newdata = df10, type = "Qhat",
+                 stepfun = TRUE)
+y0t <- sapply(1:n1tmin1, function(i) QR0tQ[[i]](F0tmin1[i]))
+F.treatedcf.t <- ecdf(y0t)
+att <- mean(df11[, "re"]) - mean(y0t)
+
+q1 = quantile(df11[, "re"], probs = u, type = 1)
+q0 = quantile(F.treatedcf.t, probs = u, type = 1)
+qte = (q1 - q0); qte
+
+c1 <- CiC(re ~ treat, t=1978, tmin1=1975, tname="year",
+          xformla=~age + I(age^2) + education + black + hispanic + married + nodegree,
+          data=lalonde.psid.panel, idname="id", se=FALSE,
+          probs=seq(0.05, 0.95, 0.05))
+
+summary(c1)
+
+```
+
+
+
+

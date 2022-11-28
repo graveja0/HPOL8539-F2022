@@ -11,6 +11,7 @@ editor_options:
   chunk_output_type: console
 bibliography: ../references.bib
 ---
+
 ```{r, message = FALSE, warning = FALSE}
 library(tidyverse)
 library(fastDummies)
@@ -371,7 +372,6 @@ run_ols <- function(df_, standard = TRUE, robust = TRUE, cluster = TRUE, permuta
 
 ```
 
-
 ```{r, eval = TRUE, cache = TRUE}
 # plan("multisession")
 # res_aR_txCP <-
@@ -487,7 +487,6 @@ df_C10Cp <-
 
 ```
 
-
 ## Why do inference?
 
 ::: incremental
@@ -544,15 +543,12 @@ Discriminate
 ::: r-hstack
 ::: r-stack
 ::: {data-id="generate" style="background: #2780e3; width: 175px; height: 175px; border-radius: 200px;"}
-
 :::
 
 ::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
-
 :::
 
 ::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
-
 :::
 :::
 
@@ -686,9 +682,9 @@ Discriminate
 
 ::: incremental
 -   This conceptualization will become important later when we think about **bootstrapping.**
--   But first, we need to understand different types of inference and when we might use each. 
+-   But first, we need to understand different types of inference and when we might use each.
 -   To do so, we'll construct a **decision framework** for how we do inference.
-::: 
+:::
 
 ## Inference Framework
 
@@ -696,8 +692,7 @@ We can think of two dimensions of uncertainty in a policy evaluation:
 
 ::: incremental
 1.  **Sampling**: we only observe a sample of the population of interest.
-2.  **Treatment assignment**: we (often) only observe one potential outcome. 
-
+2.  **Treatment assignment**: we (often) only observe one potential outcome.
 :::
 
 ## Inference Framework
@@ -705,46 +700,35 @@ We can think of two dimensions of uncertainty in a policy evaluation:
 We can think of two dimensions of uncertainty in a policy evaluation:
 
 1.  **Sampling**: we only observe a sample of the population of interest.
-2.  **Treatment assignment**: we (often) only observe one potential outcome. 
+2.  **Treatment assignment**: we (often) only observe one potential outcome.
 
 Our objective here is to develop an inference decision framework around these dimensions.
 
 ## Inference Framework
 
-
 ::: columns
-
 ::: column
-
-
-- **Analytic** inference relies on equations that use sample analogues to estimate a population-level parameter, such as a standard error. 
-
+-   **Analytic** inference relies on equations that use sample analogues to estimate a population-level parameter, such as a standard error.
 :::
 
 ::: column
-
 Example:
 
-$$ SE = \frac{\sigma}{\sqrt{n}} $$
-- $SE$ is the standard error of the sample
-- $\sigma$ is the sample standard deviation
-- $n$ is the sample size. 
+$$ SE = \frac{\sigma}{\sqrt{n}} $$ - $SE$ is the standard error of the sample - $\sigma$ is the sample standard deviation - $n$ is the sample size.
 :::
 :::
 
 ## Inference Framework
 
 ::: incremental
-
-- Drawback: standard analytic formulas apply for simple random samples of a population.
-- Another consideration is heteroskedasticity (though robust variance formulas are available)
-- In policy evaluation we often have both population sampling *and* treatment assignment correlated with clusters (e.g., states, households, etc.). 
-
+-   Drawback: standard analytic formulas apply for simple random samples of a population.
+-   Another consideration is heteroskedasticity (though robust variance formulas are available)
+-   In policy evaluation we often have both population sampling *and* treatment assignment correlated with clusters (e.g., states, households, etc.).
 :::
 
 ## Inference Framework
 
-This leads to the following frequently-asked questions: 
+This leads to the following frequently-asked questions:
 
 ::: incremental
 1.  Should we use robust standard errors?
@@ -755,20 +739,17 @@ This leads to the following frequently-asked questions:
 ## Four Questions You Should Ask
 
 ::: incremental
-- How were the data sampled? 
-- How was treatment assigned? 
-    - Is treatment assignment perfectly or partially correlated with cluster (e.g., state)?
-    - If so, how many clusters do you observe? (large #? large fraction?)
-  
+-   How were the data sampled?
+-   How was treatment assigned?
+    -   Is treatment assignment perfectly or partially correlated with cluster (e.g., state)?
+    -   If so, how many clusters do you observe? (large #? large fraction?)
 :::
 
 ## Four Questions You Should Ask
 
 ::: incremental
-
-- If you can answer these questions there is a clear pathway to conducting inference---though note that multiple pathways may exist!
-- We'll now tackle each of these questions in turn.
-
+-   If you can answer these questions there is a clear pathway to conducting inference---though note that multiple pathways may exist!
+-   We'll now tackle each of these questions in turn.
 :::
 
 ##  {background-image="media/clustering-framework-blank.png" data-background-size="contain"}
@@ -782,11 +763,9 @@ This leads to the following frequently-asked questions:
 -   It has to do with the fact that we typically obtain a random sample from the population of interest.
 :::
 
-
 ## Sampling Uncertainty
 
 ::: incremental
-
 -   While simple random samples from a population are certainly feasible, we often analyze data sampled in complex ways.
     -   Stratified samples (e.g., independent samples within a fixed number of groups like states)
     -   Clustered samples of households.
@@ -813,10 +792,9 @@ No reason to cluster, even if there is within-cluster correlation in outcomes.
 :::
 
 ::: incremental
-- Clustering standard errors can be harmful, resulting in unnecessarily wide confidence intervals. 
+-   Clustering standard errors can be harmful, resulting in unnecessarily wide confidence intervals.
 
-- If the sample represents a large fraction of the population and treatment effects are heterogeneous across units, robust standard errors are also conservative. 
-
+-   If the sample represents a large fraction of the population and treatment effects are heterogeneous across units, robust standard errors are also conservative.
 :::
 
 Source: @abadieWhenShouldYou2022a
@@ -830,23 +808,21 @@ No reason to cluster, even if there is within-cluster correlation in outcomes.
 :::
 
 ::: incremental
+-   Clustering is not appropriate even if there is within-cluster correlation in outcomes (however those clusters are defined), and thus even if clustering makes a substantial difference in the magnitude of the standard errors.
 
-- Clustering is not appropriate even if there is within-cluster correlation in outcomes (however those clusters are defined), and thus even if clustering makes a substantial difference in the magnitude of the standard errors.
-
-- However, if the data contain information on attributes of the units that are correlated with unit-level treatment effects, the methods in @abadieSamplingBasedDesignBasedUncertainty2020 can be applied to obtain less conservative standard errors.
+-   However, if the data contain information on attributes of the units that are correlated with unit-level treatment effects, the methods in @abadieSamplingBasedDesignBasedUncertainty2020 can be applied to obtain less conservative standard errors.
 :::
 
 Source: @abadieWhenShouldYou2022a
-
 
 ##  {background-image="media/clustering-framework-RR.png" data-background-size="contain"}
 
 ## Example
 
 ::: incremental
-- Basic 2x2 difference-in-difference design with null ATT $\tau=0$. 
-- Run a linear OLS DID specification for two time periods (pre vs. post)
-- Vary sampling design and assignment mechanisms. 
+-   Basic 2x2 difference-in-difference design with null ATT $\tau=0$.
+-   Run a linear OLS DID specification for two time periods (pre vs. post)
+-   Vary sampling design and assignment mechanisms.
 :::
 
 ## DID Example
@@ -865,10 +841,9 @@ df_RR %>%
   kable_styling()
 ```
 
-
 ##  {background-image="media/clustering-framework-RR-CR.png" data-background-size="contain"}
 
-## Cluster Sampling, Random Assignment 
+## Cluster Sampling, Random Assignment
 
 ## Cluster Sampling, Random Assignment {.smaller}
 
@@ -879,7 +854,7 @@ df_RR %>%
 **Scenario**: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.
 
 ::: incremental
-- Returns to age at HS graduation within a large sample of US households: large number of clusters (households) sampled, but small fraction of total clusters sampled. 
+-   Returns to age at HS graduation within a large sample of US households: large number of clusters (households) sampled, but small fraction of total clusters sampled.
 :::
 
 ## Cluster Sampling, Random Assignment {.smaller auto-animate="true" auto-animate-easing="ease-in-out"}
@@ -887,8 +862,8 @@ df_RR %>%
 **Scenario**: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.
 
 ::: incremental
-- $q_k$ is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5). 
-- $p_k$ is the fraction of the population sampled. 
+-   $q_k$ is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5).
+-   $p_k$ is the fraction of the population sampled.
 :::
 
 Source: @abadieWhenShouldYou2022a
@@ -898,41 +873,35 @@ Source: @abadieWhenShouldYou2022a
 **Scenario**: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.
 
 ::: {.callout-tip appearance="simple"}
-If $q_k$ small or if $q_k$ large but $p_k$ small, clustered standard errors are asymptotically correct (with large # of clusters).
+If $q_k$ small or if $q_k$ large but $p_k$ small, clustered standard errors are asymptotically correct (with large \# of clusters).
 :::
 
-
-- $q_k$ is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5). 
-- $p_k$ is the fraction of the population sampled. 
-
+-   $q_k$ is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5).
+-   $p_k$ is the fraction of the population sampled.
 
 Source: @abadieWhenShouldYou2022a
-
 
 ## Cluster Sampling, Random Assignment {.smaller auto-animate="true" auto-animate-easing="ease-in-out"}
 
 **Scenario**: Clustered sample of units within clusters from a large population with randomized treatment assignment at the unit level.
 
 ::: {.callout-tip appearance="simple"}
-If $q_k$ small or if $q_k$ large but $p_k$ small, clustered standard errors are asymptotically correct (with large # of clusters).
+If $q_k$ small or if $q_k$ large but $p_k$ small, clustered standard errors are asymptotically correct (with large \# of clusters).
 :::
 
 ::: {.callout-important appearance="simple"}
 If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach. More later!
 :::
 
-
-- $q_k$ is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5). 
-- $p_k$ is the fraction of the population sampled. 
-
+-   $q_k$ is the fraction of clusters sampled (e.g., 25 out of 50 states = 0.5).
+-   $p_k$ is the fraction of the population sampled.
 
 Source: @abadieWhenShouldYou2022a
-
 
 ## DID Example
 
 ::: {.callout-tip appearance="simple"}
-If $q_k$ small or if $q_k$ large but $p_k$ small, clustered standard errors are asymptotically correct (with large # of clusters).
+If $q_k$ small or if $q_k$ large but $p_k$ small, clustered standard errors are asymptotically correct (with large \# of clusters).
 :::
 
 ```{r, message = FALSE, warning = FALSE}
@@ -950,7 +919,7 @@ df_C30R %>%
   kable_styling()
 ```
 
-## DID Example 
+## DID Example
 
 ::: {.callout-important appearance="simple"}
 If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach. More later!
@@ -971,19 +940,15 @@ df_C10R %>%
   kable_styling()
 ```
 
-
-
 ##  {background-image="media/clustering-framework-RC.png" data-background-size="contain"}
 
-
 # Treatment Assignment
-
 
 ## Treatment Assignment
 
 ::: incremental
-- This dimension of uncertainty occurs because we often only observe one potential outcome for each treated unit. 
-- This would remain the case even if we observed the entire population of interest!
+-   This dimension of uncertainty occurs because we often only observe one potential outcome for each treated unit.
+-   This would remain the case even if we observed the entire population of interest!
 :::
 
 ## Treatment Assignment
@@ -1002,17 +967,14 @@ df_RR %>%
   kable_styling()
 ```
 
-
-
 ## Treatment Assignment {.smaller}
 
 ::: incremental
-- Often, treatment assignment is correlated with clusters (e.g., state, county, etc.).
-- If treatment is perfectly correlated with cluster, then everyone within the same cluster is either treated or untreated.
-    - Effect of Medicaid expansion on earnings.  
-- Alternatively, treatment could be partially correlated with cluster.
-    - Effect of attending college on earnings, where it is observed that college attendance is correlated within state, county, etc. 
-
+-   Often, treatment assignment is correlated with clusters (e.g., state, county, etc.).
+-   If treatment is perfectly correlated with cluster, then everyone within the same cluster is either treated or untreated.
+    -   Effect of Medicaid expansion on earnings.\
+-   Alternatively, treatment could be partially correlated with cluster.
+    -   Effect of attending college on earnings, where it is observed that college attendance is correlated within state, county, etc.
 :::
 
 ##  {background-image="media/clustering-framework-RR-to-RC.png" data-background-size="contain"}
@@ -1020,7 +982,6 @@ df_RR %>%
 ## Random Sampling, Clustered Assignment {.smaller}
 
 **Scenario**: Random sample of units from a large population with partially or fully clustered treatment assignment.
-
 
 ## Random Sampling, Clustered Assignment {.smaller}
 
@@ -1031,16 +992,16 @@ If assignment is perfectly clustered, **and you observe a large number of cluste
 :::
 
 ::: incremental
-- Cluster at the level of the intervention (e.g., state)
+-   Cluster at the level of the intervention (e.g., state)
 :::
 
 Source: @abadieWhenShouldYou2022a
 
 ## DID Example
 
-- Random sampling of population
-- All 50 state clusters observed
-- Treatment perfectly correlated with cluster
+-   Random sampling of population
+-   All 50 state clusters observed
+-   Treatment perfectly correlated with cluster
 
 ```{r, message = FALSE, warning = FALSE}
 df_RC %>% 
@@ -1057,41 +1018,28 @@ df_RC %>%
   kable_styling()
 ```
 
-
-
 ## Random Sampling, Clustered Assignment {.smaller}
 
 **Scenario**: Random sample of units from a large population with partially or fully clustered treatment assignment.
 
 ::: incremental
-
-- If treatment is not perfectly correlated with cluster, then clustered standard errors may be too conservative. 
-- @abadieWhenShouldYou2022a provide analytic formulas as well as a **bootstrap** procedure that can be used for inference. 
-
+-   If treatment is not perfectly correlated with cluster, then clustered standard errors may be too conservative.
+-   @abadieWhenShouldYou2022a provide analytic formulas as well as a **bootstrap** procedure that can be used for inference.
 :::
 
-
-##  Bootstrap Inference
+## Bootstrap Inference
 
 ::: incremental
-
-- Bootstrapping is a way to conduct inference when large-sample theory provides a poor guide.
-    - Small number of clusters
-    - Treatment assignment that is partially correlated with cluster. 
-    
-- You will see multiple bootstrap methods in the next slides.
-    - Two-stage cluster bootstrap [@abadieWhenShouldYou2022a]
-    - Wild cluster bootstrap [@cameronBootstrapbasedImprovementsInference2008]
-
-- Let's spend a few minutes on intuition for the bootstrap...
-
+-   Bootstrapping is a way to conduct inference when large-sample theory provides a poor guide.
+    -   Small number of clusters
+    -   Treatment assignment that is partially correlated with cluster.
+-   You will see multiple bootstrap methods in the next slides.
+    -   Two-stage cluster bootstrap [@abadieWhenShouldYou2022a]
+    -   Wild cluster bootstrap [@cameronBootstrapbasedImprovementsInference2008]
+-   Let's spend a few minutes on intuition for the bootstrap...
 :::
 
-
-
-
-
-## Bootstrap Inference  {auto-animate="true" auto-animate-easing="ease-in-out"}
+## Bootstrap Inference {auto-animate="true" auto-animate-easing="ease-in-out"}
 
 Back to basics:
 
@@ -1109,10 +1057,9 @@ Discriminate
 :::
 :::
 
-## Bootstrap Inference  {auto-animate="true" auto-animate-easing="ease-in-out"}
+## Bootstrap Inference {auto-animate="true" auto-animate-easing="ease-in-out"}
 
-
-- Basic idea is to generate a large number of bootstrap samples that mimic the distribution from which the actual sample was obtained [@roodmanFastWildBootstrap2019].
+-   Basic idea is to generate a large number of bootstrap samples that mimic the distribution from which the actual sample was obtained [@roodmanFastWildBootstrap2019].
 
 ::: r-stack
 ::: {data-id="generate" style="background: #f7b21b; width: 350px; height: 350px; border-radius: 200px;"}
@@ -1133,15 +1080,12 @@ Discriminate
 ::: r-hstack
 ::: r-stack
 ::: {data-id="generate" style="background: #f7b21b; width: 175px; height: 175px; border-radius: 200px;"}
-
 :::
 
 ::: {data-id="estimate" style="background: #3fb618; width: 125px; height: 125px; border-radius: 200px;"}
-
 :::
 
 ::: {data-id="discriminate" style="background: #e83e8c; width: 75px; height: 75px; border-radius: 200px;"}
-
 :::
 :::
 
@@ -1274,30 +1218,29 @@ Discriminate
 ## Bootstrap Inference
 
 ::: incremental
-- We repeatedly resample the sample (with replacement) and generate the parameter of interest each time.
-- The bootstrap P value is calculated as the proportion of the bootstrap values that are more extreme than the actual one from the original sample.
-- In this way, we essentially mimic the process we've used all along to understand the properties of estimators by generating data!
+-   We repeatedly resample the sample (with replacement) and generate the parameter of interest each time.
+-   The bootstrap P value is calculated as the proportion of the bootstrap values that are more extreme than the actual one from the original sample.
+-   In this way, we essentially mimic the process we've used all along to understand the properties of estimators by generating data!
 :::
 
 ## Bootstrap Inference
 
 ::: incremental
-- This is how bootstrapping works at a high level. 
-- The various bootstrap procedures you'll need have some additional wrinkles because of the clustered nature of sampling and/or treatment assignment. 
-- Let's now go back to the objective that brought us here ... 
+-   This is how bootstrapping works at a high level.
+-   The various bootstrap procedures you'll need have some additional wrinkles because of the clustered nature of sampling and/or treatment assignment.
+-   Let's now go back to the objective that brought us here ...
 :::
-
 
 ## Random Sampling, Clustered Assignment {.smaller}
 
 **Scenario**: Random sample of units from a large population with partially or fully clustered treatment assignment.
 
-- If treatment is not perfectly correlated with cluster, then clustered standard errors may be too conservative. 
-- @abadieWhenShouldYou2022a provide analytic formulas as well as a **bootstrap** procedure that can be used for inference. 
+-   If treatment is not perfectly correlated with cluster, then clustered standard errors may be too conservative.
+-   @abadieWhenShouldYou2022a provide analytic formulas as well as a **bootstrap** procedure that can be used for inference.
 
 ::: incremental
-- The analytic variance formulas are called **Causal Cluster Variance (CCV)**. 
-- This bootstrap procedure is called **two-stage cluster bootstrap (TSCB)**. 
+-   The analytic variance formulas are called **Causal Cluster Variance (CCV)**.
+-   This bootstrap procedure is called **two-stage cluster bootstrap (TSCB)**.
 :::
 
 ## Clustered Assignment {.smaller auto-animate="true" auto-animate-easing="ease-in-out"}
@@ -1307,8 +1250,6 @@ Discriminate
 ::: {.callout-tip appearance="simple"}
 If assignment is perfectly clustered, **and you observe a large number of clusters**, use standard cluster adjustment.
 :::
-
-
 
 ## Clustered Assignment {.smaller auto-animate="true" auto-animate-easing="ease-in-out"}
 
@@ -1324,13 +1265,11 @@ If assignment is perfectly clustered, **and you observe a large number of cluste
 If assignment is partially clustered (i.e., some variation in Tx assignment within cluster), use CCV/TSCB.
 :::
 
-## Clustered Assignment 
+## Clustered Assignment
 
-::: columns 
-
+::: columns
 ::: column
-
-Treatment perfectly correlated with cluster: 
+Treatment perfectly correlated with cluster:
 
 ::: {style="font-size: 0.5em"}
 ```{r}
@@ -1346,14 +1285,11 @@ df_C10C %>%
 :::
 :::
 
+## Clustered Assignment
 
-## Clustered Assignment 
-
-::: columns 
-
+::: columns
 ::: column
-
-Treatment perfectly correlated with cluster: 
+Treatment perfectly correlated with cluster:
 
 ::: {style="font-size: 0.5em"}
 ```{r}
@@ -1369,11 +1305,9 @@ df_C10C %>%
 :::
 
 ::: column
-
-Treatment partially correlated with cluster: 
+Treatment partially correlated with cluster:
 
 ::: {style="font-size: 0.5em"}
-
 ```{r}
 set.seed(234)
 df_C10Cp %>% 
@@ -1387,7 +1321,6 @@ df_C10Cp %>%
 :::
 
 ::: column
-
 :::
 :::
 
@@ -1395,124 +1328,104 @@ df_C10Cp %>%
 
 ##  {background-image="media/tscb-algorithm.png" data-background-size="contain"}
 
-
 ::: footer
 Source: @abadieWhenShouldYou2022a
 :::
 
-
-
 ## A Practical Guide to TSCB
 
 ::: incremental
-1. Start with your sample. At a minimum, you'll need
-    - Outcome
-    - Treatment indicator
-    - Cluster variable
+1.  Start with your sample. At a minimum, you'll need
+    -   Outcome
+    -   Treatment indicator
+    -   Cluster variable
 :::
 
 ## A Practical Guide to TSCB
 
 ::: incremental
-2. Determine $q_k$, the fraction of (population-level) clusters that are sampled.
-    - It could be high! (e.g., for a state policy evaluation using a national survey that includes all states, this implies $q_k=1.0$)
-    - It could be low! (e.g., a national survey of households)
+2.  Determine $q_k$, the fraction of (population-level) clusters that are sampled.
+    -   It could be high! (e.g., for a state policy evaluation using a national survey that includes all states, this implies $q_k=1.0$)
+    -   It could be low! (e.g., a national survey of households)
 :::
 
-    
 ## A Practical Guide to TSCB
 
 ::: incremental
-3. Define a number of bootstrap replications (e.g., $B=100$)
-    - You're now ready to iterate through the bootstrap procedure replication by replication!
-:::
-
-    
-## A Practical Guide to TSCB {.smaller}
-
-For each bootstrap replication ... 
-
-::: incremental
-
-4. Create a "pseudo-sample" by replicating your original sample $1/q_k$ times. 
-
-    - If $1/q_k$ is not an integer, you can use the methods in @chaoBootstrapMethodFinite1985. 
-    - Essentially, you solve for a fraction $\alpha$ using a fairly simple formula and some basic algebra.
-    - If you observe 20 of 50 clusters (such that $q_k=0.4$ and $1/q_k=2.25$), as you proceed through the B bootstrap replications, you'd replicate the sample 2 times with probability $\alpha$ or 3 times with probability $1-\alpha$. 
+3.  Define a number of bootstrap replications (e.g., $B=100$)
+    -   You're now ready to iterate through the bootstrap procedure replication by replication!
 :::
 
 ## A Practical Guide to TSCB {.smaller}
 
-For each bootstrap replication ... 
+For each bootstrap replication ...
 
 ::: incremental
+4.  Create a "pseudo-sample" by replicating your original sample $1/q_k$ times.
 
-5. For each cluster in your pseudo-sample, calculate and record the fraction of observations treated. 
-    - This is the empricial distribution of cluster-level treatment fractions, or $\bar{W}_{k,m}$. 
-    - **NOTE**: To proceed, $\bar{W}_{k,m}$ *must* be between 0 and 1 for all clusters. 
-    - If treatment assignment is perfectly correlated with cluster, then just use cluster robust inference (if you have a sufficient number clusters! If you don't, skip to the section on inference with a small number of clusters ... )
-
+    -   If $1/q_k$ is not an integer, you can use the methods in @chaoBootstrapMethodFinite1985.
+    -   Essentially, you solve for a fraction $\alpha$ using a fairly simple formula and some basic algebra.
+    -   If you observe 20 of 50 clusters (such that $q_k=0.4$ and $1/q_k=2.25$), as you proceed through the B bootstrap replications, you'd replicate the sample 2 times with probability $\alpha$ or 3 times with probability $1-\alpha$.
 :::
 
+## A Practical Guide to TSCB {.smaller}
 
-## A Practical Guide to TSCB
-
-For each bootstrap replication ... 
-
-::: incremental
-
-6. Randomly draw clusters from your pseudo-sample.
-    - If you observe 20 clusters in your original sample, then randomly draw 20 clusters from your pseudo-sample. 
-    - Draw these clusters *without* replacement. 
-
-:::
-
-
-## A Practical Guide to TSCB
-
-For each bootstrap replication ... 
+For each bootstrap replication ...
 
 ::: incremental
-
-7. For each of these randomly drawn clusters, sample a treatment fraction value from $\bar{W}_{k,m}$. 
-    - You sample here *with* replacement. 
-    - This is the new **assignment probability** for each sampled cluster, called $A_{k,m}$. 
-
+5.  For each cluster in your pseudo-sample, calculate and record the fraction of observations treated.
+    -   This is the empricial distribution of cluster-level treatment fractions, or $\bar{W}_{k,m}$.
+    -   **NOTE**: To proceed, $\bar{W}_{k,m}$ *must* be between 0 and 1 for all clusters.
+    -   If treatment assignment is perfectly correlated with cluster, then just use cluster robust inference (if you have a sufficient number clusters! If you don't, skip to the section on inference with a small number of clusters ... )
 :::
 
 ## A Practical Guide to TSCB
 
-For each bootstrap replication ... 
+For each bootstrap replication ...
 
 ::: incremental
-
-8. Next, within each sampled cluster (each of which has cluster sample size $N_{k,m}$), sample (with replacement) treated and control units.
-  - Sample $N_{k,m}A_{k,m}$ treated units.
-  - Sample $N_{k,m}(1 - A_{k,m})$ untreated units. 
-  - Do this for each sampled cluster in your bootstrap replicate sample. 
-
+6.  Randomly draw clusters from your pseudo-sample.
+    -   If you observe 20 clusters in your original sample, then randomly draw 20 clusters from your pseudo-sample.
+    -   Draw these clusters *without* replacement.
 :::
 
 ## A Practical Guide to TSCB
 
-For each bootstrap replication ... 
+For each bootstrap replication ...
 
 ::: incremental
+7.  For each of these randomly drawn clusters, sample a treatment fraction value from $\bar{W}_{k,m}$.
+    -   You sample here *with* replacement.
+    -   This is the new **assignment probability** for each sampled cluster, called $A_{k,m}$.
+:::
 
-9. Estimate your outcome regression (e.g., DID using least squares or a fixed effect model) on this bootstrap sample, are record the statistic/parameter you are interested in (e.g., $\hat \tau$)
+## A Practical Guide to TSCB
 
+For each bootstrap replication ...
+
+::: incremental
+8.  Next, within each sampled cluster (each of which has cluster sample size $N_{k,m}$), sample (with replacement) treated and control units.
+
+-   Sample $N_{k,m}A_{k,m}$ treated units.
+-   Sample $N_{k,m}(1 - A_{k,m})$ untreated units.
+-   Do this for each sampled cluster in your bootstrap replicate sample.
+:::
+
+## A Practical Guide to TSCB
+
+For each bootstrap replication ...
+
+::: incremental
+9.  Estimate your outcome regression (e.g., DID using least squares or a fixed effect model) on this bootstrap sample, are record the statistic/parameter you are interested in (e.g., $\hat \tau$)
 :::
 
 ## A Practical Guide to TSCB
 
 ::: incremental
-
-10. Repeat steps 4-9 $B$ times and collect the $\hat \tau$ estimates. 
-    - You can now calculate the standard deviation of these estimates as an estimate of the standard error. 
-    - You could also calculate a p-value by calculating the fraction of bootstrap estimates that are as or more extreme than your estimate from the original data. 
-
+10. Repeat steps 4-9 $B$ times and collect the $\hat \tau$ estimates.
+    -   You can now calculate the standard deviation of these estimates as an estimate of the standard error.
+    -   You could also calculate a p-value by calculating the fraction of bootstrap estimates that are as or more extreme than your estimate from the original data.
 :::
-
 
 ## DID Example
 
@@ -1530,29 +1443,26 @@ df_C30Cp %>%
   kable_styling()
 ```
 
+## Small Cluster Bias
+
+::: incremental
+-   Thus far we have assumed we have a sufficiently large number of clusters (e.g., \>30) in our sample.
+-   Justification of inference with cluster-robust standard errors assumes that the number of clusters goes to infinity.
+:::
 
 ## Small Cluster Bias
 
-::: incremental 
-
-- Thus far we have assumed we have a sufficiently large number of clusters (e.g., >30) in our sample. 
-- Justification of inference with cluster-robust standard errors assumes that the number of clusters goes to infinity.
+::: incremental
+-   What happens if we have only a few clusters?
+    -   Example: Evaluation of a state-level policy change based on a sample of 8 states with 4 treated and 4 untreated.
+-   @cameronBootstrapbasedImprovementsInference2008: With a small number of clusters, cluster-robust standard errors are downwards biased.
+    -   You're going to over-reject the null hypothesis because your standard errors are too small.
 :::
 
-
-## Small Cluster Bias
-
-::: incremental 
-- What happens if we have only a few clusters?
-    - Example: Evaluation of a state-level policy change based on a sample of 8 states with 4 treated and 4 untreated.
-- @cameronBootstrapbasedImprovementsInference2008: With a small number of clusters, cluster-robust standard errors are downwards biased.
-    - You're going to over-reject the null hypothesis because your standard errors are too small. 
-:::
-
-## DID Example 
+## DID Example
 
 ::: {.callout-important appearance="simple"}
-If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach. 
+If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach.
 :::
 
 ```{r, message = FALSE, warning = FALSE}
@@ -1570,24 +1480,22 @@ df_C10R %>%
   kable_styling()
 ```
 
-
 ## Small Cluster Bias
 
 ::: incremental
-- How can we deal with this? 
-- Two primary ways (though there are others):
-    - Wild cluster bootstrap.
-    - Randomization inference
+-   How can we deal with this?
+-   Two primary ways (though there are others):
+    -   Wild cluster bootstrap.
+    -   Randomization inference
 :::
 
 ##  {background-image="media/clustering-framework-CRCC-to-small.png" data-background-size="contain"}
 
-
 ## Wild cluster bootstrap
 
 ::: incremental
-- Same basic idea as a regular bootstrap.
-- Main difference is that rather than resampling rows of our data, we resample the residuals after fitting our outcome model. 
+-   Same basic idea as a regular bootstrap.
+-   Main difference is that rather than resampling rows of our data, we resample the residuals after fitting our outcome model.
 :::
 
 ## Wild cluster bootstrap
@@ -1595,11 +1503,10 @@ df_C10R %>%
 For each bootstrap replicate ...
 
 ::: incremental
-- Sample (with replacement) the residuals after fitting the main regression model.
-- We then apply a weight to each residual.
-  - Weight is -1 with probability 0.5 and 1 with probability 0.5.
-- The catch is that everyone within the same cluster receives the same weight value (i.e., we sample 1 or -1 by cluster). 
-
+-   Sample (with replacement) the residuals after fitting the main regression model.
+-   We then apply a weight to each residual.
+    -   Weight is -1 with probability 0.5 and 1 with probability 0.5.
+-   The catch is that everyone within the same cluster receives the same weight value (i.e., we sample 1 or -1 by cluster).
 :::
 
 ## Wild cluster bootstrap
@@ -1607,33 +1514,32 @@ For each bootstrap replicate ...
 For each bootstrap replicate ...
 
 ::: incremental
-- Because we only resample (and reweight the residuals) the other X variables used in the regression stay the same. 
-- The coefficients and X's from the original regression can be used to obtain a predicted value.
-- This predicted value plus the new (sampled and re-weighted) residuals are used to construct a new outcome value. 
+-   Because we only resample (and reweight the residuals) the other X variables used in the regression stay the same.
+-   The coefficients and X's from the original regression can be used to obtain a predicted value.
+-   This predicted value plus the new (sampled and re-weighted) residuals are used to construct a new outcome value.
 :::
- 
- 
+
 ## Wild cluster bootstrap
 
 For each bootstrap replicate ...
 
 ::: incremental
-- Re-estimate the regression using the new outcome values. 
-- Repeat $B$ times and collect the estimates. 
-- You can use these estimates to construct a p-value based on how extreme the original value is within the distribution of estimates generated via the bootstrap samples. 
+-   Re-estimate the regression using the new outcome values.
+-   Repeat $B$ times and collect the estimates.
+-   You can use these estimates to construct a p-value based on how extreme the original value is within the distribution of estimates generated via the bootstrap samples.
 :::
 
 ## Wild cluster bootstrap
 
 ::: incremental
-- Wild cluster bootstrap is easily executed in both Stata and R.
-- New "fast" routines can complete this process in seconds (or less). 
+-   Wild cluster bootstrap is easily executed in both Stata and R.
+-   New "fast" routines can complete this process in seconds (or less).
 :::
 
-## DID Example 
+## DID Example
 
 ::: {.callout-important appearance="simple"}
-If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach. 
+If the total number of clusters is small (e.g., 30 or less), you may need to adopt a different inference approach.
 :::
 
 ```{r, message = FALSE, warning = FALSE, cache =TRUE}
@@ -1661,34 +1567,32 @@ res %>%
 
 ##  {background-image="media/clustering-framework-small.png" data-background-size="contain"}
 
-
 ## Permutation Inference
 
 ::: incremental
-- Another approach (though it can be a bit more conservative) is to use randomization inference.
-- Basic idea here is to randomly permute the treatment indicator. 
-- This is a useful approach when treatment is perfectly correlated with clusters (e.g., state policy change) and you only have a few clusters in your sample. 
+-   Another approach (though it can be a bit more conservative) is to use randomization inference.
+-   Basic idea here is to randomly permute the treatment indicator.
+-   This is a useful approach when treatment is perfectly correlated with clusters (e.g., state policy change) and you only have a few clusters in your sample.
 :::
 
 ## Permutation Inference
 
 ::: incremental
-- Example: State policy change with 12 total states (4 treated, 8 untreated)
-- Idea: Iterative exercise where you randomly select the 4 "treated" states and re-estimate the outcome model each time.
-  - There are 495 possible combinations of 4 treated states out of 12 total states.
-  - You can therefore construct a distribution of 495 different treatment effect estimates. 
-  - How "extreme" is the estimate in your primary sample within this distribution of 495 estimates? 
+-   Example: State policy change with 12 total states (4 treated, 8 untreated)
+-   Idea: Iterative exercise where you randomly select the 4 "treated" states and re-estimate the outcome model each time.
+    -   There are 495 possible combinations of 4 treated states out of 12 total states.
+    -   You can therefore construct a distribution of 495 different treatment effect estimates.
+    -   How "extreme" is the estimate in your primary sample within this distribution of 495 estimates?
 :::
 
 ## Permutation Inference
 
 ::: incremental
-- A nice feature of this approach is that you get an exact p-value. 
-- If the total possible number of permutations is large (e.g., 20 choose 10  = 184,756), you could always just permute cluster treatment status, say, 1,000 times to approximate the distribution. 
-- A downside is that constructing 95% confidence intervals requires strong assumptions (homogeneity of treatment effect). 
+-   A nice feature of this approach is that you get an exact p-value.
+-   If the total possible number of permutations is large (e.g., 20 choose 10 = 184,756), you could always just permute cluster treatment status, say, 1,000 times to approximate the distribution.
+-   A downside is that constructing 95% confidence intervals requires strong assumptions (homogeneity of treatment effect).
 :::
 
 ##  {background-image="media/clustering-framework-small2.png" data-background-size="contain"}
 
 ## References
-

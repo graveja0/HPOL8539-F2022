@@ -27,6 +27,10 @@ website:
             href: slides/nonlinear-DID.qmd
           - text: Inference for Policy Evaluation
             href: slides/lec_inference.qmd
+          - text: Synthetic Control Methods
+            href: slides/lec_conditionalDID-and-synthetic-control.qmd
+          - text: Treatment Effect Bounds
+            href: slides/lec_bounds.qmd
       - section: "Case Studies"
         contents:
           - text: 1. Simulation as a Guide for Study Design and Inference

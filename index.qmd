@@ -82,20 +82,17 @@ schedule <- list(
      "8:45 - 10:45" = "CS] Quantile Treatment Effects and Changes-in-Changes"
   ),   
   day13 = list(
-      "8:45 - 8:45" = "CAP] Draft Methods Writeup Due to Peer Reviewer",
+
      "8:45 - 10:45" = "CS] Partial Identification Methods: Treatment Effect Bounds"
   ),   
   day14 = list(
-     "8:45 - 8:45" = "CAP] Your Review of Your Peer's Methods Writeup is Due Back to Them",
+      "8:45 - 8:45" = "CAP] Draft Methods Writeup Due to Peer Reviewer",
      "8:45 - 10:45" = "CS] Research Project Organization, Execution and Workflows: Best Practices"
   ),    
   day15 = list(
      "8:45 - 8:45" = "CAP] Final Methods Writeup Due to John",
      "8:45 - 10:45" = "CS] Student Methods Presentations"
-  )  ,
-   day16 = list(
-     "8:45 - 8:45" = "CAP] GEE"
-  )
+  )  
 )
 schedule %>% 
   map(~(
@@ -117,9 +114,9 @@ schedule %>%
     stop = "",
     desc = ""
   ) %>% 
-      tab_row_group(label = "December 8, 2022",
+      tab_row_group(label = "December 7, 2022",
                 rows = day=="day15") %>% 
-        tab_row_group(label = "December 1, 2022",
+        tab_row_group(label = "November 30, 2022",
                 rows = day=="day14") %>% 
         tab_row_group(label = "November 16, 2022",
                 rows = day=="day13") %>% 

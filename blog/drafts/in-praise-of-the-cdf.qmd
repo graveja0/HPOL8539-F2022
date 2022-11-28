@@ -1,0 +1,36 @@
+---
+title: "In Praise of the Cumulative Density Function"
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(glue)
+
+df <- 
+  data.frame(patient = LETTERS[1:10],
+            Y_1 = c(7,5,5,7,4,10,1,5,3,9),
+             Y_0 = c(5,3,8,8,3,1,6,8,8,4)) %>% 
+             #Y_1 = c(7,5,5,7,4,10,1,5,3,9),
+             #Y_0 = c(1,6,1,8,2,1,10,6,7,8)) %>% 
+  mutate(delta = Y_1 - Y_0)
+
+df.rct <- 
+  df %>% 
+  select(-delta) %>% 
+  rename(Y_1_ = Y_1,
+         Y_0_ = Y_0) %>% 
+  mutate(X = c(1,1,1,1,1,0,0,0,0,0)) %>% 
+  mutate(Y_1 = ifelse(X==1,Y_1_,"?"),
+         Y_0 = ifelse(X==0,Y_0_,"?"))
+
+Y_1 <- df.rct %>% mutate(Y_obs = ifelse(X==1,Y_1_,Y_0_)) %>% filter(X==1) %>% pull(Y_obs)
+Y_0 <- df.rct %>% mutate(Y_obs = ifelse(X==1,Y_1_,Y_0_)) %>% filter(X==0) %>% pull(Y_obs)
+
+
+
+```
+

@@ -1,0 +1,1142 @@
+---
+title: "Set Identification and Treatment Effect Bounds"
+format:
+  revealjs:
+    transition: slide
+    transition-speed: fast
+    incremental: true 
+editor: visual
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(here)
+library(knitr)
+library(ggthemes)
+
+library(patchwork)
+
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(fig.retina = 3, warning = FALSE, message = FALSE)
+```
+
+## Motivation
+
+
+-   The bulk of this course focuses on on *point estimation* of a single **average treatment effect** (ATE).
+
+-   The ATE provides policymakers with information on the average outcome that would occur if *everyone* were to receive the intervention.
+
+-   But policy effects often do not work like this.
+
+## Motivation
+
+-   Consider a policy of expanding subsidized private health insurance coverage to everyone.
+
+    -   Such a policy would encourage some people to obtain coverage.
+
+    -   But many others would have obtained coverage in any case.
+
+    -   Some others would still remain uninsured.
+
+## Motivation: Heterogeneous Treatment Effects
+
+-   The ATE doesn't necessarily tell us about what would happen to people who were newly encouraged to get insurance.
+
+-   If insurance has the same treatment effect on everyone, then the ATE would tell us something useful.
+
+-   But often there are heterogenous treatment effects. The ATE only tells us what happens on *average*.
+
+## Motivation: Assumptions for Identification and Estimation
+
+-   Even with strong designs and approaches, we must often rely on **assumptions** to identify and/or estimate ATEs.
+
+-   What if we're not willing to make these assumptions?
+
+## Motivation: Assumptions for Identification and Estimation {.smaller}
+
+::: columns
+::: column
+-   It could be that policymakers only need guidance on whether a policy is worth pursuing.
+
+-   If we could, with minimal assumptions, rule out small/zero treatment effects, that may be sufficient!
+:::
+
+::: column
+::: {style="padding-top: 100px;"}
+```{r, echo = FALSE,out.width="200%"}
+knitr::include_graphics("media/minimal-acceptable.png")
+```
+:::
+:::
+:::
+
+## Motivation: Assumptions for Identification and Estimation {.smaller}
+
+::: columns
+::: column
+-   This lecture will cover methods for *set estimation* of treatment effects.
+
+-   Specifically, we can estimate a range of treatment effect values that are consistent with the data we observe.
+
+-   We can start with the absolute minimal set of assumptions, and dial them up to narrow the bounds.
+:::
+
+::: column
+::: {style="padding-top: 100px;"}
+```{r, echo = FALSE,out.width="200%"}
+knitr::include_graphics("media/minimal-acceptable-assumptions.png")
+```
+:::
+:::
+:::
+
+## The Perfect Doctor... Randomized {.smaller}
+
+```{r, echo = FALSE}
+df <- 
+  data.frame(patient = LETTERS[1:10],
+            Y_1 = c(7,5,5,7,4,10,1,5,3,9),
+             Y_0 = c(5,3,8,8,3,1,6,8,8,4)) %>% 
+             #Y_1 = c(7,5,5,7,4,10,1,5,3,9),
+             #Y_0 = c(1,6,1,8,2,1,10,6,7,8)) %>% 
+  mutate(delta = Y_1 - Y_0)
+
+df.rct <- 
+  df %>% 
+  select(-delta) %>% 
+  rename(Y_1_ = Y_1,
+         Y_0_ = Y_0) %>% 
+  mutate(X = c(1,1,1,1,1,0,0,0,0,0)) %>% 
+  mutate(Y_1 = ifelse(X==1,Y_1_,"?"),
+         Y_0 = ifelse(X==0,Y_0_,"?"))
+             # X = c(0,1,0,0,0,1,1,1),
+             # Y_0 = c(13,"?",4,5,6,"?","?","?"),
+             # Y_1 = c("?",0,"?","?","?",1,10,9)) 
+
+```
+
+::: columns
+::: column
+-   The data table provides hypothetical data on outcomes (Y=survival years post treatment) for 10 patients.
+
+-   For each patient *both* potential outcomes (intervention and no intervention) are shown.
+
+-   These are not usual data we would observe since we typically only observe one potential outcome!
+:::
+
+::: column
+```{r, echo = FALSE}
+df %>% 
+  as_tibble() %>% 
+  bind_rows(
+    df %>% summarise_at(vars(Y_1,Y_0),function(x) mean(x,na.rm=TRUE)) %>% 
+      mutate(patient = "MEAN", delta = as.numeric(Y_1)-as.numeric(Y_0))
+  ) %>% 
+  knitr::kable(format = 'html', col.names = c("Patient ID","Y(1)", "Y(0)","Difference"))
+```
+:::
+:::
+
+## The Perfect Doctor... Randomized {.smaller}
+
+::: columns
+::: column
+-   Lets now assume we observe data from a randomized controlled trial, where the first five patients reflect randomized to the treatment arm, and the final five from the control arm.
+
+-   We now have missing data on the potential outcome we don't observe. This is the **fundamental problem of causal inference**.
+:::
+
+::: column
+```{r, echo = FALSE}
+df.rct %>% 
+  select(-Y_1_,-Y_0_) %>% 
+  knitr::kable(format = 'html', col.names = c("Patient ID","Treatment","Y(1)", "Y(0)"))
+```
+:::
+:::
+
+## Average Treatment Effect {.smaller}
+
+::: columns
+::: column
+-   But we can estimate an average treatment effect!
+
+-   The ATE for the RCT data is `r mean(as.numeric(df.rct$Y_1),na.rm=TRUE) - mean(as.numeric(df.rct$Y_0),na.rm=TRUE)`, which is identical to the average treatment effect based on the fully observed potential outcomes (`r df %>% summarise_at(vars(Y_1,Y_0),function(x) mean(as.numeric(paste0(x)),na.rm=TRUE)) %>% mutate(ate = Y_1 - Y_0) %>% pull(ate)`).
+:::
+
+::: column
+```{r, echo = FALSE}
+options(knitr.kable.NA = '')
+df.rct %>% 
+  select(-Y_1_,-Y_0_) %>% 
+  bind_rows(
+    df.rct %>% summarise_at(vars(Y_1,Y_0),function(x) glue::glue("{mean(as.numeric(paste0(x)),na.rm=TRUE)}")) %>% 
+      mutate(patient = "MEAN", X = NA)
+  ) %>% 
+  mutate(diff = as.numeric(Y_1) - as.numeric(Y_0))  %>% 
+  knitr::kable(format = 'html', col.names = c("Patient ID","Treatment","Y(1)", "Y(0)","Diff"))
+```
+:::
+:::
+
+## Heterogeneous Treatment Effects {.smaller}
+
+::: columns
+::: column
+-   The average treatment effect tells us, on average, what would happen if *everyone got the treatment*.
+
+-   Note, however, that there are heterogeneous treatment effects.
+
+-   For example, patient C does better without the new treatment, but is randomized to receive it.
+:::
+
+::: column
+```{r, echo = FALSE}
+df %>% 
+  mutate(Tx = c(1,1,1,1,1,0,0,0,0,0)) %>% 
+  select(patient,Tx,Y_1,Y_0,delta) %>% 
+  knitr::kable(format = 'html', col.names = c("Patient ID","Treatment","Y(1)", "Y(0)","Diff"))
+```
+:::
+:::
+
+## Effect Heterogeneity: Crossing Curves {.smaller}
+
+::: columns
+::: column
+-   We can see this heterogeneity by constructing empirical cumulative distribution function (ECDF) curves for each group.
+
+-   These curves tell us what fraction of the group population has an outcome less than or equal to the value on the X axis.
+
+-   Both curves start at 0 because 0% of the group has a survival value less than or equal to the smallest value in the group.
+
+-   Similarly, both curves end up at at 1.00 because 100% of group has a value less than or equal to the maximum value in the group.
+:::
+
+::: column
+::: {style="padding-top: 100px;"}
+```{r, echo = FALSE}
+# The crossing of these curves points to a couple of issues.  It suggests that there are heterogenous treatment effects.  Now if we could observe all the imaginary data, we would know that the treatment effect varies.  But even with our little "RCT" we know that the treatment effect is heterogenous.  The crossing excludes the possibility that the treatment effect is 0 or constant.  Of course we are using 5 data points to estimate each curve, so they may not accurately reflect the true distributions.
+
+p <- 
+  df.rct %>% 
+  mutate(treatment = X) %>% 
+  mutate(Y_1 = as.numeric(Y_1),
+         Y_0 = as.numeric(Y_0)) %>% 
+  mutate(Y_obs = ifelse(treatment == 1, Y_1,Y_0)) %>% 
+  mutate(treatment = factor(treatment, labels = c("Control","Treatment"))) %>% 
+  ggplot(aes(colour = factor(treatment))) + stat_ecdf(aes(x = Y_obs),lwd=1.5) +
+  ggthemes::theme_clean() + 
+  scale_x_continuous(breaks = seq(0,10,2)) + 
+  labs(y = "Fraction of Patients with Survival < X", x = "Years Survival") +
+  theme(legend.position = "top") + 
+  scale_colour_manual(name = "", values =c("darkblue","darkred")) + 
+  scale_x_continuous(limits = c(0,10), breaks = 0:10)
+
+```
+
+```{r, echo = FALSE}
+p
+```
+:::
+:::
+:::
+
+## Effect Heterogeneity: Crossing Curves {.smaller}
+
+::: columns
+::: column
+-   Note that the curves cross--this tells us there are heterogenous treatment effects.
+
+-   For example, at 3 years the entire treated group is still alive, but 20% of the control group has died.
+
+-   But at 7 years *all* of the treatment group has died and 40% of the control group remains alive!
+
+-   **The observation that the curves cross excludes the possibility that the treatment effect is 0 or constant.**
+:::
+
+::: column
+```{r, echo = FALSE, fig.align="right"}
+p + geom_vline(aes(xintercept = 3),lty=1) + geom_vline(aes(xintercept = 7),lty=1) + 
+  annotate("text",x = 2.9, y = 0.25, label = "20% of control\ngroup has died",hjust=1,cex=3) +
+  annotate("text",x = 2.9, y = 0.07, label = "All in treatment \ngroup still alive",hjust=1,cex=3) +
+  annotate("text",x = 6.9, y = 1, label = "All in treatment\ngroup have died",hjust=1,cex=3) +
+  annotate("text",x = 6.9, y = 0.65, label = "40% in control\ngroup still alive",hjust=1,cex=3)
+
+```
+:::
+:::
+
+## Kolmogorov Bounds {.smaller}
+::: incremental
+::: columns
+::: column
+-   As noted in the motivation section, it may be sufficient for policymakers to be informed of the joint distribution of potential outcomes, or the distribution of the treatment effect.
+
+-   *Kolmogorov's Conjecture* provides a method for bounding the treatment effect with minimal assumptions.
+
+-   Specifically, we can bound the distribution of the treatment effect even though we only observe the distributions of the outcomes for each of the treatments.
+:::
+
+::: column
+::: {.callout-note appearance="minimal"}
+Let $\beta_i = y_i(1) - y_i(0)$ denote the treatment effect and $F$ denote its distribution. Let $F_0$ denote the distribution of outcomes for treatment $x=0$ and $F_1$ denote the distribution of outcomes for treatment $x=1$. Then $F^L(b)<=F(b)<=F^U(b)$, where
+
+$$
+F^L(b) = \max  \\{ \max_y F_1(y) - F_0(y - b),0  \\}
+$$
+
+and
+
+$$
+F^U(b) = 1 + \min  \\{ \min_y F_1(y) - F_0(y - b),0 \\}
+$$
+:::
+:::
+:::
+:::
+
+## Kolmogorov Bounds {.smaller}
+
+::: incremental
+::: columns
+::: column
+-   For Kolmogorov bounds, this will be done on the scale of the sample fraction with treatment effect less than or equal to some value.
+
+-   For example, we can place bounds on the fraction of the sample that has a 0 or negative treatment effect.
+
+-   If the lower bound is $>0\%$, then we know that some fraction of the sample is made worse off.
+:::
+
+::: column
+
+::: {.callout-note appearance="minimal"}
+**Formal definition:**
+
+Let $\beta_i = y_i(1) - y_i(0)$ denote the treatment effect and $F$ denote its distribution. Let $F_0$ denote the distribution of outcomes for treatment $x=0$ and $F_1$ denote the distribution of outcomes for treatment $x=1$. Then $F^L(b)<=F(b)<=F^U(b)$, where
+
+$$
+F^L(b) = \max  \\{ \max_y F_1(y) - F_0(y - b),0  \\}
+$$
+
+and
+
+$$
+F^U(b) = 1 + \min  \\{ \min_y F_1(y) - F_0(y - b),0 \\}
+$$
+:::
+:::
+:::
+:::
+
+## Kolmogorov Bounds {.smaller}
+
+::: columns
+::: column
+-   Let's start with the observed "RCT" data from the example.
+
+-   `Y_obs` summarizes what we observe, i.e., Y(1) if in treatment arm, Y(0) if control.
+:::
+
+::: column
+```{r, echo = FALSE}
+Y_1 <- df.rct %>% mutate(Y_obs = ifelse(X==1,Y_1_,Y_0_)) %>% filter(X==1) %>% pull(Y_obs)
+Y_0 <- df.rct %>% mutate(Y_obs = ifelse(X==1,Y_1_,Y_0_)) %>% filter(X==0) %>% pull(Y_obs)
+
+df.rct  %>% 
+  mutate(Y_obs = ifelse(X==1,Y_1_,Y_0_)) %>% 
+  select(patient,X,Y_obs) %>% 
+  kable()
+```
+:::
+:::
+
+## Kolmogorov Bounds {.smaller}
+
+::: columns
+::: column
+-   We'll now extract out the empirical cumulative distribution function for each group.
+
+-   This function tells us what fraction of the group has outcome value $<=$ whatever value you provide it.
+
+-   Recall from a few slides back I noted that "at 3 years the entire treated group is still alive, but 20% of the control group has died."
+
+-   You can see this result in the output on the right.
+:::
+
+::: column
+```{r, echo = TRUE, eval = TRUE}
+# Get the ECDF 
+F_1 <- ecdf(Y_1)
+F_0 <- ecdf(Y_0)
+```
+
+```{r, echo = TRUE, eval = TRUE}
+# Evaluate ECDF at 3 years for treatment group.
+F_1(3)
+# Evaluate ECDF at 3 years for control group.
+F_0(3)
+```
+:::
+:::
+
+## Kolmogorov Bounds {.smaller}
+
+::: columns
+::: column
+-   Note from the formal definition that we maximize and minimize over values of the outcome $y$. For example:
+
+$$
+F^L(b) = \max  \\{ \max_y F_1(y) - F_0(y - b),0  \\}
+$$ - Note that the outcome ranges from 0-10.
+
+-   So, to construct bounds we'll need to evaluate each ECDF at 1, 2, 3, ... 10 (and everywhere in-between!).
+:::
+
+::: column
+```{r, eval = TRUE,out.height="50%",echo = FALSE}
+p 
+```
+:::
+:::
+
+## Kolmogorov Bounds {.smaller}
+
+::: columns
+::: column
+-   Let's start with a hypothesized treatment effect of 0 (i.e., the value of $b$ in the formal definition earlier).
+
+-   The lower bound tells us: at least what fraction of the sample has a treatment effect of 0 **or below**?
+
+-   The upper bound tells us: at most what fraction of the sample has a treatment effect of 0 **or below**?
+:::
+
+::: column
+```{r, echo = TRUE, eval = TRUE}
+b = 0
+y_ <- c(0,1,2,3,4,5,6,7,8,9,10)
+# Lower Bound
+l <- max(0,max(F_1(y_) - F_0(y_- b)))
+# Upper Bound
+u <- 1 + min(min(F_1(y_) - F_0(y_- b)))
+```
+
+```{r,echo = TRUE, eval = TRUE}
+# Lower bound
+l
+
+# Upper bound
+u 
+```
+:::
+:::
+
+## Kolmogorov Bounds {.smaller}
+
+::: columns
+::: column
+-   So what can we learn from the data?
+
+-   From earlier, we found that the average treatment effect is `r mean(as.numeric(df.rct$Y_1),na.rm=TRUE) - mean(as.numeric(df.rct$Y_0),na.rm=TRUE)`, indicating that the treatment benefits people on average.
+
+-   But the Kolmogorov bounds at a 0 treatment effect tells us that between 40% and 80% of the sample has a negative treatment effect!
+
+-   The fact that the treatment harms 40% or more of people who receive may relevant information for decision making.
+:::
+
+::: column
+```{r, echo = TRUE, eval = TRUE}
+b = 0
+y_ <- c(0,1,2,3,4,5,6,7,8,9,10)
+# Lower Bound
+l <- max(0,max(F_1(y_) - F_0(y_- b)))
+# Upper Bound
+u <- 1 + min(min(F_1(y_) - F_0(y_- b)))
+```
+
+```{r,echo = TRUE, eval = TRUE}
+# Lower bound
+l
+
+# Upper bound
+u 
+```
+:::
+:::
+
+## Kolmogorov Bounds {.smaller}
+
+::: columns
+::: column
+-   Let's now look back at the "full" data (i.e., with both potential outcomes) to confirm our findings.
+
+-   Indeed, we see that 5 patients (50%) have treatment effects (`Diff`) of 0 or below.
+
+-   Of course, in the real world we wouldn't have access to this full dataset.
+
+-   But our constructed Kolmogorov bounds (at 0 treatment effect) were 40%-80%, and so accurately captured this information.
+:::
+
+::: column
+```{r, echo = FALSE}
+df %>% 
+  mutate(Tx = c(1,1,1,1,1,0,0,0,0,0)) %>% 
+  select(patient,Tx,Y_1,Y_0,delta) %>% 
+  knitr::kable(format = 'html', col.names = c("Patient ID","Treatment","Y(1)", "Y(0)","Diff"))
+```
+:::
+:::
+
+## Kolmogorov Bounds {.smaller}
+
+::: columns
+::: column
+-   We can now repeat this exercise for different hypothesized treatment effects aside from 0.
+
+-   A plot of the bounds for various treatment effects is shown on the right.
+
+-   Notice again our bounds at 0 (40-80%)
+
+-   And notice also that we can rule out treatment effect values of -5 and below because the bounds hug 0 on both ends.
+:::
+
+::: column
+```{r, eval = TRUE, echo = FALSE}
+get_kolmogorov_bounds <- function(df,treat,outcome, treatment_effect_range = c(-5,10), resolution = 100, K = 50 ) {
+  Z = enquo(treat)
+  Y = enquo(outcome)
+  y1 = df %>% filter({{Z}}==1) %>% pull({{Y}})
+  y0 = df %>% filter({{Z}}==0) %>% pull({{Y}})
+  F1 <- ecdf(y1)
+  F0 <- ecdf(y0)
+  y_K = seq(treatment_effect_range[1],treatment_effect_range[2],length.out = K)
+  y_ <- seq(min(c(y1,y0),max(c(y1,y0))),length.out = resolution)
+  y_K %>%
+    map_df(~({
+      lower <- max(0,max(F1(y_)-F0(y_-.x)))
+      upper <- 1+min(min(F1(y_)-F0(y_-.x)))
+      data.frame(b = .x,lower,upper)
+    }))
+}
+p_b <- 
+df.rct %>% mutate(Y_obs = ifelse(X==1,Y_1_,Y_0_)) %>% 
+ get_kolmogorov_bounds(outcome = Y_obs, treat = X, treatment_effect_range = c(-10,10), resolution = 100) %>% 
+   ggplot(aes(x = b, y=lower)) + geom_line(lty=2,lwd=1) + geom_line(aes(y=upper),lty=3,lwd=1.2) + 
+  labs(y = "Fraction of Patients with Treatment Effect < X" , x= "Treatment Effect") + 
+  geom_vline(aes(xintercept = 0),lty=1,colour = "lightgrey") + 
+  ggthemes::theme_clean()
+  
+```
+
+```{r, echo = FALSE}
+p_b
+```
+:::
+:::
+
+## Treatment Effect Bounds: Alternative Approaches
+
+-   The previous discussion put bounds on the fraction of the sample itself (e.g., the fraction with negative treatment effects).
+
+-   What if we want to put bounds on the treatment effect itself--that is, on the scale of the outcome?
+
+## Treatment Effect Bounds: Alternative Approaches
+
+-   We may believe that treatment is selected, but the assumptions required for estimating treatment effects are too restrictive or are unrealistic for our application.
+
+-   Alternatively, in a randomized setting, we may have noncompliance with treatment, or differential attrition from the study arms.
+
+# "Worst Case" Bounds 
+
+-   Also known as "minimal assumptions" bounds or "natural bounds" (Pearl).
+
+-   Considers treatment effect bounds when the treatment assignment mechanism is unknown.
+
+## "Worst Case" Bounds {.smaller}
+
+-   Define treatment $X$ and outcome $Y$, with potential outcomes $Y(1)$ and $Y(0)$.
+
+-   Define the average treatment effect as
+
+$$
+ATE = \sum_{x=0}^1 E[Y(1)|X=x]Pr[X=x]-\sum_{x=0}^1 E[Y(0)|X=x]Pr[X=x]
+$$ - This expression draws on the Law of Total Expectation to decompose the ATE into component parts.
+
+## "Worst Case" Bounds {.smaller}
+
+$$
+ATE = \bigg ( \overbrace{E[Y(1)|X=1]Pr(X=1) + E[Y(1)|X=0]Pr(X=0)}^{E[Y(1)]} \bigg )  - \\\ \bigg ( \underbrace{E[Y(0)|X=1]Pr[X=1]  + E[Y(0)|X=0]Pr[X=0]}_{E[Y(0)]} \bigg )
+$$
+
+-   Under SUTVA, there is no interference among units---so there are only two potential outcomes per unit.
+
+-   This establishes *causal consistency* and allows us to simplify because $Y(x)=Y$ when $X=x$.
+
+    -   That is, the Y we observe is $Y(1)$ when in the treatment group and $Y(0)$ when in the untreated group.
+
+## "Worst Case" Bounds {.smaller}
+
+$$
+ATE = \bigg ( \overbrace{E[Y(1)|X=1]Pr(X=1) + \color{red}{E[Y(1)|X=0]}Pr(X=0)}^{E[Y(1)]} \bigg )  - \\\ \bigg ( \underbrace{\color{red}{E[Y(0)|X=1]}Pr[X=1]  + E[Y(0)|X=0]Pr[X=0]}_{E[Y(0)]} \bigg )
+$$
+
+-   So we can use the sample to estimate $E[Y(1)|X=1]$, $E[Y(0)|X=0]$, $Pr[X=1]$ and $Pr[X=0]$
+
+-   That gets us most of the way there, but there is a problem:
+
+    -   We can't observe $E[Y(1)|X=0]$ or $E[Y(0)|X=1]$
+
+    -   For example, we don't know the outcome for the units that do not get treated under a policy that assigns treatment to everyone.
+
+## "Worst Case" Bounds
+
+-   We can't observe $E[Y(1)|X=0]$ or $E[Y(0)|X=1]$, but can we put bounds on them?
+
+-   Yes!
+
+## "Worst Case" Bounds
+
+::: incremental
+-   What is the weakest possible assumption we could make?
+
+-   It is to put the largest and smallest possible values on these unknown quantities.
+
+-   Intuitively, an average cannot be smaller than the smallest possible number in the set of values being averaged. And it can't be larger than the largest possible number.
+
+    -   The smallest outcome value will be denoted $\underline{Y}$, and the largest $\overline Y$.
+
+    -   Bounds will be denoted by $\underline{\text{ATE}}$ and $\overline{\text{ATE}}$.
+:::
+
+```{r, echo = FALSE, results = "hide"}
+### Create Bounds Figure from Example Data
+
+## NOTE THAT EVAL IS SET TO FALSE BECAUSE THIS SECTION WAS RENDERING A RANDOM FIGURE APPENDED TO THE PREVIOUS SLIDE
+
+bounds <- list(
+  WC = list(
+    EY1 = list(
+      Z0_u = "maxY",
+      Z0_l = "minY",
+      Z1_u = "Y_1",
+      Z1_l = "Y_1"
+    ),
+    EY0 = list(
+      Z0_u = "Y_0",
+      Z0_l = "Y_0",
+      Z1_u = "maxY",
+      Z1_l = "minY"
+    )
+  ),
+  MTS = list(
+    EY1 = list(
+      Z0_u = "maxY",
+      Z0_l = "Y_1",# Had the untreated group received the treatment (lower values better) they would have no better outcomes than the treated group
+      Z1_u = "Y_1",
+      Z1_l = "Y_1"
+    ),
+    EY0 = list(
+      Z0_u = "Y_0",
+      Z0_l = "Y_0",
+      Z1_u = "Y_0", # Had the untreated group received the treatment (lower values better) they would have no worse outcomes than in the untreated group
+      Z1_l = "minY"
+    )
+  ),
+  MTR = list(
+    EY1 = list(
+      Z0_u = "maxY",
+      Z0_l = "Y_0", # control units cant' get any worse if they get treated
+      Z1_u = "Y_1",
+      Z1_l = "Y_1"
+    ),
+    EY0 = list(
+      Z0_u = "Y_0",
+      Z0_l = "Y_0",
+      Z1_u = "Y_1",  # treated units cant get any better if they get control
+      Z1_l = "minY"
+    )
+  )
+)
+
+df_bounds_ <-
+  df %>%
+  mutate(X = ifelse(Y_1>Y_0,1,0)) %>%
+  mutate(Y = ifelse(X==1,Y_1,Y_0)) %>%
+  mutate(Z=ifelse(abs(delta)>=3,1,0)) %>%
+  mutate(maxY = max(Y),
+            minY = min(Y)) %>%
+  group_by(X) %>%
+  summarise_at(vars(Y,maxY,minY),mean)  %>%
+  mutate(PX = 0.5) %>%
+  #mutate(id = "WC") %>%
+  gather(measure,value,-X) %>%
+  unite(measure,measure,X) %>%
+  spread(measure,value) %>%
+  rename(maxY = maxY_0,
+         minY = minY_0) %>%
+  select(-minY_1,-maxY_1) %>%
+  mutate(test = 3) %>%
+  uncount(test) %>%
+  mutate(assumption = c("WC","MTR","MTS"))
+
+bounds_lut <-
+  bounds %>% map_dfr(~(.x %>% data.frame())) %>%
+  mutate(assumption = names(bounds)) %>%
+  gather(measure,quantity,-assumption) %>%
+  separate(measure, into = c("potential_outcome","bound"),sep ="\\.")
+
+df_bounds <-
+  bounds_lut %>%
+  left_join(
+    df_bounds_ %>%
+      gather(quantity,value,-PX_0,-PX_1,-assumption), c("assumption","quantity")
+  ) %>%
+  select(-quantity) %>%
+  unite(bound,potential_outcome,bound) %>%
+  spread(bound,value) %>%
+  mutate(LB = (PX_0 * EY1_Z0_l + PX_1 * EY1_Z1_l) - (PX_0 * EY0_Z0_u + PX_1 * EY0_Z1_u),
+        UB = (PX_0 * EY1_Z0_u + PX_1 * EY1_Z1_u) - (PX_0 * EY0_Z0_l + PX_1 * EY0_Z1_l)) %>%
+  mutate(assumption = factor(assumption, levels = c("WC","MTR","MTS"))) %>% 
+  arrange(assumption)
+
+tmp_labels_y <-
+  df_bounds_ %>% filter(assumption =="WC") %>% select(minY,maxY,Y_0,Y_1)  %>% gather(measure,value) %>%
+  mutate(measure = ifelse(measure=="Y_0","\nE[Y|X=0]",measure)) %>%
+  mutate(measure = ifelse(measure=="Y_1","E[Y|X=1]",measure)) %>%
+  mutate(measure = glue::glue("{measure} = {value}"))
+
+tmp_plot_data <-
+  df_bounds %>%
+  gather(measure,value,-assumption,-LB,-UB) %>%
+  filter(!(measure %in% c("PX_0","PX_1"))) %>%
+  separate(measure,into= c("potential_outcome","measure","bound"),sep = "_") %>%
+  mutate(potential_outcome = factor(potential_outcome,levels = c("EY1","EY0"))) %>%
+  as_tibble() %>%
+  mutate(x = as.numeric(factor(measure,levels = c("Z0","Z1")))) %>%
+  mutate(x = ifelse(x==2,3,x)) %>%
+  mutate(xend = x + 1) %>%
+  mutate(value_j = jitter(value,factor=1))
+
+# Get the weighted average bounds in each panel.
+tmp_plot_data_weighted <-
+  df_bounds %>%
+  mutate(l_EY1 = (PX_0 * EY1_Z0_l + PX_1 * EY1_Z1_l),
+         u_EY0 = (PX_0 * EY0_Z0_u + PX_1 * EY0_Z1_u),
+         u_EY1 = (PX_0 * EY1_Z0_u + PX_1 * EY1_Z1_u) ,
+         l_EY0 = (PX_0 * EY0_Z0_l + PX_1 * EY0_Z1_l)) %>%
+  select(assumption, l_EY1, l_EY0, u_EY1, u_EY0) %>%
+  mutate(u_ATE = u_EY1 - l_EY0,
+         l_ATE = l_EY1 - u_EY0) %>%
+  gather(measure,value,-assumption) %>%
+  separate(measure,into= c("bound","potential_outcome"),sep = "_") %>%
+  mutate(potential_outcome = factor(potential_outcome,levels = c("EY1","EY0","ATE"))) %>%
+  as_tibble() %>%
+  mutate(x = 1, xend=2)
+
+
+theme_bounds <- function(base_size = 11, base_family = "Gill Sans", ticks = TRUE) {
+  ggthemes::theme_clean() +
+  ggplot2::theme(legend.position = "none",
+          strip.placement = "outside",
+          strip.background = element_rect(colour= "grey", fill = "white",linetype=1),
+          strip.text = element_text(colour = "black"),
+          strip.text.y.left = element_text(colour = "black", angle = 0),
+          panel.grid.major.y = element_blank(),
+          panel.background = element_rect(colour = "grey",linetype=1))
+}
+
+## Plot 1: Only Worst Case Bounds
+set.seed(1234)
+p0_ <-
+  tmp_plot_data %>%
+  mutate(value_j = ifelse(assumption != "WC",NA,value)) %>%
+  ggplot() +
+  geom_segment(aes(x = x, xend = xend, y = value_j, yend = value_j, colour = bound),lwd=1) +
+  facet_grid(potential_outcome~assumption,switch = "y") +
+  theme_bounds() +
+  labs(y = "", x = "") +
+  scale_colour_manual(values = c("darkred","grey")) +
+  scale_y_continuous(limits = range(tmp_labels_y$value)+c(-1,1), breaks = tmp_labels_y$value, labels = tmp_labels_y$measure) +
+  scale_x_continuous(limits = c(0.5,4.5),breaks = c(1.5,3.5), labels= c("Cx\nX=0","Tx\nX=1")) +
+  coord_flip()
+
+p1_ <-
+  tmp_plot_data_weighted %>%
+  mutate(value = ifelse(assumption != "WC",NA,value)) %>%
+  filter(potential_outcome !="ATE") %>%
+  ggplot() +
+  geom_segment(aes(x = x, xend = xend, y = value, yend = value, colour = bound),lwd=1) +
+  facet_grid(potential_outcome~assumption,switch = "y") +
+  theme_bounds() +
+  labs(y = "", x = "") +
+  scale_colour_manual(values = c("darkred","grey")) +
+  scale_y_continuous(limits = range(tmp_labels_y$value)+c(-1,1), breaks = tmp_labels_y$value, labels = tmp_labels_y$measure) +
+  scale_x_continuous(limits = c(0.5,2.5),breaks = c(1.5), labels= c("")) +
+  coord_flip()
+
+p2_ <-
+  tmp_plot_data_weighted %>%
+  mutate(value = ifelse(assumption != "WC",NA,value))  %>%
+  filter(potential_outcome =="ATE") %>%
+  ggplot() +
+  geom_segment(aes(x = x, xend = xend, y = value, yend = value, colour = bound),lwd=1) +
+  facet_grid(potential_outcome~assumption,switch = "y") +
+  theme_bounds() +
+  labs(y = "", x = "") +
+  scale_colour_manual(values = c("darkred","grey")) +
+  scale_y_continuous(limits = c(-5,5), breaks = -5:5) +
+  scale_x_continuous(limits = c(0.5,2.5),breaks = c(1.5), labels= c("")) +
+  coord_flip()
+
+fig <- p0_ + p1_ + p2_ + plot_layout(nrow=3,heights = c(3,2,1))
+ggsave(plot = fig, filename=here("media/01_bounds-plot_WC-only.png"),width=8,height=8)
+
+## Plot 2: ALL BOUNDS
+
+p0_ <-
+  tmp_plot_data %>%
+  #mutate(value_j = ifelse(assumption != "WC",NA,value)) %>%
+  ggplot() +
+  geom_segment(aes(x = x, xend = xend, y = value_j, yend = value_j, colour = bound),lwd=1) +
+  facet_grid(potential_outcome~assumption,switch = "y") +
+  theme_bounds() +
+  labs(y = "", x = "") +
+  scale_colour_manual(values = c("darkred","grey")) +
+  scale_y_continuous(limits = range(tmp_labels_y$value)+c(-1,1), breaks = tmp_labels_y$value, labels = tmp_labels_y$measure) +
+  scale_x_continuous(limits = c(0.5,4.5),breaks = c(1.5,3.5), labels= c("Cx\nX=0","Tx\nX=1")) +
+  coord_flip()
+
+p1_ <-
+  tmp_plot_data_weighted %>%
+  #mutate(value = ifelse(assumption != "WC",NA,value)) %>%
+  filter(potential_outcome !="ATE") %>%
+  ggplot() +
+  geom_segment(aes(x = x, xend = xend, y = value, yend = value, colour = bound),lwd=1) +
+  facet_grid(potential_outcome~assumption,switch = "y") +
+  theme_bounds() +
+  labs(y = "", x = "") +
+  scale_colour_manual(values = c("darkred","grey")) +
+  scale_y_continuous(limits = range(tmp_labels_y$value)+c(-1,1), breaks = tmp_labels_y$value, labels = tmp_labels_y$measure) +
+  scale_x_continuous(limits = c(0.5,2.5),breaks = c(1.5), labels= c("")) +
+  coord_flip()
+
+p2_ <-
+  tmp_plot_data_weighted %>%
+  #mutate(value = ifelse(assumption != "WC",NA,value))  %>%
+  filter(potential_outcome =="ATE") %>%
+  ggplot() +
+  geom_segment(aes(x = x, xend = xend, y = value, yend = value, colour = bound),lwd=1) +
+  facet_grid(potential_outcome~assumption,switch = "y") +
+  theme_bounds() +
+  labs(y = "", x = "") +
+  scale_colour_manual(values = c("darkred","grey")) +
+  scale_y_continuous(limits = c(-5,5), breaks = -5:5) +
+  scale_x_continuous(limits = c(0.5,2.5),breaks = c(1.5), labels= c("")) +
+  coord_flip()
+
+fig <- p0_ + p1_ + p2_ + plot_layout(nrow=3,heights = c(3,2,1))
+ggsave(plot = fig,filename = here("media/02_bounds-plot.png"),width=8,height=8)
+```
+
+## "Worst Case" Bounds {.smaller}
+
+-   Lower bound is given by
+
+$\underline{\text{ATE}} = (E[Y|X=1]-\overline{Y})Pr[X=1] + (\underline{Y}-E[Y|X=0])Pr[X=0]$
+
+-   Upper bound is given by
+
+$\underline{\text{ATE}} = (E[Y|X=1]-\underline{Y})Pr[X=1] + (\overline{Y}-E[Y|X=0])Pr[X=0]$
+
+## 
+
+![](media/01_bounds-plot_annotated_WC.png)
+
+## The Perfect Doctor...Bounded! {.smaller}
+
+```{r, echo = FALSE}
+manski_bounds <- function(X,Y,Z) {
+
+  PX1 = mean(X==1)
+  PX0 = mean(X==0)
+  EY_X1 = mean(Y[X==1])
+  EY_X0 = mean(Y[X==0])
+  minY = min(Y)
+  maxY = max(Y)
+
+  out <- list(natural = c((EY_X1 - maxY)*PX1 + (minY - EY_X0)*PX0,
+              (EY_X1 - minY)*PX1 + (maxY - EY_X0)*PX0
+  ))
+
+  if (!is.null(Z)) {
+    EY_X1Z1 = mean(Y[X==1 & Z==1])
+    EY_X1Z0 = mean(Y[X==1 & Z==0])
+    EY_X0Z1 = mean(Y[X==0 & Z==1])
+    EY_X0Z0 = mean(Y[X==0 & Z==0])
+
+    PX1_Z1 = mean(X[Z==1]==1)
+    PX1_Z0 = mean(X[Z==0]==1)
+    PX0_Z1 = mean(X[Z==1]==0)
+    PX0_Z0 = mean(X[Z==0]==0)
+
+    out2 <- list(level_set_Z =
+      c(
+      min((EY_X1Z1-minY)*PX1_Z1 + (maxY - EY_X0Z1) * PX0_Z1,
+      (EY_X1Z0-minY)*PX1_Z0 + (maxY - EY_X0Z0) * PX0_Z0),
+
+      max((EY_X1Z1-maxY)*PX1_Z1 + (minY - EY_X0Z1) * PX0_Z1,
+        (EY_X1Z0-maxY)*PX1_Z0 + (minY - EY_X0Z0) * PX0_Z0)
+      )
+    )
+    out <- append(out,out2)
+  }
+  out
+}
+
+df_selected <- 
+  df %>% 
+  mutate(X = ifelse(Y_1>Y_0,1,0)) %>% 
+  mutate(Y = ifelse(X==1,Y_1,Y_0)) %>% 
+  mutate(Z=ifelse(abs(delta)>=3,1,0))
+
+
+X = df_selected$X
+Y = df_selected$Y
+Z = df_selected$Z
+#manski_bounds(X=X,Y=Y,Z=Z)
+```
+
+::: columns
+::: column
+-   The data table provides hypothetical data on outcomes (Y=survival years post treatment) for 10 patients.
+
+-   For each patient only the observed potential outcome is shown.
+
+-   Treatment status is selected: the intervention is only received among patients who would do better, i.e., $Y(1)>Y(0)$.
+
+-   A naive analysis would conclude the intervention effect is `r  df_selected %>% group_by(X) %>% summarise_at(vars(Y),function(x) mean(x,na.rm=TRUE)) %>% mutate(X = ifelse(X==1,"Y_1","Y_0")) %>% spread(X,Y)  %>% mutate(ate = Y_1-Y_0) %>% pull(ate)`--though we know from the full data that the true treatment effect is `r df %>% summarise_at(vars(Y_1,Y_0),function(x) mean(as.numeric(paste0(x)),na.rm=TRUE)) %>% mutate(ate = Y_1 - Y_0) %>% pull(ate)`
+:::
+
+::: column
+```{r, echo = FALSE}
+df_selected %>% 
+  select(-Z) %>% 
+  as_tibble() %>% 
+  bind_rows(
+    df_selected %>% group_by(X) %>% summarise_at(vars(Y),function(x) mean(x,na.rm=TRUE)) %>% mutate(X = paste0("Y_",X)) %>% 
+      mutate(patient = "MEAN") %>% spread(X,Y)
+  ) %>% 
+  mutate(Y_1 = ifelse(X==0 & patient!="MEAN",NA,Y_1),
+         Y_0 = ifelse(X==1 & patient!="MEAN",NA,Y_0)) %>% 
+  select(-delta) %>% 
+  select(patient,X, Y_1,Y_0) %>% 
+  knitr::kable(format = 'html', col.names = c("Patient ID","Tx","Y(1)", "Y(0)"))
+```
+:::
+:::
+
+## The Perfect Doctor...Bounded!
+
+::: columns
+::: column
+```{r,echo = TRUE}
+PX1 = mean(X==1)
+PX0 = mean(X==0)
+EY_X1 = mean(Y[X==1])
+EY_X0 = mean(Y[X==0])
+minY = min(Y)
+maxY = max(Y)
+```
+
+```{r, echo = TRUE}
+# Lower Bound
+(EY_X1 - maxY)*PX1 + (minY - EY_X0)*PX0
+
+# Upper Bound
+(EY_X1 - minY)*PX1 + (maxY - EY_X0)*PX0
+```
+:::
+
+::: column
+```{r, echo = FALSE}
+df_selected %>% 
+  select(-Z) %>% 
+  as_tibble() %>% 
+  bind_rows(
+    df_selected %>% group_by(X) %>% summarise_at(vars(Y),function(x) mean(x,na.rm=TRUE)) %>% mutate(X = paste0("Y_",X)) %>% 
+      mutate(patient = "MEAN") %>% spread(X,Y)
+  ) %>% 
+  mutate(Y_1 = ifelse(X==0 & patient!="MEAN",NA,Y_1),
+         Y_0 = ifelse(X==1 & patient!="MEAN",NA,Y_0)) %>% 
+  select(-delta) %>% 
+  select(patient,X, Y_1,Y_0) %>% 
+  knitr::kable(format = 'html', col.names = c("Patient ID","Tx","Y(1)", "Y(0)"))
+```
+:::
+:::
+
+## Worst Case Bounds: Useless? {.smaller}
+
+-   The estimated bounds (`r (EY_X1 - maxY)*PX1 + (minY - EY_X0)*PX0` to `r (EY_X1 - minY)*PX1 + (maxY - EY_X0)*PX0`) are ... wide.
+
+-   The benefit is that, knowing treatment is totally selected, they are constructed with minimal assumptions.
+
+-   They're not totally useless: if policies (e.g., new clinical or treatment guidance) would *not* be implemented unless the treatment effect was larger than `r ceiling((EY_X1 - minY)*PX1 + (maxY - EY_X0)*PX0)`, then the natural bounds provide useful and actionable information.
+
+## Treatment Effect Bounds: Next Steps {.smaller}
+
+-   If we're willing to dial up our assumptions slightly, we can start to tighten the bounds a bit.
+
+-   Specifically, we will leverage additional variation in our data to narrow the estimated bounds.
+
+-   **Assumption**: there is some observable characteristic (Z) such that the average treatment effect does not change with changes in the observable characteristic.
+
+-   If this holds, then we can estimate bounds on subsets of the data based on $Z$.
+
+    -   For this example we'll assume $Z$ is binary.
+
+## Bounds with Exogenous Variation
+
+$$
+\overline{\text{ATE}} = \min \\{ (E[Y|X=1,Z=1] - \underline{Y})Pr(X=1|Z=1) \\\
++(\overline{Y}-E[Y|X=0,Z=1])Pr(X=0|Z=1),\\\
+(E[Y|X=1,Z=0] - \underline{Y})Pr(X=1|Z=0)\\\
++(\overline{Y}-E[Y|X=0,Z=0])Pr(X=0|Z=0)\\}
+$$ $$
+\underline{\text{ATE}} = \max \\{ (E[Y|X=1,Z=1] - \overline{Y})Pr(X=1|Z=1) \\\
++(\underline{Y}-E[Y|X=0,Z=1])Pr(X=0|Z=1),\\\
+(E[Y|X=1,Z=0] - \overline{Y})Pr(X=1|Z=0)\\\
++(\underline{Y}-E[Y|X=0,Z=0])Pr(X=0|Z=0)\\}
+$$
+
+## Bounds with Exogenous Variation
+
+::: columns
+::: column
+```{r, echo = TRUE}
+
+EY_X1Z1 = mean(Y[X==1 & Z==1])
+EY_X1Z0 = mean(Y[X==1 & Z==0])
+EY_X0Z1 = mean(Y[X==0 & Z==1])
+EY_X0Z0 = mean(Y[X==0 & Z==0])
+PX1_Z1 = mean(X[Z==1]==1)
+PX1_Z0 = mean(X[Z==0]==1)
+PX0_Z1 = mean(X[Z==1]==0)
+PX0_Z0 = mean(X[Z==0]==0)
+```
+
+```{r, echo = TRUE}
+# Lower Bound
+max((EY_X1Z1-maxY)*PX1_Z1 + 
+      (minY - EY_X0Z1) * PX0_Z1,
+     (EY_X1Z0-maxY)*PX1_Z0 + 
+      (minY - EY_X0Z0) * PX0_Z0)
+```
+:::
+
+::: column
+```{r, echo = FALSE}
+df_selected %>% 
+  as_tibble() %>% 
+  bind_rows(
+    df_selected %>% group_by(X) %>% summarise_at(vars(Y),function(x) mean(x,na.rm=TRUE)) %>% mutate(X = paste0("Y_",X)) %>% 
+      mutate(patient = "MEAN") %>% spread(X,Y)
+  ) %>% 
+  mutate(Y_1 = ifelse(X==0 & patient!="MEAN",NA,Y_1),
+         Y_0 = ifelse(X==1 & patient!="MEAN",NA,Y_0)) %>% 
+  select(-delta) %>% 
+  select(patient,X,Z, Y_1,Y_0) %>% 
+  knitr::kable(format = 'html', col.names = c("Patient ID","Tx","Z","Y(1)", "Y(0)"))
+```
+:::
+:::
+
+## Bounds with Exogenous Variation
+
+::: columns
+::: column
+```{r, echo = TRUE}
+
+EY_X1Z1 = mean(Y[X==1 & Z==1])
+EY_X1Z0 = mean(Y[X==1 & Z==0])
+EY_X0Z1 = mean(Y[X==0 & Z==1])
+EY_X0Z0 = mean(Y[X==0 & Z==0])
+PX1_Z1 = mean(X[Z==1]==1)
+PX1_Z0 = mean(X[Z==0]==1)
+PX0_Z1 = mean(X[Z==1]==0)
+PX0_Z0 = mean(X[Z==0]==0)
+```
+
+```{r, echo = TRUE}
+# Upper Bound
+min((EY_X1Z1-minY)*PX1_Z1 + 
+    (maxY - EY_X0Z1) * PX0_Z1,
+    (EY_X1Z0-minY)*PX1_Z0 + 
+      (maxY - EY_X0Z0) * PX0_Z0)
+```
+:::
+
+::: column
+```{r, echo = FALSE}
+df_selected %>% 
+  as_tibble() %>% 
+  bind_rows(
+    df_selected %>% group_by(X) %>% summarise_at(vars(Y),function(x) mean(x,na.rm=TRUE)) %>% mutate(X = paste0("Y_",X)) %>% 
+      mutate(patient = "MEAN") %>% spread(X,Y)
+  ) %>% 
+  mutate(Y_1 = ifelse(X==0 & patient!="MEAN",NA,Y_1),
+         Y_0 = ifelse(X==1 & patient!="MEAN",NA,Y_0)) %>% 
+  select(-delta) %>% 
+  select(patient,X,Z, Y_1,Y_0) %>% 
+  knitr::kable(format = 'html', col.names = c("Patient ID","Tx","Z","Y(1)", "Y(0)"))
+```
+:::
+:::
+
+```{r,echo = FALSE}
+lb <- max((EY_X1Z1-maxY)*PX1_Z1 + 
+      (minY - EY_X0Z1) * PX0_Z1,
+     (EY_X1Z0-maxY)*PX1_Z0 + 
+      (minY - EY_X0Z0) * PX0_Z0)
+ub <- min((EY_X1Z1-minY)*PX1_Z1 + 
+    (maxY - EY_X0Z1) * PX0_Z1,
+    (EY_X1Z0-minY)*PX1_Z0 + 
+      (maxY - EY_X0Z0) * PX0_Z0)
+```
+
+## Bounds: Next Steps {.smaller}
+
+-   Recall that the "true" treatment effect is `r df %>% summarise_at(vars(Y_1,Y_0),function(x) mean(as.numeric(paste0(x)),na.rm=TRUE)) %>% mutate(ate = Y_1 - Y_0) %>% pull(ate)`.
+
+-   Our original "natural bounds" (`r (EY_X1 - maxY)*PX1 + (minY - EY_X0)*PX0` to `r (EY_X1 - minY)*PX1 + (maxY - EY_X0)*PX0`) were quite wide, but as promised they do include the true treatment effect.
+
+-   We narrowed our bounds further to (`r lb` to `r ub`) based on an additional assumption.
+
+-   We'll next take this one step further to tighten them even more.
+
+## Bounds with Monotonicity {.smaller}
+
+-   **Monotone treatment response (MTR)**: Under treatment each individual will have a response greater than or equal to that under control.
+
+    -   At worst, receiving the flu vaccine does not increase the likelihood a patient develops flu-like symptoms.
+    -   At best, it increases the likelihood they do not develop symptoms.
+
+-   Assuming either of the above allows us to narrow the bounds because the assumptions place additional constraints on unobserved counterfactuals.
+
+## Bounds with Monotonicity {.smaller}
+
+-   **Monotone treatment selection (MTS)**: individuals who select treatment will on average have outcomes greater than or equal to that of individuals who do not select treatment under the counterfactual scenario all individuals selected the same treatment.
+
+## 
+
+![](media/01_bounds-plot_annotated.png)
+
+## Sources
+
+-   This lecture drew on adapted material from the following:
+
+    -   Christopher P. Adams, *Learning Microeconometrics with R*
+    -   Scott Cunningham, *Causal Inference: The Mixtape*
+
+-   A nice STATA command for bounds is available and discussed in McCarthy, Ian, Daniel L. Millimet, and Manan Roy. "Bounding treatment effects: A command for the partial identification of the average treatment effect with endogenous and misreported treatment assignment." The Stata Journal 15.2 (2015): 411-436.

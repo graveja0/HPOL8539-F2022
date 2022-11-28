@@ -1,0 +1,43 @@
+---
+title: "Quantile Treatment Effects and Changes-in-Changes"
+format: revealjs
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+## Motivation
+
+::: incremental
+-   Our goal of policy/program evaluation is to understand how an intervention impacts a population.
+-   Often, the impact of the intevention will vary from person to person.
+    -   Some people may benefit, some may not; some may be harmed.
+:::
+
+## Motivation
+
+::: incremental
+-   Many methods focus on the *average* impact of a program.
+-   This may be because the average can be useful!
+-   It also may be because the identifying assumptions we need to make only apply at the average.
+:::
+
+## Motivation
+
+::: incremental
+-   What if we're interested in the distributional effects of a program?
+-   Perhaps an intervention has a null *average* treatment effect, but has a large impact on individuals in the tails of the distribution (e.g., lowest income, those in poorest health, etc.)
+:::
+
+## Motivation
+
+::: incremental
+-   We may be able to use the tools of causal inference to infer treatment effects for subpopulations, giving us some insights into heterogeneity across groups.
+    -   These methods still focus on the average within these groups, however.
+:::
+
+## Motivation
+
+::: incremental
+-   When responses to treatment differ among otherwise observationally equivalent subjects, the entire distribution of the treatment effect may also be of interest (Fan and Park 2009)
+:::

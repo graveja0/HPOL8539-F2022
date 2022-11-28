@@ -1,0 +1,1548 @@
+---
+title: "Synthetic Control Methods"
+format:
+  revealjs:
+    transition: fade
+    background-transition: fade
+    highlight-style: ayu-mirage
+    footer: |
+      [Back to Website](../index.html)
+editor_options: 
+  chunk_output_type: console
+bibliography: ../references.bib
+---
+
+## Motivation {.smaller}
+
+```{r setup}
+library(tidyverse)
+library(janitor)
+library(data.table)
+library(CVXR)
+library(dplyr)
+library(patchwork)
+library(tidysynth)
+library(parallel)
+library(tictoc)
+library(ggsci)
+library(directlabels)
+library(synthdid)
+library(MCPanel)
+library(rngtools)
+library(future)
+library(doFuture)
+library(future.batchtools)
+library(xtable)
+library(dplyr)
+library(tidyr)
+library(tibble)
+library(glue)
+library(hrbrthemes)
+library(here)
+library(scul)#devtools::install_github("hollina/scul") # https://hollina.github.io/scul/
+library(DataCombine)
+library(MASS)
+library(sandwich)
+library(lmtest)
+library(knitr)
+library(kableExtra)
+library(augsynth)
+  
+
+#Additional packages used depending on the models run
+library(nlme)
+library(sandwich)
+library(geepack)
+library(car)
+
+select <- dplyr::select
+options("scipen" = 100, "digits" = 5)
+ggplot2::theme_set(hrbrthemes::theme_ipsum(grid = "X"))
+
+data("smoking")
+
+load(here("../HPOL8539_learnr/data/rand-gun/PublicData_for_sims.rdata"))
+
+#############################################
+##Functions
+#############################################
+
+#function needed for slow coding
+const<-function(m)
+{
+  v=0
+  if(m!=0)
+  {
+    for(i in 1:m)
+    {
+      v=v+i
+    }
+  }
+  return(v)
+}
+
+
+#function needed for slow coding
+slow.acting<-function(month,length,monthly.effect)
+{
+  top=length-1
+  total.times<-c(1:top) #creating length+1 spline values for the slow acting time span
+  #compute year 1 average effect
+  Fraction.year.enacted<-(13-month)/12
+  Average.effect.while.enacted =0.5*Fraction.year.enacted*(1/length)
+  Average.effect.over.year1 = Fraction.year.enacted*Average.effect.while.enacted
+  values.midyrs<-Average.effect.over.year1 + total.times*(1/length)
+  value.last.yr<-((13-month)*1+(month-1)-const(month-1)*monthly.effect)/12
+  values=c(Average.effect.over.year1,values.midyrs,value.last.yr)
+  return(values)
+}
+
+# calculate mean squared error
+mse<-function(x)
+{
+  return(mean(x^2,na.rm=T))
+}
+
+#Set p-values so denote if result statistically signifcant at alpha = 0.05 level
+#0 for p>=0.05 and 1 for p<0.05
+pval.bin<-function(p)
+{
+  p[p<0.05]=1
+  p[p!=1]=0
+  return(p)
+}
+
+# Calculate correction factor for standard error
+corr.factor<-function(t.stats)
+{
+  f.stats=(t.stats)^2
+  f.stats=sort(f.stats)
+  high.cut=0.95*iters
+  femp95=f.stats[high.cut]
+  freal=qf(.95,1,Inf)
+  corr.factor=sqrt(femp95/freal)
+  return(corr.factor)
+}
+
+#formula for correcting p-values using correction factor
+adj.ps<-function(regn.coeffs,ses,cf)
+{
+  adj.ses=sqrt(ses)*cf
+  low95=regn.coeffs-1.96*adj.ses
+  high95=regn.coeffs+1.96*adj.ses
+
+  new.p=rep(0,iters)
+  for(i in 1:iters)
+  {
+    if(low95[i]<0&high95[i]>0)
+    {
+      new.p[i]=1
+    }else{
+      new.p[i]=0
+    }
+  }
+  return(new.p)
+}
+
+
+#type S  when true effect is negative
+type.s<-function(betas,pvals,effect.direction)
+{
+  if(length(betas[pvals<0.05])!=0)
+  {
+    if(effect.direction=="neg"){
+      a=length(betas[betas>0&pvals<0.05])/length(betas[pvals<0.05])
+    }else{
+      a=length(betas[betas<0&pvals<0.05])/length(betas[pvals<0.05])
+    }
+  }else{
+    a=0
+  }
+  return(a)
+}
+
+
+test.cf<-function(regn.coeffs,ses,cf,effect.direction)
+{
+  adj.ses=sqrt(ses)*cf
+  low95=regn.coeffs-1.96*adj.ses
+  high95=regn.coeffs+1.96*adj.ses
+
+  new.p=rep(0,iters)
+  for(i in 1:iters)
+  {
+    if(low95[i]<0&high95[i]>0)
+    {
+      new.p[i]=0
+    }else{
+      new.p[i]=1
+    }
+  }
+  #switch findings in the incorrect direction to 0's
+  if (effect.direction == "pos"){
+    new.p[new.p==1&regn.coeffs<0]=0
+  }else{
+    new.p[new.p==1&regn.coeffs>0]=0
+  }
+  return(sum(new.p)/iters) #should be ~0.05
+}
+
+#needed for performing cluster adjustment to standard errors
+robust.se <- function(model, cluster){
+ require(sandwich)
+ require(lmtest)
+ M <- length(unique(cluster))
+ N <- length(cluster)
+ K <- model$rank
+ dfc <- (M/(M - 1)) * ((N - 1)/(N - K))
+ uj <- apply(estfun(model), 2, function(x) tapply(x, cluster, sum));
+ rcse.cov <- dfc * sandwich(model, meat = crossprod(uj)/N)
+ rcse.se <- coeftest(model, rcse.cov)
+ return(list(rcse.cov, rcse.se))
+}
+
+# The main simulation generator and output function
+run.sim = function(code.speed, effect.direction,seed_val = 12345){
+
+  #creating matrix to hold 4 key regression results a
+  #Column 1 = estimated effect (regression coefficient)
+  #Column 2 = estimated variance
+  #Column 3 = t-statistic
+  #Column 4 = p-value
+  #stats.matrix1=list(matrix(0,iters,4),matrix(0,iters,4),matrix(0,iters,4))
+
+  #use same seed for all effects
+  #set.seed(123)
+  
+  set.seed(seed_val)
+  #outer loop covers 3 different treated states sample sizes
+  #for(j in 1:3)
+  #{
+  j = 1
+    n.trt=j
+
+    #inner loop created the needed iters of simulated datasets where gun policy has a nonzero effect on outcomes
+    #for(k in 1:iters)
+    #{
+    k = 1
+
+
+      #Create vector of state names to sample from
+      state.names=unique(x$State)
+
+      #randomly sample the exposed/treated states
+      z=sample(state.names,n.trt,replace=FALSE)
+
+      #randomly sample the year the law was enacted for each treated state
+      years.enacted=sample(c(1981:2009),n.trt,replace=TRUE)
+      years.enacted = 2002
+
+      #randomly sample the month the law was enacted for each treated state
+      month.enacted=sample(c(1:12),n.trt,replace=TRUE)
+
+      
+      #create levels coding
+      x$levels.coding=rep(0,nrow(x))
+
+      if (code.speed == "slow") {
+        #Slow coding - assumes it takes 5 years for a law to become fully effective
+        length=5
+
+        #loops through for each treated/exposed state to create the needed slow coding levels coding
+        for(s in 1:n.trt)
+        {
+          month=month.enacted[s]
+          values=slow.acting(month,length,monthly.effect = (1/length)/12)
+          mark=length+1
+          mark2=years.enacted[s]+length
+          check=2014-years.enacted[s]
+          if(check>=length(values))
+          {
+            x$levels.coding[x$State==z[s]&x$Year>=years.enacted[s]][1:mark]=values
+            x$levels.coding[x$State==z[s]&x$Year>mark2]=1
+          }else{
+            hold=check+1
+            x$levels.coding[x$State==z[s]&x$Year>=years.enacted[s]][1:hold]=values[1:hold]
+          }
+        }
+
+        #Creating change levels coding for models for treated/exposed states
+        x$ch.levels.coding=rep(0,nrow(x))
+
+        for(s in 1:n.trt)
+        {
+          levels=x$levels.coding[x$State==z[s]]
+          levels.shifted=c(0,levels[-length(levels)])
+          x$ch.levels.coding[x$State==z[s]]=levels-levels.shifted
+        }
+
+      }else{
+        if (code.speed == "instant"){
+          #Instantaneous coding version
+          for(s in 1:n.trt)
+          {
+            x$levels.coding[x$State==z[s]&x$Year==years.enacted[s]]=(12-month.enacted[s]+1)/12
+            x$levels.coding[x$State==z[s]&x$Year>years.enacted[s]]=1
+          }
+
+          #Creating change levels coding
+          x$ch.levels.coding=rep(0,nrow(x))
+
+          for(s in 1:n.trt)
+          {
+            levels=x$levels.coding[x$State==z[s]]
+            levels.shifted=c(0,levels[-length(levels)])
+            x$ch.levels.coding[x$State==z[s]]=levels-levels.shifted
+          }
+        }
+      }
+
+      if(effect.direction !="null"){
+        ##################
+        #Introduce treatment effects to state observations
+        ##################
+
+        if (link == "linear"){
+          x$cr.adj=x$Crude.Rate+te*x$levels.coding
+        }
+        if (link == "log-lin"){
+          x$logY.adj=log(x$Crude.Rate+x$Crude.Rate*(te-1)*x$levels.coding)
+          x$cr.adj=exp(x$logY.adj)
+        }
+        if (link == "log"){
+          x$deaths.adj=x$Deaths+x$Deaths*(te-1)*x$levels.coding
+          x$deaths.adj=round(x$deaths.adj)
+          x$cr.adj=(x$deaths.adj*100000)/x$Population
+        }
+        #need lags to be computed on new adjusted crude rates as potential control covariate in models
+        mark1=dim(x)[2]+1
+
+        x <- slide(x, Var = "cr.adj", GroupVar = "State", slideBy = -1)
+        colnames(x)[mark1] <- "cr.adj.lag1"
+        x$lag1 = x$cr.adj.lag1
+      }else{
+      	x$cr.adj=x$Crude.Rate
+      	x$deaths.adj=x$Deaths
+        x$lag1 = x$crude.rate.lag1
+      	x$logY.adj=log(x$Crude.Rate)
+      }
+    #}
+  #}
+  return(list(df = x %>% janitor::clean_names(), param = c(paste0(state.names[z]),years.enacted,month.enacted,te)))
+}
+```
+
+```{r, cache=FALSE}
+
+link = "linear"
+te = -3
+sim.cloud <- sim <- run.sim(code.speed="instant",effect.direction="neg",seed_val=22)
+
+sim.null <- run.sim(code.speed="instant",effect.direction="null",seed_val=22)
+sim.null$df %>% saveRDS(here("ignore/synthetic-control-simulated-data.rds"))
+
+# link = "linear"
+# te = 0
+# sim <- run.sim(code.speed="instant",effect.direction="null",seed_val=1)
+```
+
+## Motivation
+
+::: incremental
+-   Hypothetical gun law passed in a single state (`r sim$param[1]`) in 2002.
+-   The plot shows the total firearm death rate, by year and state
+-   I have imposed a (simulated) immediately-acting treatment effect ($\tau = `r sim$param[4]`$).
+:::
+
+::: footer
+Data drawn from [Schell et al.](https://www.rand.org/pubs/research_reports/RR2685.html) "Evaluating Methods to Estimate the Effect of State Laws on Firearm Deaths A Simulation Study"
+:::
+
+## Firearm Death Rate, by State and Year
+
+::: columns
+::: column
+```{r}
+#| fig-height: 5
+#| fig-width: 7
+#| fig-align: center
+#| fig-cap: With Treatment
+#| fig-cap-location: top
+sim$df %>% 
+  mutate(w = as.integer(state == sim$param[1])) %>%  
+  group_by(w,year) %>% 
+  summarise(y = mean(cr_adj)) %>% 
+  mutate(w = ifelse(w==1,"Treated","Rest of US")) %>% 
+  ggplot(aes(x = year, y = y , group = w)) + 
+  geom_line(data = . %>% filter(w=="Treated"), lwd = 1.5) +
+  geom_line(data = . %>% filter(w!="Treated"), lwd  = 0.75, lty=5) + 
+  geom_line(data = sim$df %>% mutate(y = cr_adj), aes(group= state), alpha = .1) + 
+  geom_dl(aes(label = glue::glue(" {w}")), method = list("last.bumpup")) + 
+  scale_x_continuous(expand = expansion(mult = c(0,.25)), breaks = seq(range(sim$df$year)[1],range(sim$df$year)[2],5)) +
+  labs(x = "Year", y = "Fatality Rate") + 
+  geom_vline(aes(xintercept = as.numeric(sim$param[[2]])), colour = "red", lty=5, lwd=1.5) 
+
+```
+:::
+
+::: column
+```{r}
+#| fig-height: 5
+#| fig-width: 7
+#| fig-align: center
+#| fig-cap: Without Treatment (True Counterfactual)
+#| fig-cap-location: top
+sim.null$df %>% 
+  mutate(w = as.integer(state == sim$param[1])) %>%  
+  group_by(w,year) %>% 
+  summarise(y = mean(cr_adj)) %>% 
+  mutate(w = ifelse(w==1,"Treated","Rest of US")) %>% 
+  ggplot(aes(x = year, y = y , group = w)) + 
+  geom_line(data = . %>% filter(w=="Treated"), lwd = 1.5) +
+  geom_line(data = . %>% filter(w!="Treated"), lwd  = 0.75, lty=5) + 
+  geom_line(data = sim$df %>% mutate(y = cr_adj), aes(group= state), alpha = .1) + 
+  geom_dl(aes(label = glue::glue(" {w}")), method = list("last.bumpup")) + 
+  scale_x_continuous(expand = expansion(mult = c(0,.25)), breaks = seq(range(sim$df$year)[1],range(sim$df$year)[2],5)) +
+  labs(x = "Year", y = "Fatality Rate") + 
+  geom_vline(aes(xintercept = as.numeric(sim$param[[2]])), colour = "red", lty=5, lwd=1.5) + 
+  ggtitle("Without Treatment")
+
+```
+:::
+:::
+
+## How Would You Evaluate This Policy Change? {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+1.  Difference-in-Differences
+
+## How Would You Evaluate This Policy Change? {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+1.  Difference-in-Differences
+    -   Difference in average pre-treatment outcomes between treated and control units is subtracted from the difference in average posttreatment outcomes
+
+## How Would You Evaluate This Policy Change? {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+2.  Matching
+
+## How Would You Evaluate This Policy Change? {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+2.  Matching
+    -   For each treated unit, one or more matches are found among the controls, based on both pre-treatment outcomes and other covariates.
+
+## How Would You Evaluate This Policy Change? {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+3.  Synthetic control
+
+## How Would You Evaluate This Policy Change? {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+3.  Synthetic control
+    -   For each treated unit, a synthetic control is constructed as a weighted average of control units that matches pretreatment outcomes and covariates for the treated units.
+
+## How Would You Evaluate This Policy Change? {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+4.  Regression methods (e.g., interrupted time series, imputation estimators)
+
+## How Would You Evaluate This Policy Change? {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+4.  Regression methods (e.g., interrupted time series, imputation estimators)
+    -   Post-treatment outcomes for control units are regressed on pre-treatment outcomes and other covariates and the regression coefficients are used to predict the counterfactual outcome for the treated units.
+
+## A Generalized Framework
+
+::: incremental
+
+-   $N + 1$ units observed for $T$ periods, with a subset of treated units (for simplicity - unit 0) treated from $T0$ onwards.
+
+-   Time-varying treatment indicator: $W_{i,t}$
+
+-   Potential outcomes for unit $0$ define the treatment effect: $\tau_{0,t} := Y_{0,t}(1) − Y_{0,t}(0)$ for $t = T0 + 1, . . . , T$
+
+:::
+
+::: footer
+Source: Doudchenko and Imbens (2016) and [Apoorva Lal](https://apoorvalal.github.io/presentations/pdf/ImbensDoudchenko.pdf)
+:::
+
+## A Generalized Framework
+
+::: incremental
+
+-   Observed outcome: $Y^{obs}_{i,t} = Y_{i,t}(W_{i,t})$
+
+-   Time-invariant characteristics $X_i := (X_{i,1}, . . . , X_{i,M} )^T$ for each unit, which may include lagged outcomes Y\^{obs}\_{i,t} for $t ≤ T0$.
+
+:::
+
+::: footer
+Source: Doudchenko and Imbens (2016) and [Apoorva Lal](https://apoorvalal.github.io/presentations/pdf/ImbensDoudchenko.pdf)
+:::
+
+## Data Setup
+
+```{r}
+sim$df %>% head() %>% kable(digits=2) %>% kable_styling()
+```
+
+## A Generalized Framework
+
+-   Let's focus on the last period:
+
+$$
+\tau_{0,T} = Y_{0,T}(1) − Y_{0,T}(0) = Y^{obs}_{0,T} − \color{red}{Y_{0,T}(0)}
+$$ - The last (red) value is an unobserved counterfactual.
+
+## A Generalized Framework
+
+-   The above methods impute $Y_{0,T}(1)$ with a linear structure: $$
+    \hat{Y}_{0,T}(0) = \mu + \sum_{i=1}^n \omega_i \cdot Y^{obs}_{i,T}
+    $$
+-   The methods differ in whether and how they choose $\mu$ and $\omega_i$ given the observed data.
+
+## A Menu of Constraints
+
+::: incremental
+
+1.  **No Intercept**: $\mu = 0$
+2.  **Adding Up**: $\sum_{i=1}^{n} \omega_i = 1$
+3.  **Non-negativity**: $\omega_i >= 0$ for all $i$
+4.  **Constant weights**: $\omega_i = \bar \omega$ for all $i$.
+
+:::
+
+## 1. **No Intercept**: $\mu = 0$
+
+::: incremental
+-   Rules out the possibility that the outcome for the treated unit is systematically different, by a constant amount, than the other units.
+-   A hallmark of difference-in-differences is that the outcome *levels* can vary by a fixed difference over time as long as parallel trends holds.
+:::
+
+## 2. **Adding Up**: $\sum_{i=1}^{n} \omega_i = 1$
+
+::: incremental
+-   Requires that the weights sum up to one.
+-   Common in matching strategies.
+-   Implausible if the treated unit is an outlier relative to other units.
+-   Combined with constraint #1, it may be difficult to obtain good predictions for extreme units.
+:::
+
+## 2. **Adding Up**: $\sum_{i=1}^{n} \omega_i = 1$
+
+![Hollingsworth and Wing (2022)](images/paste-FFB57C39.png)
+
+## 3. **Non-negativity**: $\omega_i >= 0$ for all $i$
+
+::: incremental
+-   Is an important restriction on standard synthetic control methods.
+-   Helps ensure that there is a unique solution for control unit weights.
+-   Often ensures that the weights are non-zero only for a small subset of the control units, making the weights easier to interpret.
+:::
+
+## 4. **Constant weights**: $\omega_i = \bar \omega$ for all $i$.
+
+::: incremental
+-   Strengthens the nonnegativity condition by making the assumption that all control units are equally valid.
+-   Common in DID (we'll see this in a minute).
+-   In conjuction to constraint 2 (Adding Up), implies that weights are all equal to 1/N, where N is number of control units.
+:::
+
+# Difference-in-differences (DID)
+
+## Difference-in-Differences
+
+1.  ~~**No Intercept**~~: $\mu = 0$
+
+2.  **Adding Up**: $\sum_{i=1}^{n} \omega_i = 1$
+
+3.  **Non-negativity**: $\omega_i >= 0$ for all $i$
+
+4.  **Constant weights**: $\omega_i = \bar \omega$ for all $i$.
+
+## Difference-in-Differences
+
+```{r}
+#| fig-height: 7
+#| fig-width: 10
+#| fig-align: center
+#| fig-cap: Total Firearm Death Rate, by Year and State
+#| fig-cap-location: top
+
+
+sim$df %>% 
+  mutate(w = as.integer(state == sim$param[1])) %>%  
+  group_by(w,year) %>% 
+  summarise(y = mean(cr_adj)) %>% 
+  mutate(w = ifelse(w==1,"Treated","Rest of US")) %>% 
+  ggplot(aes(x = year, y = y , group = w)) + 
+  geom_line(data = . %>% filter(w=="Treated"), lwd = 1.5) +
+  geom_line(data = . %>% filter(w!="Treated"), lwd  = 0.75, lty=5) + 
+  geom_line(data = sim$df %>% mutate(y = cr_adj), aes(group= state), alpha = .1) + 
+  geom_dl(aes(label = glue::glue(" {w}")), method = list("last.bumpup")) + 
+  scale_x_continuous(expand = expansion(mult = c(0,.25)), breaks = seq(range(sim$df$year)[1],range(sim$df$year)[2],5)) +
+  labs(x = "Year", y = "Fatality Rate") + 
+  geom_vline(aes(xintercept = as.numeric(sim$param[[2]])), colour = "red", lty=5, lwd=1.5)
+
+```
+
+## Difference-in-Differences Estimate
+
+```{r}
+df_ <- 
+  sim$df %>% data.frame() %>% 
+  mutate(treated = as.integer(state == sim$param[1]) * as.integer(year >= as.numeric(sim$param[2]))) 
+
+setup = panel.matrices(df_, 
+                       unit = "state",
+                       time = "year",
+                       outcome = "cr_adj",
+                       treatment = "treated")
+res_did <-  with(setup,synthdid_estimate(Y, N0, T0, weights = list(lambda = rep(1/T0,T0), omega = rep(1/N0, N0))))
+```
+
+$\hat \tau$ = `r round(res_did[[1]],3)`
+
+```{r}
+synthdid_plot(res_did, facet.vertical=FALSE,
+              control.name='control', treated.name='treated',
+              lambda.comparable=TRUE, se.method = 'none',
+              trajectory.linetype = 1, line.width=.75, effect.curvature=-.4,
+              trajectory.alpha=.7, effect.alpha=.7,
+              diagram.alpha=1, onset.alpha=.7) +
+  theme(legend.position=c(.26,.07), legend.direction='horizontal',
+        legend.key=element_blank(), legend.background=element_blank(),
+        strip.background=element_blank(), strip.text.x = element_blank()) +
+  scale_color_aaas()
+```
+
+## DID Estimates by State {.smaller}
+
+::: columns
+::: column
+-   **Constant weights**: Each of the 49 control states receives weight 1/49 = 0.020408
+-   **Adding Up**: These weights all sum to 1
+-   **Non-negativity**: All of the weights are positive.
+-   Overall DID estimate is just a weighted average of these individual estimates.
+:::
+
+::: column
+```{r}
+synthdid_units_plot(res_did, se.method='none') +
+    theme(legend.background=element_blank(), legend.title = element_blank(),
+          legend.direction='horizontal', legend.position=c(.17,.07),
+          strip.background=element_blank(), strip.text.x = element_blank()) + 
+  labs(x = "", y = "Difference in Gun Fatality Rate") 
+
+```
+:::
+:::
+
+# Synthetic Control
+
+## Synthetic Control
+
+1.  **No Intercept**: $\mu = 0$
+
+2.  **Adding Up**: $\sum_{i=1}^{n} \omega_i = 1$
+
+3.  **Non-negativity**: $\omega_i >= 0$ for all $i$
+
+4.  ~~**Constant weights**~~: $\omega_i = \bar \omega$ for all $i$.
+
+## Synthetic Controls
+
+-   Motivation: limit extrapolation bias that can occur when units with different pre-treatment characteristics are combined using a traditional adjustment, such as a linear regression (Kellogg et al. 2021).
+
+## Synthetic Control
+
+::: incremental
+
+-   Imposing these constraints allows you to create a counterfactual whose outcome trajectory is within the support ("convex hull") of donor units (i.e., other states)
+-   The counterfactual treated unit is simply a weighted sum of a subset of donors, with weights calculated to minimize the pre-intervention "distance" between the the treated unit and its synthetic counterfactual.
+-   Can use both lagged outcome and covariates to construct the weights.
+:::
+
+## Synthetic Control Estimate
+
+```{r}
+res_sc <- with(setup, synthdid_estimate(Y, N0, T0, eta.omega = 0.000001, 
+                                         weights = list(lambda = rep(0, T0)), omega.intercept = FALSE))  
+
+treat_state <- sim$param[1]
+treat_year <- sim$param[2] %>% as.numeric()
+tx <- sym(treat_state)
+treat_state_dot <- gsub(" ",".",treat_state)
+tx_dot <- sym(treat_state_dot)
+df <- sim$df %>% as_tibble() %>% 
+  clean_names() %>% 
+  mutate(treated = as.integer(state == treat_state) * as.integer(year >= treat_year)) %>% 
+  mutate(crude_rate = cr_adj)
+
+est_adh <- function(df) {
+  T0 = which(unique(df$year)<treat_year); T0
+  T1 <- which(unique(df$year)>=treat_year); T1
+  
+  wide <- 
+    df %>% 
+    dplyr::select(year,state,crude_rate) %>% 
+    spread(state,crude_rate) %>% 
+    select_at(vars(year,treat_state, everything()))  %>% 
+    as.matrix() 
+  
+  y_treat_pre = wide[T0, 2] |> as.matrix()
+  y_ctrl_pre  = wide[T0, -(1:2)] |> as.matrix()
+  
+  #' Solve for synthetic control weights in CVXR
+  #' @param y_t t_0 X 1   matrix of pre-treatment outcomes for treatment units
+  #' @param y_c t_0 X n_0 matrix of pre-treatment outcomes for donor units
+  #' @return vector of weights
+  #' @import CVXR
+  #' @export
+  sc_solve = function(y_t, y_c){
+    # Source: https://apoorvalal.github.io/posts/09122021_ElasticNetSyntheticControl.html#conceptual-setup-from-doudchenko-and-imbens-2016
+    ω = Variable(ncol(y_c))
+    objective = Minimize(sum_squares(y_t - y_c %*% ω))
+    constraints = list( # no intercept
+      ω >= 0,            # positive weights
+      sum(ω) == 1        # weights sum to 1
+    )
+    problem = Problem(objective, constraints)
+    result = solve(problem, solver = 'SCS')
+    ω_hat = result$getValue(ω)
+    return(ω_hat)
+  }
+  # %%
+  ω_sc = sc_solve(y_treat_pre, y_ctrl_pre)
+  wt_table = data.frame(donor = colnames(y_ctrl_pre), wt = ω_sc)
+  # %% compute and plot
+  wide2 = copy(wide) %>% data.frame() 
+  # impute Y(0) post for treated unit using weights
+  wide2$y0_sc = as.matrix(wide2[, -(1:2)]) %*% ω_sc
+
+  wide2$treat_effect = wide2[[treat_state_dot]] - wide2$y0_sc
+  
+  sc_fit = ggplot(wide2, aes(year)) +
+    geom_line(aes(y = {{tx_dot}}), size = 2) +
+    geom_line(aes(y = y0_sc), size = 2, alpha = 0.7, color = 'cornflowerblue') +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    geom_vline(xintercept = 1990, linetype = "dashed", color = 'red') +
+    labs(title = "Synthetic Control: ADH (2010)", y = ""); sc_fit
+  
+  sc_est = ggplot(wide2, aes(year, treat_effect)) + geom_line() +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    geom_vline(xintercept = treat_year, linetype = "dashed", color = 'red') +
+    ylim(c(-10, 10)) +
+    labs(title = "Synthetic Control Estimates: ADH (2010)", y = "")
+  
+  p_adh10 <- 
+    ggplot_build(sc_fit) %>% pluck("data") %>% pluck(1) %>% 
+    dplyr::select(x,y,colour) %>% 
+    mutate(method = ifelse(colour == "black", "Treated","Unknown"))  %>% 
+    dplyr::select(-colour) %>% 
+    bind_rows(
+      ggplot_build(sc_fit) %>% pluck("data") %>% pluck(2) %>% 
+        select(x,y,colour) %>% 
+        mutate(method = ifelse(colour == "cornflowerblue", "SC: ADH (2010)", "Unknown"))  %>% 
+        select(-colour) 
+    )
+  
+  tau_adh10 <- 
+    sc_est %>% ggplot_build() %>% pluck("data") %>% pluck(1) %>% 
+    select(x, tau = y) %>% 
+    mutate(method = "SC: ADH (2010)")
+  
+  tau_avg <- tau_adh10 %>% filter(x>=treat_year) %>% summarise(tau = mean(tau)) 
+    
+  out <- list(weights = wt_table, plot_data = p_adh10, tau = tau_adh10, tau_avg = tau_avg)
+  return(out)
+}
+
+res_adh <- df %>% est_adh()
+```
+
+$\hat \tau$ = `r round(res_adh$tau_avg,3)`
+
+```{r}
+res_sc2 <- res_sc
+wts <- res_adh$weights$wt
+wts[abs(wts) < 1e-2 ] <- 0
+attr(res_sc2,"weights")$omega = wts
+
+synthdid_plot(res_sc2, facet.vertical=FALSE,
+              control.name='control', treated.name='treated',
+              lambda.comparable=TRUE, se.method = 'none',
+              trajectory.linetype = 1, line.width=.75, effect.curvature=-.4,
+              trajectory.alpha=.7, effect.alpha=.7,
+              diagram.alpha=1, onset.alpha=.7) +
+  theme(legend.position=c(.26,.07), legend.direction='horizontal',
+        legend.key=element_blank(), legend.background=element_blank(),
+        strip.background=element_blank(), strip.text.x = element_blank()) +
+  scale_color_aaas() 
+```
+
+## Weights: Synthetic Control
+
+```{r}
+synthdid_units_plot(res_sc2, se.method='none') +
+    theme(legend.background=element_blank(), legend.title = element_blank(),
+          legend.direction='horizontal', legend.position=c(.17,.07),
+          strip.background=element_blank(), strip.text.x = element_blank()) + 
+  labs(x = "", y = "Difference in Gun Fatality Rate") 
+
+```
+
+## Synthetic Control From 100,000 feet
+
+-   At a high level, synthetic control methods choose a fixed set of weights that, when applied to the control units, produce a counterfactual to the treated unit.
+-   This counterfactual stands in as a "synthetic" treated unit that traces out what would have happened to the treatment unit had it never been treated.
+
+## Synthetic Control From Ground Level
+
+-   There are many approaches one could take to estimating the weights.
+-   We won't get into all of them here, but many draw on innovative machine-learning methods.
+
+```{r, message = FALSE, warning = FALSE}
+
+est_synth <- function(df) {
+  T0 = which(unique(df$year)<treat_year); T0
+  T1 <- which(unique(df$year)>=treat_year); T1
+  
+  wide <- 
+    df %>% 
+    dplyr::select(year,state,crude_rate) %>% 
+    spread(state,crude_rate) %>% 
+    select_at(vars(year,treat_state, everything()))  %>% 
+    as.matrix() 
+  
+  y_treat_pre = wide[T0, 2] |> as.matrix()
+  y_ctrl_pre  = wide[T0, -(1:2)] |> as.matrix()
+  
+  library(Synth)
+  data_for_traditional_scm <- df %>% select(year,state,cr_adj,starts_with("pc")) 
+  # create matrices from panel data that provide inputs for synth()
+  data_for_traditional_scm$idno = as.numeric(as.factor(data_for_traditional_scm$state))  # create numeric country id required for synth()
+  data_for_traditional_scm <- as.data.frame(data_for_traditional_scm)
+  dataprep.out<-
+    dataprep(
+      foo = data_for_traditional_scm,
+      predictors = c(paste0("pc",1:17)),
+      predictors.op = "mean",
+      dependent = "cr_adj",
+      unit.variable = "idno",
+      time.variable = "year",
+      special.predictors = list(
+        list("cr_adj", 1999, "mean"),
+        list("cr_adj", 2000, "mean"),
+        list("cr_adj", 2001, "mean")
+      ),
+      treatment.identifier = unique(data_for_traditional_scm$idno[data_for_traditional_scm$state=="Pennsylvania"]),
+      controls.identifier = unique(data_for_traditional_scm$idno[data_for_traditional_scm$state != "Pennsylvania"]),
+      time.predictors.prior = c(1979:2001),
+      time.optimize.ssr = c(1979:2001),
+      time.plot = 1979:2014
+    )
+  
+  ## run the synth command to identify the weights
+  ## that create the best possible synthetic
+  ## control unit for the treated.
+  synth.out <- synth(dataprep.out)
+  synth.out$solution.w
+
+  
+  
+
+  wt_table = data.frame(donor = colnames(y_ctrl_pre), wt = synth.out$solution.w)
+  # %% compute and plot
+  wide2 = copy(wide) %>% data.frame() 
+  # impute Y(0) post for treated unit using weights
+  wide2$y0_sc = as.matrix(wide2[, -(1:2)]) %*% synth.out$solution.w
+
+  wide2$treat_effect = wide2[[treat_state_dot]] - wide2$y0_sc
+  
+  #p <- path.plot(dataprep.res = dataprep.out,synth.res = synth.out)
+  
+    
+  dataprep.res = dataprep.out
+  synth.res = synth.out
+  tr.intake = NA
+  Ylab = c("Y Axis")
+  Xlab = c("Time")
+  Ylim = NA
+  Legend = c("Treated", "Synthetic")
+  Legend.position = c("topright")
+  Main = NA
+  Z.plot = FALSE
+  
+  
+  y0plot1 <- dataprep.res$Y0plot %*% synth.res$solution.w
+  
+  p_adh10 <- tibble(x = dataprep.res$tag$time.plot,
+    y = as.vector(unname(dataprep.res$Y1plot)),
+    method = "Treated") %>% 
+    bind_rows(
+      tibble(x = dataprep.res$tag$time.plot,
+                 y = as.vector(unname(y0plot1)),
+                 method = "SC w Xs: ADH (2010)") 
+    )
+
+ tau_adh10  <- 
+   p_adh10 %>% 
+  spread(method,y) %>% 
+  set_names(c("x","sc","tx")) %>% 
+  mutate(tau = tx - sc) %>% 
+  mutate(method = "SC w Xs: ADH (2010)") %>% 
+  select(x,tau,method)
+
+  tau_avg <- tau_adh10 %>% filter(x>=treat_year) %>% summarise(tau = mean(tau)) 
+    
+  out <- list(weights = wt_table, plot_data = p_adh10, tau = tau_adh10, tau_avg = tau_avg, synth.out =synth.out  )
+  return(out)
+  
+}
+```
+
+##  {data-visibility="hidden"}
+
+```{r, cache = FALSE}
+sink("")
+suppressMessages({res_synth <- df %>% est_synth()})
+sink()
+
+```
+
+## Abadie, Diamond and Heinmueller (2010)
+
+Match on pre-intervention outcome only:
+
+```{r}
+res_adh$plot_data %>% 
+  ggplot(aes( x= x, y = y, colour = method)) + 
+  geom_line(data = . %>% filter(method=="Treated"), lwd=1.5) +
+  geom_line(data = . %>% filter(method!="Treated"), lwd=0.5) +
+  geom_point() + 
+  geom_vline(aes(xintercept = treat_year), colour = "red",lty=2,lwd=2) +
+  scale_color_jama() + 
+  scale_x_continuous(expand = expansion(mult = c(0,.25)),breaks = seq(range(df$year)[1],range(df$year)[2],5)) + 
+  geom_dl(aes(label = glue::glue(" {method}")), method = list("last.bumpup"))  + 
+  theme(legend.position = "none") +
+  labs(x = "Year", y = "Outcome") +
+    scale_y_continuous(limits = c(0,30),breaks = seq(10,30,5))+
+  annotate("text",x = 1999, y = 20, label = glue("Avg Difference in\nPost Period= {round(res_adh$tau_avg,3)}"),size = unit(5, "pt"),hjust=0)
+
+```
+
+## Abadie, Diamond and Heinmueller (2010)
+
+Include state-level predictors:
+
+```{r}
+res_synth$plot_data %>% 
+  ggplot(aes( x= x, y = y, colour = method)) + 
+  geom_line(data = . %>% filter(method=="Treated"), lwd=1.5) +
+  geom_line(data = . %>% filter(method!="Treated"), lwd=0.5) +
+  geom_point() + 
+  geom_vline(aes(xintercept = treat_year), colour = "red",lty=2,lwd=2) +
+  scale_color_jama() + 
+  scale_x_continuous(expand = expansion(mult = c(0,.25)),breaks = seq(range(df$year)[1],range(df$year)[2],5)) + 
+  geom_dl(aes(label = glue::glue(" {method}")), method = list("last.bumpup"))  + 
+  theme(legend.position = "none") +
+  labs(x = "Year", y = "Outcome") +
+    scale_y_continuous(limits = c(0,30),breaks = seq(10,30,5))+
+  annotate("text",x = 1999, y = 20, label = glue("Avg Difference in\nPost Period= {round(res_synth$tau_avg,3)}"),size = unit(5, "pt"),hjust=0)
+
+```
+
+## Elastic Net Synthetic Control
+
+Doudchenko and Imbens (2017)
+
+```{r}
+#################################
+# Elastic-Net Synthetic Control
+#################################
+
+est_ensc <- function(df) {
+  
+  T0 = which(unique(df$year)<treat_year); T0
+  T1 <- which(unique(df$year)>=treat_year); T1
+  
+  wide <- 
+    df %>% 
+    dplyr::select(year,state,crude_rate) %>% 
+    spread(state,crude_rate) %>% 
+    select_at(vars(year,treat_state, everything()))  %>% 
+    as.matrix() 
+  
+  y_treat_pre = wide[T0, 2] |> as.matrix()
+  y_ctrl_pre  = wide[T0, -(1:2)] |> as.matrix()
+  
+  
+  #' Solve for Imbens-Doudchenko elastic net synthetic control weights in CVXR
+  #' @param y_t t_0 X 1   matrix of pre-treatment outcomes for treatment units
+  #' @param y_c t_0 X n_0 matrix of pre-treatment outcomes for donor units
+  #' @param y_c t_0 X n_0 matrix of pre-treatment outcomes for donor units
+  #' @param lambdas       vector of penalty values
+  #' @param alpha         scalar mixing value between L1 and L2 regularisation
+  #' @param t             number of lambdas to try (when range not manually specified)
+  #' @return vector of weights
+  #' @import CVXR
+  #' @export
+  en_sc_solve = function(y_t, y_c, lambdas = NULL, alpha = 0.5, t = 10){
+    # Source: https://apoorvalal.github.io/posts/09122021_ElasticNetSyntheticControl.html#conceptual-setup-from-doudchenko-and-imbens-2016
+    # sequence of lambdas
+    if (is.null(lambdas)) lambdas = 10^seq(-2, log10(max(y_t)), length.out = t)
+    # penalty term
+    elastic_penalty = function(ω, λ = 0, α = 0) {
+      lasso =  cvxr_norm(ω, 1) * α
+      ridge =  cvxr_norm(ω, 2) * (1 - α) / 2
+      λ * (lasso + ridge)
+    }
+    # targets : intercept and weights
+    μ = Variable(1) ; ω = Variable(ncol(y_c))
+    en_solve = function(l) {
+      obj = (sum_squares(y_t - μ - y_c %*% ω)/(2 * nrow(y_c)) +
+               elastic_penalty(ω, l, alpha) )
+      # unconstrained problem, just apply L1 and L2 regularisation to weights
+      prob = Problem(Minimize(obj))
+      sol = solve(prob, solver = 'SCS')
+      sols = c(sol$getValue(μ), sol$getValue(ω))
+    }
+    # solve for each value of lambda
+    solution_mat = lapply(lambdas, en_solve)
+    # convert to (n_0 + 1) × |lambdas| matrix
+    solution_mat = do.call(cbind, solution_mat)
+    return(solution_mat)
+  }
+  
+  # %% pseudo-treatment prediction to pick λ
+  y_ctrl = wide[, -(1:2)] |> as.matrix() # all control units in matrix
+  lambdas = 10^seq(-1, log10(max(y_ctrl)), length.out = 20)
+  # %%
+  pick_lambda = function(j, Y, lambdas){
+    # pre period data
+    ypre = head(Y, length(T0))
+    y_j  = ypre[, j]; y_nj = ypre[, -j]
+    # fit μ, ω for pseudo-treatment unit
+    ω_tilde = en_sc_solve(y_j, y_nj, lambdas)
+    # compute prediction error on post-period
+    ypost = tail(Y, length(T1))
+    mse_j = function(w) mean(ypost[, j] - cbind(1, ypost[, -j])  %*% w)
+    # each column in ω_tilde is a set of weights and intercepts for a given λ, so
+    # summarise across columns
+    mses = apply(ω_tilde, 2, mse_j)
+    # lambda that minimises error
+    lambdas[which(mses == min(mses))]
+  }
+  
+  # %% # for small number of donors, can compute for all ; in other cases, pick randomly?
+  # system.time(
+  #   lam_choices <- mclapply(1:ncol(y_ctrl),
+  #                           pick_lambda, y_ctrl,
+  #                           10^seq(-1, log10(max(y_ctrl)), length.out = 20),
+  #                           mc.cores = 6
+  #   )
+  # )
+  # tabulate best lambda and pick the mode
+  # lam_choices |> as.numeric() |> table()  |> sort() |> tail(1) |> names() |>
+  #   as.numeric() |> round(2)
+  # %%
+  
+  en_ω = en_sc_solve(y_treat_pre, y_ctrl_pre, .1)
+  wt_table = data.frame(donor = colnames(y_ctrl_pre), wt =  en_ω[-1])
+  
+# %% compute and plot
+  wide3 = copy(wide) %>% data.frame()
+  # impute Y(0) post for treated unit using weights
+  wide3$y0_hat_en = as.matrix(cbind(1, wide3[, -(1:2)])) %*% en_ω
+  wide3$treat_effect = wide3[[treat_state_dot]] - wide3$y0_hat_en
+  
+  # %%
+  ensc_fit = ggplot(wide3, aes(year)) +
+    geom_line(aes(y = {{tx_dot}}), size = 2) +
+    geom_line(aes(y = y0_hat_en), size = 2, alpha = 0.7, color = 'cornflowerblue') +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    geom_vline(xintercept = 1990, linetype = "dashed", color = 'red') +
+    labs(title = "Outcome ENSC Series", y = "")
+  
+  # %%
+  ensc_est = ggplot(wide3, aes(year, treat_effect)) + geom_line() +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    #geom_vline(xintercept = 1990, linetype = "dashed", color = 'red') +
+    #ylim(c(-9000, 6000)) +
+    labs(title = "ENSC Estimates", y = "")
+  
+  p_ensc <- 
+    ggplot_build(ensc_fit) %>% pluck("data") %>% pluck(1) %>% 
+    select(x,y,colour) %>% 
+    mutate(method = ifelse(colour == "black", "Treated","Unknown"))  %>% 
+    select(-colour) %>% 
+    bind_rows(
+      ggplot_build(ensc_fit) %>% pluck("data") %>% pluck(2) %>% 
+        select(x,y,colour) %>% 
+        mutate(method = ifelse(colour == "cornflowerblue", "ENSC: Doudchenko & Imbens (2016)", "Unknown"))  %>% 
+        select(-colour) 
+    )
+  
+  tau_ensc <- 
+    ensc_est %>% ggplot_build() %>% pluck("data") %>% pluck(1) %>% 
+    select(x, tau = y) %>% 
+    mutate(method = "ENSC: Doudchenko & Imbens (2016)")
+  
+  tau_avg <-   tau_ensc %>% filter(x>=treat_year) %>% summarise(tau = mean(tau)) 
+  
+  
+  out <- list(weights = wt_table, plot_data = p_ensc, tau = tau_ensc, tau_avg = tau_avg)
+  return(out)
+  
+}
+
+res_ensc <- df %>% est_ensc()
+
+```
+
+```{r}
+res_ensc$plot_data %>% 
+  ggplot(aes( x= x, y = y, colour = method)) + 
+  geom_line(data = . %>% filter(method=="Treated"), lwd=1.5) +
+  geom_line(data = . %>% filter(method!="Treated"), lwd=0.5) +
+  geom_point() + 
+  geom_vline(aes(xintercept = treat_year), colour = "red",lty=2,lwd=2) +
+  scale_color_jama() + 
+  scale_x_continuous(expand = expansion(mult = c(0,.5)),breaks = seq(range(df$year)[1],range(df$year)[2],5)) + 
+  geom_dl(aes(label = glue::glue(" {method}")), method = list("last.bumpup"))  + 
+  theme(legend.position = "none") +
+  labs(x = "Year", y = "Outcome") +
+  scale_y_continuous(limits = c(0,30),breaks = seq(10,30,5))+
+  annotate("text",x = 1999, y = 20, label = glue("Avg Difference in\nPost Period= {round(res_ensc$tau_avg,3)}"),size = unit(5, "pt"),hjust=0)
+
+```
+
+## Augmented Synthetic Control
+
+Ben-Michael, Feller and Rothstein (2021)
+
+```{r}
+est_augsynth <- function(df) {
+  T0 = which(unique(df$year)<treat_year); T0
+  T1 <- which(unique(df$year)>=treat_year); T1
+  
+  wide <- 
+    df %>% 
+    dplyr::select(year,state,crude_rate) %>% 
+    spread(state,crude_rate) %>% 
+    select_at(vars(year,treat_state, everything()))  %>% 
+    as.matrix() 
+  
+  y_treat_pre = wide[T0, 2] |> as.matrix()
+  y_ctrl_pre  = wide[T0, -(1:2)] |> as.matrix()
+  
+  
+  syn <- augsynth(cr_adj ~ treated, state, year, df, progfunc = "Ridge", scm = TRUE)
+  wt_table <- 
+    syn$weights %>% data.frame() %>% 
+    set_names("wt") %>% 
+    rownames_to_column(var = "donor") 
+  
+  wide_augsynth = copy(wide) %>% data.frame()
+  wide_augsynth$y0_sc = as.matrix(wide_augsynth [, -(1:2)]) %*% wt_table$wt
+  wide_augsynth$treat_effect = wide_augsynth[[treat_state_dot]] - wide_augsynth$y0_sc
+  
+  augsynth_fit = ggplot(wide_augsynth , aes(year)) +
+    geom_line(aes(y = {{tx_dot}}), size = 2) +
+    geom_line(aes(y = y0_sc), size = 2, alpha = 0.7, color = 'cornflowerblue') +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    geom_vline(xintercept = 1990, linetype = "dashed", color = 'red') +
+    labs(title = "Augmented Synthetic Control: BMFR (2021)", y = ""); augsynth_fit
+  
+  augsynth_est = ggplot(wide_augsynth, aes(year, treat_effect)) + geom_line() +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    geom_vline(xintercept = treat_year, linetype = "dashed", color = 'red') +
+    ylim(c(-10, 10)) +
+    labs(title = "Synthetic Control Estimates: ADH (2010)", y = "")
+  
+  p_augsynth <- 
+    ggplot_build(augsynth_fit) %>% pluck("data") %>% pluck(1) %>% 
+    select(x,y,colour) %>% 
+    mutate(method = ifelse(colour == "black", "Treated","Unknown"))  %>% 
+    select(-colour) %>% 
+    bind_rows(
+      ggplot_build(augsynth_fit) %>% pluck("data") %>% pluck(2) %>% 
+        select(x,y,colour) %>% 
+        mutate(method = ifelse(colour == "cornflowerblue", "A-SC: BMFR (2021)", "Unknown"))  %>% 
+        select(-colour) 
+    )
+  
+  tau_augsynth <- 
+    augsynth_est %>% ggplot_build() %>% pluck("data") %>% pluck(1) %>% 
+    select(x, tau = y) %>% 
+    mutate(method = "A-SC: BMFR (2021)")
+  
+  tau_avg <-   tau_augsynth %>% filter(x>=treat_year) %>% summarise(tau = mean(tau)) 
+  
+  
+  #### ADD COVARIATES 
+  syn_x <- augsynth(cr_adj ~ treated | pc1 + pc2 + pc3 + pc4 + pc5 + 
+                      pc6 + pc7 + pc8 + pc9 + pc10 + pc11 + pc12 + pc13 + 
+                      pc14 + pc15 + pc16 + pc17, state, year, df, progfunc = "Ridge", scm = TRUE)
+  
+  wt_table_x <- 
+    syn_x$weights %>% data.frame() %>% 
+    set_names("wt") %>% 
+    rownames_to_column(var = "donor") 
+  
+  wide_augsynth_x = copy(wide) %>% data.frame()
+  # impute Y(0) post for treated unit using weights
+  wide_augsynth_x$y0_sc = as.matrix(wide_augsynth_x[, -(1:2)]) %*% wt_table_x$wt
+  wide_augsynth_x$treat_effect = wide_augsynth_x[[treat_state_dot]] - wide_augsynth_x$y0_sc
+  
+  augsynth_x_fit = ggplot(wide_augsynth_x , aes(year)) +
+    geom_line(aes(y = {{tx_dot}}), size = 2) +
+    geom_line(aes(y = y0_sc), size = 2, alpha = 0.7, color = 'cornflowerblue') +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    geom_vline(xintercept = 1990, linetype = "dashed", color = 'red') +
+    labs(title = "Augmented Synthetic Control w Covariates: BMFR (2021)", y = ""); augsynth_x_fit
+  
+  augsynth_x_est = ggplot(wide_augsynth_x, aes(year, treat_effect)) + geom_line() +
+    geom_hline(yintercept = 0, linetype = "dotted") +
+    geom_vline(xintercept = treat_year, linetype = "dashed", color = 'red') +
+    ylim(c(-10, 10)) +
+    labs(title = "Synthetic Control Estimates w Covariates: ADH (2010)", y = "")
+  
+  p_augsynthX <- 
+    ggplot_build(augsynth_x_fit) %>% pluck("data") %>% pluck(1) %>% 
+    select(x,y,colour) %>% 
+    mutate(method = ifelse(colour == "black", "Treated","Unknown"))  %>% 
+    select(-colour) %>% 
+    bind_rows(
+      ggplot_build(augsynth_x_fit) %>% pluck("data") %>% pluck(2) %>% 
+        select(x,y,colour) %>% 
+        mutate(method = ifelse(colour == "cornflowerblue", "A-SC w Covariates: BMFR (2021)", "Unknown"))  %>% 
+        select(-colour) 
+    )
+  
+  tau_augsynthX <- 
+    augsynth_x_est %>% ggplot_build() %>% pluck("data") %>% pluck(1) %>% 
+    select(x, tau = y) %>% 
+    mutate(method = "A-SC w Covariates: BMFR (2021)")
+  
+  tau_avg_X <-   tau_augsynthX %>% filter(x>=treat_year) %>% summarise(tau = mean(tau)) 
+  
+  out <- list(weights = wt_table, plot_data = p_augsynth, tau = tau_augsynth, tau_avg = tau_avg,
+              weightsX = wt_table_x , plot_data_x = p_augsynthX, tau = tau_augsynthX, tau_avgX = tau_avg_X)
+  
+  return(out)
+}
+res_augsynth <- df %>% est_augsynth()
+```
+
+```{r}
+res_augsynth$plot_data %>% 
+  ggplot(aes( x= x, y = y, colour = method)) + 
+  geom_line(data = . %>% filter(method=="Treated"), lwd=1.5) +
+  geom_line(data = . %>% filter(method!="Treated"), lwd=0.5) +
+  geom_point() + 
+  geom_vline(aes(xintercept = treat_year), colour = "red",lty=2,lwd=2) +
+  scale_color_jama() + 
+  scale_x_continuous(expand = expansion(mult = c(0,.5)),breaks = seq(range(df$year)[1],range(df$year)[2],5)) + 
+  geom_dl(aes(label = glue::glue(" {method}")), method = list("last.bumpup"))  + 
+  theme(legend.position = "none") +
+  labs(x = "Year", y = "Outcome") +
+    scale_y_continuous(limits = c(0,30),breaks = seq(10,30,5))+
+  annotate("text",x = 1999, y = 20, label = glue("Avg Difference in\nPost Period= {round(res_augsynth$tau_avg,3)}"),size = unit(5, "pt"),hjust=0)
+
+```
+
+## Augmented Synthetic Control
+
+Using covariates to improve synthetic match
+
+```{r}
+res_augsynth$plot_data_x %>% 
+  ggplot(aes( x= x, y = y, colour = method)) + 
+  geom_line(data = . %>% filter(method=="Treated"), lwd=1.5) +
+  geom_line(data = . %>% filter(method!="Treated"), lwd=0.5) +
+  geom_point() + 
+  geom_vline(aes(xintercept = treat_year), colour = "red",lty=2,lwd=2) +
+  scale_color_jama() + 
+  scale_x_continuous(expand = expansion(mult = c(0,.5)),breaks = seq(range(df$year)[1],range(df$year)[2],5)) + 
+  geom_dl(aes(label = glue::glue(" {method}")), method = list("last.bumpup"))  + 
+  theme(legend.position = "none") +
+  labs(x = "Year", y = "Outcome") +
+    scale_y_continuous(limits = c(0,30),breaks = seq(10,30,5))+
+  annotate("text",x = 1999, y = 20, label = glue("Avg Difference in\nPost Period= {round(res_augsynth$tau_avgX,3)}"),size = unit(5, "pt"),hjust=0)
+
+```
+
+## GSYNTH {data-visibility="hidden"}
+
+```{r, echo = FALSE}
+est_gsynth <- function(df) {
+  
+  library(gsynth)
+  
+  T0 = which(unique(df$year)<treat_year)
+  T1 <- which(unique(df$year)>=treat_year)
+  
+  wide <- 
+    df %>% 
+    dplyr::select(year,state,crude_rate) %>% 
+    spread(state,crude_rate) %>% 
+    select_at(vars(year,treat_state, everything()))  %>% 
+    as.matrix() 
+  
+  y_treat_pre = wide[T0, 2] |> as.matrix()
+  y_ctrl_pre  = wide[T0, -(1:2)] |> as.matrix()
+  
+  sink("~/tmp")
+  out <-
+    gsynth(cr_adj ~ treated , 
+           index = c("state","year"),
+           data = df, 
+           force = "two-way", 
+           CV = TRUE,
+           r = c(0,5), se = FALSE, inference = "parametric", nboots = 1000, parallel = FALSE)
+  sink()
+  
+  wt_table <- 
+    out$wgt.implied %>% data.frame() %>% 
+    set_names("wt") %>% 
+    rownames_to_column(var = "donor") 
+  
+  wide_gsynth = copy(wide) %>% data.frame()
+  wide_gsynth$y0_sc = as.matrix(wide_gsynth [, -(1:2)]) %*% wt_table$wt
+  wide_gsynth$treat_effect = wide_gsynth[[treat_state_dot]] - wide_gsynth$y0_sc
+  
+  sink("~/tmp")
+  gsynth_fit = plot(out, type = "counterfactual", raw = "none", main="")
+  sink() 
+  
+  p_gsynth <- 
+    ggplot_build(gsynth_fit) %>% pluck("data") %>% pluck(2) %>% 
+    select(x,y,colour) %>% 
+    mutate(method = ifelse(colour != "black", "Treated","GSYNTH"))  %>% 
+    select(-colour)
+  
+  tau_gsynth <- 
+    p_gsynth %>% 
+    spread(method,y) %>% 
+    mutate(tau = GSYNTH - Treated) %>% 
+    select(x,tau) %>% 
+    mutate(method = "GSYNTH")
+  
+  tau_avg <-   tau_gsynth %>% filter(x>=treat_year) %>% summarise(tau = mean(tau)) 
+  
+  
+  #### ADD COVARIATES 
+  sink("~/tmp")
+  outX <-
+    gsynth(cr_adj ~ treated + pc1 + pc2 + pc3 + pc4 + pc5 + 
+             pc6 + pc7 + pc8 + pc9 + pc10 + pc11 + pc12 + pc13 + 
+             pc14 + pc15 + pc16 + pc17  ,
+           index = c("state","year"),
+           data = df, 
+           force = "two-way", 
+           CV = TRUE,
+           r = c(0,5), se = FALSE, inference = "parametric", nboots = 1000, parallel = FALSE)
+  sink()
+
+  wt_table_x <- 
+    outX$wgt.implied %>% data.frame() %>% 
+    set_names("wt") %>% 
+    rownames_to_column(var = "donor") 
+  
+  wide_gsynth_x = copy(wide) %>% data.frame()
+  # impute Y(0) post for treated unit using weights
+  wide_gsynth_x$y0_sc = as.matrix(wide_gsynth_x[, -(1:2)]) %*% wt_table_x$wt
+  wide_gsynth_x$treat_effect = wide_gsynth_x[[treat_state_dot]] - wide_gsynth_x$y0_sc
+  
+  gsynth_x_fit = plot(outX, type = "counterfactual", raw = "none", main="")
+  
+  p_gsynthX <- 
+    ggplot_build(gsynth_x_fit) %>% pluck("data") %>% pluck(2) %>% 
+    select(x,y,colour) %>% 
+    mutate(method = ifelse(colour != "black", "Treated","GSYNTH w Xs"))  %>% 
+    select(-colour)
+  
+  tau_gsynthX <- 
+    p_gsynthX %>% 
+    spread(method,y) %>% 
+    janitor::clean_names() %>% 
+    mutate(tau = gsynth_w_xs - treated) %>% 
+    select(x,tau) %>% 
+    mutate(method = "GSYNTH w Xs")
+  
+  tau_avg_X <-   tau_gsynthX %>% filter(x>=treat_year) %>% summarise(tau = mean(tau)) 
+
+  out <- list(weights = wt_table, plot_data = p_gsynth, tau = tau_gsynth, tau_avg = tau_avg,
+              weightsX = wt_table_x , plot_data_x = p_gsynthX, tau = tau_gsynthX, tau_avgX = tau_avg_X)
+  
+  return(out)
+}
+
+res_gsynth <- df %>% est_gsynth()
+ 
+```
+
+## GSYNTH
+
+-   [Generalized synthetic control method](https://www.cambridge.org/core/journals/political-analysis/article/generalized-synthetic-control-method-causal-inference-with-interactive-fixed-effects-models/B63A8BD7C239DD4141C67DA10CD0E4F3)
+-   Imputes counterfactuals for each treated unit using control group information based on a linear interactive fixed effects model.
+-   Allows the treatment to be correlated with unobserved unit and time heterogeneity
+
+## GSYNTH
+
+```{r}
+
+res_gsynth$plot_data %>% 
+  ggplot(aes( x= x, y = y, colour = method)) + 
+  geom_line(data = . %>% filter(method=="Treated"), lwd=1.5) +
+  geom_line(data = . %>% filter(method!="Treated"), lwd=0.5) +
+  geom_point() + 
+  geom_vline(aes(xintercept = treat_year), colour = "red",lty=2,lwd=2) +
+  scale_color_jama() + 
+  scale_x_continuous(expand = expansion(mult = c(0,.5)),breaks = seq(range(df$year)[1],range(df$year)[2],5)) + 
+  geom_dl(aes(label = glue::glue(" {method}")), method = list("last.bumpup"))  + 
+  theme(legend.position = "none") +
+  labs(x = "Year", y = "Outcome") +
+    scale_y_continuous(limits = c(0,30),breaks = seq(10,30,5))+
+  annotate("text",x = 1999, y = 20, label = glue("Avg Difference in\nPost Period= {round(res_gsynth$tau_avg,3)}"),size = unit(5, "pt"),hjust=0)
+
+```
+
+# Inference
+
+## Inference for Synthetic Control
+
+-   Inference can be complex owing to the fact that often a single unit is "treated."
+    -   Can't appeal to large sample asymptotics.
+
+## Inference for Synthetic Control
+
+::: incremental
+-   A standard approach: placebo treatments.
+-   Apply the synthetic control method to each donor unit, and collect the treatment effect estimates.
+-   Idea: the distribution of placebo effects give you a sense of what could happen under the null of no treatment effect.
+-   Can construct a p-value by asking where your estimate lies within this distribution.
+-   Analogous to randomization inference from last time.
+:::
+
+# Extensions of Synthetic Control
+
+## Synthetic Control with Staggered Adoption
+
+-   Xu (2017) (`gsynth` package)
+-   Ben-Michael, Feller, and Rothstein (2022) (`augsynth` package)
+
+## Synthetic Difference-in-Differences
+
+::: incremental
+-   Arkhangelsky et al. (2019)
+-   Synthetic DID approach relaxes the parallel trends assumption.
+-   Key difference:
+    1.  Pre-intervention trends do not have to match exactly (i.e., 1. $\mu = 0$ does not have to hold)
+    2.  Weighting is not equivalent across all time periods.
+:::
+
+## Synthetic Difference-in-Differences
+
+```{r}
+df_ <- 
+  sim$df %>% data.frame() %>% 
+  mutate(treated = as.integer(state == sim$param[1]) * as.integer(year >= as.numeric(sim$param[2]))) 
+
+setup = panel.matrices(df_, 
+                       unit = "state",
+                       time = "year",
+                       outcome = "cr_adj",
+                       treatment = "treated")
+res_did2 <-  with(setup,synthdid_estimate(Y, N0, T0))
+```
+
+$\hat \tau$ = `r round(res_did2[[1]],3)`
+
+```{r}
+synthdid_plot(res_did2, facet.vertical=FALSE,
+              control.name='control', treated.name='treated',
+              lambda.comparable=TRUE, se.method = 'none',
+              trajectory.linetype = 1, line.width=.75, effect.curvature=-.4,
+              trajectory.alpha=.7, effect.alpha=.7,
+              diagram.alpha=1, onset.alpha=.7) +
+  theme(legend.position=c(.26,.07), legend.direction='horizontal',
+        legend.key=element_blank(), legend.background=element_blank(),
+        strip.background=element_blank(), strip.text.x = element_blank()) +
+  scale_color_aaas()
+```
+
+## 
+
+```{r}
+mc_estimate = function(Y, N0, T0) {
+    N1=nrow(Y)-N0
+    T1=ncol(Y)-T0
+    W <- outer(c(rep(0,N0),rep(1,N1)),c(rep(0,T0),rep(1,T1)))
+    mc_pred <- mcnnm_cv(Y, 1-W, num_lam_L = 20)
+    mc_fit  <- mc_pred$L + outer(mc_pred$u, mc_pred$v, '+')
+    mc_est <- sum(W*(Y-mc_fit))/sum(W)
+    mc_est
+}
+mc_placebo_se = function(Y, N0, T0, replications=200) {
+    N1 = nrow(Y) - N0
+    theta = function(ind) { mc_estimate(Y[ind,], length(ind)-N1, T0) }
+    sqrt((replications-1)/replications) * sd(replicate(replications, theta(sample(1:N0))))
+}
+
+difp_estimate = function(Y, N0, T0) {
+    synthdid_estimate(Y, N0, T0, weights=list(lambda=rep(1/T0, T0)), eta.omega=1e-6)
+}
+
+sc_estimate_reg = function(Y, N0, T0) {
+    sc_estimate(Y, N0, T0, eta.omega=((nrow(Y)-N0)*(ncol(Y)-T0))^(1/4))
+}
+difp_estimate_reg = function(Y, N0, T0) {
+    synthdid_estimate(Y, N0, T0, weights=list(lambda=rep(1/T0, T0)))
+}
+
+
+estimators = list(did=did_estimate,
+                  sc=sc_estimate,
+                  sdid=synthdid_estimate,
+                  difp=difp_estimate,
+                  mc = mc_estimate,
+                  sc_reg = sc_estimate_reg,
+                  difp_reg = difp_estimate_reg)
+estimates = lapply(estimators, function(estimator) { estimator(setup$Y, setup$N0, setup$T0) } )
+```
+
+```{r}
+#| fig-height: 8
+#| fig-width: 10
+library(patchwork)
+names(estimates)[1:3] <- c("DID","Synthetic Control","Synthetic DID")
+p1 <- synthdid_plot(estimates[1:3], facet.vertical=FALSE,
+              control.name='control', treated.name='treated',
+              lambda.comparable=TRUE, se.method = 'none',
+              trajectory.linetype = 1, line.width=.75, effect.curvature=-.4,
+              trajectory.alpha=.7, effect.alpha=.7,
+              diagram.alpha=1, onset.alpha=.7) +
+    theme(legend.position=c(.26,.07), legend.direction='horizontal',
+          legend.key=element_blank(), legend.background=element_blank()
+          ) + 
+    scale_color_aaas()
+
+p2 <- synthdid_units_plot(rev(estimates[1:3]), se.method='none') +
+    theme(legend.background=element_blank(), legend.title = element_blank(),
+          legend.direction='horizontal', legend.position=c(.17,.07),
+          strip.background=element_blank(), strip.text.x = element_blank())
+p1 / p2
+```
+
+## Ensemble Methods
+
+![](images/paste-C2A8BA9F.png)
+
+```{r}
+#https://github.com/maxkllgg/masc
+#https://a-torgovitsky.github.io/sc.pdf
+```
+
+```{r}
+#https://github.com/paulgp/applied-methods-phd/blob/main/lectures/14_synthetic_dind.pdf
+```
